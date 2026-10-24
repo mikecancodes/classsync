@@ -30,8 +30,7 @@ In **Project → Settings → Environment Variables**, add the values below and 
 | --- | --- | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | Only for sign-in/cloud features | Production and Preview | Public Supabase project URL. |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Only for sign-in/cloud features | Production and Preview | Public/publishable anon key. Database security depends on the configured Row Level Security policies. Never use the service-role key here. |
-| `GEMINI_API_KEY` | Optional | Production and Preview | Store as a Secret. Server-side only; never add a `NEXT_PUBLIC_` prefix. The AI routes also require an authenticated user in hosted environments. |
-| `GEMINI_MODEL` | Optional | Production and Preview | Non-secret model name; defaults to `gemini-flash-latest`. |
+| `GEMINI_API_KEY` | Optional | Production and Preview | Create a Google AI Studio Free Tier key, store as a Secret, and keep billing disabled. Server-side only; never add a `NEXT_PUBLIC_` prefix. The app uses `gemini-3.5-flash-lite` and hosted AI requires sign-in. |
 | `CLASSSYNC_SITE_URL` | Only if the address changes (defaults to `https://classsync-two.vercel.app` in CI/Vercel builds) | Production | The live site address, e.g. `https://classsync.vercel.app`. Baked into the downloadable extension (`/classsync-extension.zip`) so it can talk to the live site. Without it the extension only works with localhost. |
 | `ALLOW_LOCAL_AI` | Do not set on Vercel | None | Local-development bypass only. The server requires loopback and development mode for it. |
 

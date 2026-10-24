@@ -145,6 +145,8 @@
 .sync-sidebar>.primary-button { width: 100%; justify-content: center; font-size: 12px; padding: 11px; }
 .sync-sidebar-placeholder { color: var(--muted); font-size: 12px; line-height: 1.8; padding: 24px 0; }
 .sync-sidebar .sync-failure { font-size: 12px; line-height: 1.7; color: var(--text); padding: 13px; background: var(--hover); border: 1px solid var(--border); border-radius: 8px; margin-top: 15px; }
+.sync-sidebar .sync-instruction { font-size: 12px; line-height: 1.7; margin-top: 12px; color: var(--muted); }
+.sync-sidebar .sync-instruction a { color: var(--accent); font-weight: 600; text-decoration: underline; }
 .sync-sidebar label { display: grid; gap: 7px; font-size: 11px; color: var(--muted); margin-top: 24px; }
 .sync-sidebar select { width: 100%; padding: 8px; min-width: 0; font-size: 11px; background: var(--surface); }
 .sync-sidebar-count { font-size: 11px; color: var(--muted); padding: 20px 0 0; }
@@ -218,3 +220,17 @@
   .home-board .priority-label { margin-top: 7px; display: inline-block; }
   .home-board .docked-chat .chat-heading { padding: 14px 10px; }
 }
+/* Subscription uses the existing Sync action; only a paste field is added. */
+.sync-sidebar .calendar-link-field { margin: 8px 0 12px; }
+.calendar-link-field input { margin: 0; min-width: 0; width: 100%; font-size: 11px; }
+.full-calendar .school-calendar-event { border-left-color: var(--ai, #7553cf); color: var(--ai, #7553cf); }
+.calendar-sync-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; margin-bottom: 22px; }
+.calendar-sync-controls .calendar-link-field { flex: 1; min-width: 180px; margin: 0; }
+.calendar-sync-controls .primary-button { min-height: 40px; }
+.sync-sidebar .calendar-sync-controls { display: grid; gap: 12px; margin: 8px 0 12px; }
+.sync-sidebar .calendar-sync-controls .calendar-link-field { min-width: 0; }
+.sync-sidebar .calendar-sync-controls .primary-button { width: 100%; justify-content: center; font-size: 12px; padding: 11px; }
+.syllabus-proposals { list-style: none; padding: 0; margin: 10px 0; display: grid; gap: 6px; max-height: 320px; overflow: auto; }
+.syllabus-proposals label { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; line-height: 1.5; }
+.syllabus-review { border-top: 1px solid var(--border); margin-top: 12px; padding-top: 12px; }
+.syllabus-scan h2 { display: flex; gap: 8px; align-items: center; }

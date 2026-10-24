@@ -7,7 +7,21 @@ type Announcement = AcademicState['announcements'][number];
 // by their stable d2l-… IDs, so importing twice never duplicates anything. D2L owns titles,
 // dates and descriptions; the student owns completion, scores, read state and course setup.
 
-export const importPayloadSchema = z.object({ version: z.literal(1), source: z.literal('d2l'), data: stateSchema });
+// A course syllabus file the extension found in D2L Content (scanned for dates on review)
+export const syllabusFileSchema = z.object({
+  courseId: z.string().min(1).max(100),
+  title: z.string().min(1).max(200),
+  fileName: z.string().min(1).max(200),
+  mimeType: z.enum(['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']),
+  base64: z.string().min(1).max(12_000_000),
+});
+export type SyllabusFile = z.infer<typeof syllabusFileSchema>;
+
+export const importPayloadSchema = z.object({ version: z.literal(1), source: z.literal('d2l'), data: stateSchema, syllabi: z.array(syllabusFileSchema).max(50).default([]) });
+
+// A course still has the single default bucket an earlier import created, so D2L's weights
+// can replace it; categories the student set up themselves are never overwritten
+const isDefaultCategories = (course: Course) => course.categories.length === 1 && course.categories[0].name === 'Coursework' && course.categories[0].weight === 100;
 
 export type ImportSummary = {
   newCourses: string[];
@@ -24,7 +38,7 @@ export function mergeImport(state: AcademicState, payload: unknown): { state: Ac
   const courses = new Map<string, Course>(state.courses.map(c => [c.id, c]));
   for (const course of incoming.courses) {
     const existing = courses.get(course.id);
-    if (existing) courses.set(course.id, { ...existing, name: course.name, code: course.code });
+    if (existing) courses.set(course.id, { ...existing, name: course.name, code: course.code, categories: isDefaultCategories(existing) && !isDefaultCategories(course) ? course.categories : existing.categories });
     else { courses.set(course.id, course); summary.newCourses.push(course.name); }
   }
 
@@ -44,10 +58,15 @@ export function mergeImport(state: AcademicState, payload: unknown): { state: Ac
       summary.newAssignments.push(item.title);
       continue;
     }
-    const earned = existing.earned ?? (item.earned !== null && item.earned <= existing.points ? item.earned : null);
+    // Until the student enters a score, D2L's points and category stay current
+    const points = existing.earned === null ? item.points : existing.points;
+    const earned = existing.earned ?? (item.earned !== null && item.earned <= points ? item.earned : null);
     const status = existing.status === 'todo' && item.status === 'done' ? 'done' : existing.status;
-    const merged: Assignment = { ...existing, title: item.title, due: item.due, description: item.description, earned, status };
-    const changed = (['title', 'due', 'description', 'earned', 'status'] as const).some(key => merged[key] !== existing[key]);
+    const course = courses.get(item.courseId);
+    const category = existing.earned === null && course?.categories.some(c => c.name === item.category) ? item.category : existing.category;
+    const merged: Assignment = { ...existing, title: item.title, due: item.due, description: item.description, points, earned, status, category };
+    if (!course?.categories.some(c => c.name === merged.category)) ensureCategory(item.courseId, merged.category);
+    const changed = (['title', 'due', 'description', 'points', 'earned', 'status', 'category'] as const).some(key => merged[key] !== existing[key]);
     assignments.set(item.id, merged);
     if (changed) summary.updatedAssignments.push(item.title); else summary.unchanged++;
   }

@@ -22,7 +22,7 @@ ClassSync tab (/connect)          extension                                  sch
                                                  [Allow access] → chrome.permissions.request
                                                  checks /d2l/api/versions/ is real D2L
                                                  opens <origin>/d2l/home ─────────────▶ sign in
-                                                 tabs.onUpdated sees /d2l/home ◀───────
+                                                 signed-in D2L page loads ◀───────────
                                                  collectD2L → toImportPayload
 "import-ready" ◀────── bridge ◀── background (stores pendingImport, focuses the tab)
 "get-import" ─────────▶ … ─▶ payload → ImportReview dialog → mergeImport → workspace
@@ -31,7 +31,9 @@ ClassSync tab (/connect)          extension                                  sch
 
 - **The bridge** (`src/classsync-bridge.js`) is injected only on the ClassSync site (manifest `content_scripts`). It forwards just six message types (`src/bridge-protocol.js`). `connect` must carry a bare `https://` origin, and the student still has to approve Chrome's prompt for that exact site.
 - **Reading D2L** prefers an open D2L tab (same-origin requests always carry the session cookie) and otherwise calls from the background worker.
-- **If the session expired**, the extension opens D2L's sign-in and resumes automatically once `/d2l/home` loads.
+- **No refresh needed after installing:** on install/update the background injects the bridge into ClassSync tabs that are already open (a dead bridge from before an update removes itself).
+- **Back to ClassSync automatically:** once any signed-in D2L page loads (`src/d2l-pages.js`: not login/logout/SSO pages), the sync starts and ClassSync is brought to the front right away, showing progress and then the review.
+- **If the session expired**, the extension opens D2L's sign-in and resumes automatically after sign-in.
 - **No background schedule.** Syncs happen on connect, on Sync, or from the popup, so dialogs never appear on their own.
 
 ## Files
@@ -42,7 +44,7 @@ ClassSync tab (/connect)          extension                                  sch
 | `src/background.js` | Connect flow, login detection, sync, pending import, notifying ClassSync tabs, badge |
 | `src/bridge-protocol.js` / `src/classsync-bridge.js` | Page ↔ extension messages and their checks |
 | `connect.html` / `connect.js` | The Allow access page: permission prompt + D2L check |
-| `src/d2l-collect.js` | D2L API calls. Self-contained, because it's injected into the D2L tab |
+| `src/d2l-collect.js` | D2L API calls, including grade categories and the syllabus file. Self-contained, because it's injected into the D2L tab |
 | `src/to-classsync.js` | D2L data → the app's import payload (courses, assignments, announcements) |
 | `popup.*` / `options.*` | Status, Sync now, Open ClassSync, last-sync JSON download / Disconnect |
 | `test/` | Converter vs. the app's real schema and merge; bridge message filter |
@@ -60,8 +62,11 @@ Developers can also load `extension/` directly with Load unpacked. That works wi
 | D2L | → ClassSync | Notes |
 |---|---|---|
 | Active course enrollments | `courses` | ID `d2l-<orgUnitId>`. One category, "Coursework", at 100% |
-| Assignment folders (dropbox) | `assignments` | Due date, instructions, points, score from feedback or gradebook, `done` if submitted or graded |
-| Quizzes, discussions, other dated items | `assignments` | Matched to dropbox items by course + title; exempt items skipped |
+| Grade categories (if the student may see them) | course `categories` | D2L weights (or share of max points); "Coursework" at 0 for the rest |
+| Assignment folders (dropbox) | `assignments` | Due date, instructions, points, score from feedback or gradebook, category from the gradebook |
+| Quizzes, discussions, other dated items | `assignments` | Score/points from the gradebook item with the same name; exempt items skipped |
+| Graded items with no assignment (exams, participation) | `assignments` | Added as completed with the score; text/calculated/final items skipped |
+| Syllabus file in Content (PDF/Word, ≤ 8 MB) | review dialog → `assignments` + class materials | Scanned for dates (decision 15); the student picks what to add |
 | Announcements | `announcements` | Platform `D2L`, newest 300, hidden ones skipped |
 
 **When importing again** (`mergeImport`), D2L updates titles, due dates and descriptions. The student's completion, scores, read state, class color, instructor and grade categories are kept. Nothing is deleted. If a course's categories were renamed, a missing category is added at weight 0 so grade weights don't change. The whole import is validated before anything is applied.

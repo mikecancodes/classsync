@@ -4,16 +4,20 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, BookOpen, ListTodo, CalendarDays, Sparkles, Calculator, Settings, RefreshCw, Search, Plus, ArrowUpRight, ArrowRight, Clock3, Check, ChevronLeft, ChevronRight, Sun, X, Pencil, Trash2, CheckCircle2, Cloud } from 'lucide-react';
 import { AcademicState, Assignment, Course, dateKey, formatDate, grade, letter, stateSchema } from '@/lib/model';
-import { WORKSPACE_KEY, LEGACY_KEY, emptyWorkspace, migrateWorkspace } from '@/lib/workspace';
+import { WORKSPACE_KEY, PREVIOUS_KEY, LEGACY_KEY, emptyWorkspace, migrateWorkspace } from '@/lib/workspace';
 import { materialFile } from '@/lib/material-files';
 import { Chatbot } from './chatbot';
 import { Dashboard } from './dashboard';
+import { Calendar } from './calendar';
+import { CalendarSyncControls } from './calendar-sync-controls';
+import { CALENDAR_URL_KEY, schoolCalendarSchema, monthWithSchoolEvents } from '@/lib/calendar-model';
 import { WorkspaceHeader } from './workspace-header';
 import { NotesPage } from './notes-page';
 import { SyncTodo } from './sync-todo';
 import { SyncSidebar } from './sync-sidebar';
 import { ConnectPage } from './connect-page';
 import { ImportReview } from './import-review';
+import { SyllabusScan } from './syllabus-scan';
 import { useExtension } from '@/lib/extension-bridge';
 import { supabase } from '@/lib/supabase';
 import { CloudAction, CloudConflictError, CloudWorkspaceSession, readCloudWorkspace, writeCloudWorkspace } from '@/lib/cloud-workspace';
@@ -28,6 +32,35 @@ export default function ClassSync() {
  const [dark,setDark]=useState(false),[search,setSearch]=useState(''),[filter,setFilter]=useState('all'),[courseFilter,setCourseFilter]=useState('all');
  const [editing,setEditing]=useState<Assignment|null>(null),[adding,setAdding]=useState(false),[addingCourse,setAddingCourse]=useState(false),[toast,setToast]=useState(''),[user,setUser]=useState<string|null>(null),[syncing,setSyncing]=useState(false);
  const [syncTodo,setSyncTodo]=useState(false);
+ const [calendarUrl, setCalendarUrl] = useState('');
+ const [calendarSyncing, setCalendarSyncing] = useState(false);
+ const calendarInFlight = useRef(false);
+ useEffect(() => { try { setCalendarUrl(localStorage.getItem(CALENDAR_URL_KEY) ?? ''); } catch {} }, []);
+ function changeCalendarUrl(url: string) {
+   setCalendarUrl(url);
+   try { if (url.trim()) localStorage.setItem(CALENDAR_URL_KEY, url); else localStorage.removeItem(CALENDAR_URL_KEY); }
+   catch { setToast('Calendar link could not be remembered in this browser.'); }
+ }
+ async function syncCalendar() {
+   if (calendarInFlight.current) return;
+   calendarInFlight.current = true;
+   setCalendarSyncing(true);
+   try {
+     const response = await fetch('/api/calendar/sync', {
+       method: 'POST', headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify({ url: calendarUrl.trim(), timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }),
+       signal: AbortSignal.timeout(20000),
+     });
+     const result = await response.json();
+     if (!response.ok) throw new Error(result.error || 'Calendar sync failed. Your existing calendar was preserved.');
+     const calendar = schoolCalendarSchema.parse(result.calendar);
+     setData(current => stateSchema.parse({ ...current, schoolCalendar: calendar }));
+     setMonth(current => monthWithSchoolEvents(calendar.events, current, dateKey()));
+     setToast(calendar.events.length ? 'School calendar synced: ' + calendar.events.length + ' events.' : 'Calendar synced, but the feed has no events in the supported date range.');
+     router.push('/calendar');
+   } catch (error) { setToast(error instanceof Error && error.name !== 'ZodError' ? error.message : 'Calendar sync failed. Your existing calendar was preserved.'); }
+   finally { calendarInFlight.current = false; setCalendarSyncing(false); }
+ }
  const extension=useExtension();
  const [month,setMonth]=useState(()=>new Date(new Date().getFullYear(),new Date().getMonth(),1));
  const [tab,setTab]=useState('Assignments');
@@ -51,7 +84,7 @@ export default function ClassSync() {
    }
    setUser(email);
  }
- useEffect(()=>{try {const raw=localStorage.getItem(STORE) ?? localStorage.getItem(LEGACY_KEY); const workspace=raw?migrateWorkspace(JSON.parse(raw)):emptyWorkspace(); setData(workspace); if(raw){localStorage.setItem(STORE,JSON.stringify(workspace));localStorage.removeItem(LEGACY_KEY);} setDark(localStorage.getItem('classsync-theme')==='dark');}catch {storageWritable.current=false;setToast('Saved data could not be read. Original storage was preserved.');} setLoaded(true); if(supabase){supabase.auth.getSession().then(({data})=>updateAccount(data.session?.user.id ?? null, data.session?.user.email ?? null)); const {data:listener}=supabase.auth.onAuthStateChange((_e,s)=>updateAccount(s?.user.id ?? null, s?.user.email ?? null)); return ()=>listener.subscription.unsubscribe();}},[]);
+ useEffect(()=>{try {const raw=localStorage.getItem(STORE) ?? localStorage.getItem(PREVIOUS_KEY) ?? localStorage.getItem(LEGACY_KEY); const workspace=raw?migrateWorkspace(JSON.parse(raw)):emptyWorkspace(); setData(workspace); if(raw){localStorage.setItem(STORE,JSON.stringify(workspace));} setDark(localStorage.getItem('classsync-theme')==='dark');}catch {storageWritable.current=false;setToast('Saved data could not be read. Original storage was preserved.');} setLoaded(true); if(supabase){supabase.auth.getSession().then(({data})=>updateAccount(data.session?.user.id ?? null, data.session?.user.email ?? null)); const {data:listener}=supabase.auth.onAuthStateChange((_e,s)=>updateAccount(s?.user.id ?? null, s?.user.email ?? null)); return ()=>listener.subscription.unsubscribe();}},[]);
  useEffect(()=>{if(loaded && storageWritable.current) try {localStorage.setItem(STORE,JSON.stringify(data));}catch {setToast('Browser storage is full. Export a backup from Settings.');}},[data,loaded]);
  useEffect(()=>{document.documentElement.dataset.theme=dark?'dark':'light'; if(loaded) try {localStorage.setItem('classsync-theme',dark?'dark':'light');} catch {};},[dark,loaded]);
  useEffect(()=>{if(toast){const id=setTimeout(()=>setToast(''),5000);return ()=>clearTimeout(id);}},[toast]);
@@ -137,19 +170,14 @@ export default function ClassSync() {
  {path==='/'&&<Dashboard data={data} today={today} onEdit={setEditing} onComplete={toggle} onAnnouncementToggle={toggleAnnouncement}/>}
  {path==='/notes'&&<NotesPage data={data} setData={setData} notify={setToast}/>}
  {path==='/courses'&&<div className="course-grid full">{data.courses.map(courseCard)}{data.courses.length===0&&<div className="empty"><h2>No classes yet</h2><p>Add a class to start organizing coursework.</p><button className="primary-button" onClick={()=>setAddingCourse(true)}><Plus size={16}/>Add class</button></div>}</div>}
- {(path==='/assignments'||currentCourse)&&<>{currentCourse&&<div className="course-detail-stats"><div className={`course-symbol ${currentCourse.color}`}><BookOpen size={25}/></div><div><strong>{grade(currentCourse,data.assignments).current?.toFixed(1)??'—'}%</strong><span>Current weighted grade</span></div><div><strong>{pending.filter(a=>a.courseId===currentCourse.id).length}</strong><span>Assignments to go</span></div><div><strong>{data.materials.filter(m=>m.courseId===currentCourse.id).length}</strong><span>Saved materials</span></div></div>}{currentCourse&&<div className="tabs">{['Assignments','Notes & materials','Syllabus','Grades'].map(t=><button key={t} className={tab===t?'selected':''} onClick={()=>setTab(t)}>{t}</button>)}</div>}{(!currentCourse||tab==='Assignments')&&<section className="panel">{!currentCourse&&data.courses.length===0?<div className="empty"><h2>No classes yet</h2><p>Add a class before adding assignments.</p><button className="primary-button" onClick={()=>setAddingCourse(true)}><Plus size={16}/>Add class</button></div>:<><div className="assignment-search"><Search size={16}/><input ref={searchRef} value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search assignments..." aria-label="Search assignments"/></div><div className="filter-bar"><div className="tabs">{[['all','All assignments'],['todo','To do'],['progress','In progress'],['done','Completed'],['overdue','Overdue']].map(([v,l])=><button key={v} className={filter===v?'selected':''} onClick={()=>setFilter(v)}>{l}</button>)}</div>{!currentCourse&&<select aria-label="Filter by course" value={courseFilter} onChange={e=>setCourseFilter(e.target.value)}><option value="all">All courses</option>{data.courses.map(c=><option key={c.id} value={c.id}>{c.code}</option>)}</select>}</div>{assignmentRows(visible)}</>}</section>}{currentCourse&&tab==='Notes & materials'&&<Materials course={currentCourse} data={data} setData={setData} notify={setToast}/>} {currentCourse&&tab==='Syllabus'&&<section className="panel form-panel"><h2>Course syllabus</h2><p>Edit or paste your syllabus here. Use Grade calculator to extract grading weights.</p><textarea aria-label="Course syllabus" rows={14} value={currentCourse.syllabus} onChange={e=>setData(d=>({...d,courses:d.courses.map(c=>c.id===currentCourse.id?{...c,syllabus:e.target.value}:c)}))}/><span className="muted">Saved automatically in this browser.</span></section>}{currentCourse&&tab==='Grades'&&<GradeCalculator data={data} setData={setData} initialCourse={currentCourse.id}/>}</>}
- {path==='/calendar'&&<section className="panel full-calendar"><div className="section-heading"><h2>{month.toLocaleDateString('en-US',{month:'long',year:'numeric'})}</h2><div className="inline"><button className="secondary-button" onClick={()=>setMonth(new Date(new Date().getFullYear(),new Date().getMonth(),1))}>Today</button><button className="icon-button" aria-label="Previous month" onClick={()=>setMonth(new Date(month.getFullYear(),month.getMonth()-1,1))}><ChevronLeft/></button><button className="icon-button" aria-label="Next month" onClick={()=>setMonth(new Date(month.getFullYear(),month.getMonth()+1,1))}><ChevronRight/></button></div></div><Calendar month={month} assignments={data.assignments} onSelect={a=>{if(a)setEditing(a);}}/></section>}
+ {(path==='/assignments'||currentCourse)&&<>{currentCourse&&<div className="course-detail-stats"><div className={`course-symbol ${currentCourse.color}`}><BookOpen size={25}/></div><div><strong>{grade(currentCourse,data.assignments).current?.toFixed(1)??'—'}%</strong><span>Current weighted grade</span></div><div><strong>{pending.filter(a=>a.courseId===currentCourse.id).length}</strong><span>Assignments to go</span></div><div><strong>{data.materials.filter(m=>m.courseId===currentCourse.id).length}</strong><span>Saved materials</span></div></div>}{currentCourse&&<div className="tabs">{['Assignments','Notes & materials','Syllabus','Grades'].map(t=><button key={t} className={tab===t?'selected':''} onClick={()=>setTab(t)}>{t}</button>)}</div>}{(!currentCourse||tab==='Assignments')&&<section className="panel">{!currentCourse&&data.courses.length===0?<div className="empty"><h2>No classes yet</h2><p>Add a class before adding assignments.</p><button className="primary-button" onClick={()=>setAddingCourse(true)}><Plus size={16}/>Add class</button></div>:<><div className="assignment-search"><Search size={16}/><input ref={searchRef} value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search assignments..." aria-label="Search assignments"/></div><div className="filter-bar"><div className="tabs">{[['all','All assignments'],['todo','To do'],['progress','In progress'],['done','Completed'],['overdue','Overdue']].map(([v,l])=><button key={v} className={filter===v?'selected':''} onClick={()=>setFilter(v)}>{l}</button>)}</div>{!currentCourse&&<select aria-label="Filter by course" value={courseFilter} onChange={e=>setCourseFilter(e.target.value)}><option value="all">All courses</option>{data.courses.map(c=><option key={c.id} value={c.id}>{c.code}</option>)}</select>}</div>{assignmentRows(visible)}</>}</section>}{currentCourse&&tab==='Notes & materials'&&<Materials course={currentCourse} data={data} setData={setData} notify={setToast}/>} {currentCourse&&tab==='Syllabus'&&<section className="panel form-panel"><h2>Course syllabus</h2><p>Edit or paste your syllabus here. Use Grade calculator to extract grading weights.</p><textarea aria-label="Course syllabus" rows={14} value={currentCourse.syllabus} onChange={e=>setData(d=>({...d,courses:d.courses.map(c=>c.id===currentCourse.id?{...c,syllabus:e.target.value}:c)}))}/><span className="muted">Saved automatically in this browser.</span></section>}{currentCourse&&tab==='Syllabus'&&<SyllabusScan course={currentCourse} data={data} setData={setData} notify={setToast}/>}{currentCourse&&tab==='Grades'&&<GradeCalculator data={data} setData={setData} initialCourse={currentCourse.id}/>}</>}
+ {path==='/calendar'&&<section className="panel full-calendar"><CalendarSyncControls url={calendarUrl} onChange={changeCalendarUrl} onSync={()=>{if(calendarUrl.trim())void syncCalendar();else setToast('Paste your school calendar subscription link first.');}} syncing={calendarSyncing} label="Sync" /><div className="section-heading"><h2>{month.toLocaleDateString('en-US',{month:'long',year:'numeric'})}</h2><div className="inline"><button className="secondary-button" onClick={()=>setMonth(new Date(new Date().getFullYear(),new Date().getMonth(),1))}>Today</button><button className="icon-button" aria-label="Previous month" onClick={()=>setMonth(new Date(month.getFullYear(),month.getMonth()-1,1))}><ChevronLeft/></button><button className="icon-button" aria-label="Next month" onClick={()=>setMonth(new Date(month.getFullYear(),month.getMonth()+1,1))}><ChevronRight/></button></div></div><Calendar month={month} assignments={data.assignments} schoolCalendar={data.schoolCalendar} onSelect={a=>{if(a)setEditing(a);}}/></section>}
  {path==='/assistant'&&<Assistant data={data}/>}
  {path==='/grades'&&<GradeCalculator data={data} setData={setData}/>}
  {path==='/connect'&&<ConnectPage extension={extension}/>}
  {path==='/settings'&&<SettingsPanel data={data} setData={setData} user={user} cloud={cloud} syncing={syncing} cloudMessage={cloudMessage} cloudConflict={cloudConflict} notify={setToast}/>}
  {!navigation.some(n=>n.href===path)&&!currentCourse&&path!=='/settings'&&path!=='/connect'&&<div className="empty"><h2>That page isn’t here.</h2><Link href="/">Back to your dashboard</Link></div>}
  </main></div><Chatbot data={data}/>{syncTodo&&<SyncTodo data={data} onComplete={toggle} onClose={()=>setSyncTodo(false)}/>} {(adding||editing)&&data.courses.length>0&&<AssignmentModal assignment={editing} courses={data.courses} courseId={currentCourse?.id} onClose={()=>{setAdding(false);setEditing(null);}} onSave={updateAssignment}/>} {addingCourse&&<CourseDialog onClose={()=>setAddingCourse(false)} onSave={addCourse}/>} {extension.pendingImport&&<ImportReview data={data} payload={extension.pendingImport.payload} school={extension.pendingImport.school} onApply={(next,message)=>{setData(next);extension.clearImport(true);setToast(message);}} onCancel={()=>extension.clearImport(false)}/>} {toast&&<div className="toast" role="status"><CheckCircle2 size={18}/>{toast}<button aria-label="Dismiss notification" onClick={()=>setToast('')}><X size={16}/></button></div>}</div>;
-}
-
-function Calendar({month,assignments,onSelect,small=false}:{month:Date;assignments:Assignment[];onSelect:(a?:Assignment)=>void;small?:boolean}) {
- const start=new Date(month.getFullYear(),month.getMonth(),1).getDay(), days=new Date(month.getFullYear(),month.getMonth()+1,0).getDate();
- return <div className={`calendar-grid ${small?'mini':''}`}>{['S','M','T','W','T','F','S'].map((d,i)=><div className="weekday" key={i}>{small?d:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][i]}</div>)}{Array.from({length:Math.ceil((start+days)/7)*7},(_,i)=>{const d=new Date(month.getFullYear(),month.getMonth(),i-start+1),key=dateKey(d),inMonth=d.getMonth()===month.getMonth(),events=assignments.filter(a=>a.due===key);return <div key={i} className={`calendar-day ${inMonth?'':'outside'} ${key===dateKey()?'today':''}`}><button aria-label={`View ${key}`} onClick={()=>onSelect(events[0])}><span>{d.getDate()}</span>{small&&events.length>0&&<i/>}</button>{!small&&events.map(a=><button className={`calendar-event ${a.status==='done'?'completed':''}`} key={a.id} onClick={()=>onSelect(a)}>{a.status==='done'?'✓ ':''}{a.title}</button>)}</div>;})}</div>;
 }
 
 function CourseDialog({onSave,onClose}:{onSave:(course:{code:string;name:string;professor:string})=>void;onClose:()=>void}) {

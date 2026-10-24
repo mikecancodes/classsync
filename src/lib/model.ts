@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { schoolCalendarSchema } from './calendar-model';
 export const categorySchema = z.object({ name: z.string().min(1).max(80), weight: z.number().min(0).max(100) });
 export const courseSchema = z.object({ id: z.string().min(1).max(100), code: z.string().min(1).max(30), name: z.string().min(1).max(100), professor: z.string().max(100), schedule: z.string().max(120), color: z.enum(['blue','purple','green','orange']), categories: z.array(categorySchema).min(1).max(20), syllabus: z.string().max(40000) });
 export const assignmentSchema = z.object({ id: z.string().min(1).max(100), courseId: z.string().min(1).max(100), title: z.string().trim().min(1).max(160), due: z.iso.date(), status: z.enum(['todo','progress','done']), category: z.string().min(1).max(80), points: z.number().positive().max(100000), earned: z.number().min(0).max(100000).nullable(), description: z.string().max(5000) }).refine(a => a.earned === null || a.earned <= a.points, { message: 'Earned points cannot exceed possible points.' });
@@ -8,7 +9,7 @@ export const announcementSchema = z.object({
   platform: z.enum(['D2L', 'Canvas']), title: z.string().min(1).max(160),
   description: z.string().max(2000), priority: z.enum(['high', 'medium', 'low']).optional(), posted: z.iso.date(), read: z.boolean(),
 });
-export const stateSchema = z.object({ version: z.union([z.literal(1), z.literal(2)]).default(2).transform(() => 2 as const), announcements: z.array(announcementSchema).max(300).default([]), courses: z.array(courseSchema).max(50), assignments: z.array(assignmentSchema).max(1000), materials: z.array(materialSchema).max(200) }).strict().superRefine((s, ctx) => {
+export const stateSchema = z.object({ version: z.union([z.literal(1), z.literal(2), z.literal(3)]).default(3).transform(() => 3 as const), schoolCalendar: schoolCalendarSchema.nullable().default(null), announcements: z.array(announcementSchema).max(300).default([]), courses: z.array(courseSchema).max(50), assignments: z.array(assignmentSchema).max(1000), materials: z.array(materialSchema).max(200) }).strict().superRefine((s, ctx) => {
   if (new Set(s.courses.map(c=>c.id)).size !== s.courses.length || new Set(s.assignments.map(a=>a.id)).size !== s.assignments.length || new Set(s.materials.map(m=>m.id)).size !== s.materials.length) ctx.addIssue({code:'custom',message:'IDs must be unique.'});
   for (const a of s.assignments) if (!s.courses.some(c=>c.id===a.courseId && c.categories.some(cat=>cat.name===a.category))) ctx.addIssue({code:'custom',message:'Assignment course or category does not exist.'});
   for (const m of s.materials) if (!s.courses.some(c=>c.id===m.courseId)) ctx.addIssue({code:'custom',message:'Material course does not exist.'});

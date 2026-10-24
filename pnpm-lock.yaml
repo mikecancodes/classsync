@@ -14,6 +14,15 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.99.0
         version: 2.118.0
+      fflate:
+        specifier: ^0.8.3
+        version: 0.8.3
+      ical.js:
+        specifier: 2.2.1
+        version: 2.2.1
+      ipaddr.js:
+        specifier: 2.5.0
+        version: 2.5.0
       lucide-react:
         specifier: ^0.577.0
         version: 0.577.0(react@19.3.1)
@@ -45,9 +54,6 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.0
         version: 19.3.0(@types/react@19.3.0)
-      fflate:
-        specifier: ^0.8.3
-        version: 0.8.3
       tailwindcss:
         specifier: ^4.2.0
         version: 4.3.3
@@ -734,9 +740,16 @@ packages:
     resolution: {integrity: sha512-vK9P5/iUfdl95AI+JVyUuIcVtd4ofvtrOr3HNtM2yxC9bnMbEdp3x01OhQNnjb8IJYi38VlTE3mBXwcfvywuSw==}
     engines: {node: '>= 14'}
 
+  ical.js@2.2.1:
+    resolution: {integrity: sha512-yK/UlPbEs316igb/tjRgbFA8ZV75rCsBJp/hWOatpyaPNlgw0dGDmU+FoicOcwX4xXkeXOkYiOmCqNPFpNPkQg==}
+
   iceberg-js@0.8.1:
     resolution: {integrity: sha512-1dhVQZXhcHje7798IVM+xoo/1ZdVfzOMIc8/rgVSijRK38EDqOJoGula9N/8ZI5RD8QTxNQtK/Gozpr+qUqRRA==}
     engines: {node: '>=20.0.0'}
+
+  ipaddr.js@2.5.0:
+    resolution: {integrity: sha512-aq+t5NAc+cS6rZQQVWC2x98CPqGtKKTMDd4Gaodv0wShnItdKg/51djkGJ1hqH+Oy0ivDftCbSLCQob8zso01w==}
+    engines: {node: '>= 10'}
 
   jiti@2.7.0:
     resolution: {integrity: sha512-AC/7JofJvZGrrneWNaEnJeOLUx+JlGt7tNa0wZiRPT4MY1wmfKjt2+6O2p2uz2+skll8OZZmJMNqeke7kKbNgQ==}
@@ -1492,7 +1505,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  ical.js@2.2.1: {}
+
   iceberg-js@0.8.1: {}
+
+  ipaddr.js@2.5.0: {}
 
   jiti@2.7.0: {}
 

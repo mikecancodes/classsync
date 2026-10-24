@@ -48,6 +48,51 @@ export async function collectD2L(origin) {
     return items;
   }
 
+  // Runs fn over items with at most `limit` requests in flight
+  async function mapLimit(items, limit, fn) {
+    const results = new Array(items.length);
+    let next = 0;
+    const worker = async () => { while (next < items.length) { const i = next++; results[i] = await fn(items[i]); } };
+    await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+    return results;
+  }
+
+  // Topics anywhere in the content tree, with the titles of the modules they sit in
+  function topicsOf(modules, parents = []) {
+    return (modules ?? []).flatMap(m => [
+      ...(m.Topics ?? []).map(t => ({ ...t, moduleTitles: [...parents, m.Title ?? ''] })),
+      ...topicsOf(m.Modules, [...parents, m.Title ?? '']),
+    ]);
+  }
+
+  const SYLLABUS_TYPES = { pdf: 'application/pdf', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' };
+  const MAX_SYLLABUS_BYTES = 8 * 1024 * 1024;
+
+  function toBase64(buffer) {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    return btoa(binary);
+  }
+
+  // The course's syllabus file (PDF or Word) from Content, if one is titled "syllabus"
+  async function findSyllabus(le, ou, toc) {
+    const extensionOf = topic => (String(topic.Url ?? '').split('?')[0].match(/\.(pdf|docx)$/i)?.[1] ?? '').toLowerCase();
+    const candidates = topicsOf(toc?.Modules)
+      .filter(t => t.TopicId != null && extensionOf(t) && [t.Title, ...t.moduleTitles].some(title => /syllabus/i.test(title ?? '')))
+      .sort((a, b) => Number(/syllabus/i.test(b.Title ?? '')) - Number(/syllabus/i.test(a.Title ?? '')) || (extensionOf(a) === 'pdf' ? -1 : 1));
+    for (const topic of candidates.slice(0, 3)) {
+      const res = await fetch(`${origin}/d2l/api/le/${le}/${ou}/content/topics/${topic.TopicId}/file`, { credentials: 'include' });
+      if (!res.ok) continue;
+      const buffer = await res.arrayBuffer();
+      if (!buffer.byteLength || buffer.byteLength > MAX_SYLLABUS_BYTES) continue;
+      const ext = extensionOf(topic);
+      const fileName = decodeURIComponent(String(topic.Url).split('?')[0].split('/').pop() || `syllabus.${ext}`).slice(0, 200);
+      return { topicId: topic.TopicId, title: String(topic.Title || 'Syllabus').slice(0, 200), fileName, mimeType: SYLLABUS_TYPES[ext], base64: toBase64(buffer) };
+    }
+    return null;
+  }
+
   try {
     const versions = await get('/d2l/api/versions/');
     const latest = code => versions.find(v => v.ProductCode === code)?.LatestVersion;
@@ -61,18 +106,20 @@ export async function collectD2L(origin) {
     const courses = [];
     for (const enrollment of enrollments) {
       const ou = enrollment.OrgUnit.Id;
-      const [news, folders, grades] = await Promise.all([
+      const [news, folders, grades, categories, toc] = await Promise.all([
         get(`/d2l/api/le/${le}/${ou}/news/`, { optional: true }),
         get(`/d2l/api/le/${le}/${ou}/dropbox/folders/`, { optional: true }),
         get(`/d2l/api/le/${le}/${ou}/grades/values/myGradeValues/`, { optional: true }),
+        get(`/d2l/api/le/${le}/${ou}/grades/categories/`, { optional: true }),
+        get(`/d2l/api/le/${le}/${ou}/content/toc`, { optional: true }),
       ]);
-      // one request per assignment, so do them one at a time to stay well under D2L's rate limit
-      const foldersWithSubmissions = [];
-      for (const folder of folders ?? []) {
+      const syllabus = toc ? await findSyllabus(le, ou, toc).catch(() => null) : null;
+      // one request per assignment; four at a time stays well under D2L's rate limit
+      const foldersWithSubmissions = await mapLimit(folders ?? [], 4, async folder => {
         const submissions = await get(`/d2l/api/le/${le}/${ou}/dropbox/folders/${folder.Id}/submissions/mysubmissions/`, { optional: true });
-        foldersWithSubmissions.push({ ...folder, MySubmissions: submissions ?? [] });
-      }
-      courses.push({ enrollment, news: news ?? [], folders: foldersWithSubmissions, grades: grades ?? [] });
+        return { ...folder, MySubmissions: submissions ?? [] };
+      });
+      courses.push({ enrollment, news: news ?? [], folders: foldersWithSubmissions, grades: grades ?? [], categories: categories ?? [], syllabus });
     }
 
     const ids = courses.map(c => c.enrollment.OrgUnit.Id).join(',');

@@ -34,8 +34,7 @@ On the free Hobby plan, private-repo deploys can be limited to commits from the 
 |---|---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://xxxx.supabase.co` | All | Public |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase publishable/anon key | All | Public; safe because of RLS |
-| `GEMINI_API_KEY` | From Google AI Studio (MLH credits) | Production, Preview | **Secret.** Server only |
-| `GEMINI_MODEL` | e.g. `gemini-flash-latest` | All | Optional |
+| `GEMINI_API_KEY` | Google AI Studio Free Tier key | Production, Preview | **Secret.** Server only. Keep billing disabled; the app pins `gemini-3.5-flash-lite` and hosted AI requires sign-in. |
 | `ALLOW_LOCAL_AI` | **don't set it** | — | Local-development bypass only. The app already refuses it outside loopback; keep it out of Vercel anyway |
 
 - `NEXT_PUBLIC_*` values are baked in at **build time**. After changing one, **redeploy** for it to take effect.

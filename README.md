@@ -40,7 +40,7 @@ pnpm start
 
 ## Local demo behavior
 
-The first visit generates realistic sample coursework with deadlines relative to that visit. Thereafter the version-2 workspace is stored under `classsync-workspace-v2` in localStorage. Legacy v1 data migrates through validation and its original key remains as a recovery copy. Invalid stored data is preserved and automatic writes are paused. Theme is saved separately. Completed status does not imply a score; record earned points explicitly.
+The first visit generates realistic sample coursework with deadlines relative to that visit. Thereafter the version-3 workspace is stored under `classsync-workspace-v3` in localStorage. Legacy v1 data migrates through validation and its original key remains as a recovery copy. Invalid stored data is preserved and automatic writes are paused. Theme is saved separately. Completed status does not imply a score; record earned points explicitly.
 
 **Sync classes** reveals the left-side To-do list with current incomplete coursework, a class filter, and completion controls. Actual class sync is not implemented. Existing data stays in the shared workspace. Due Soon means incomplete work due today through seven local calendar days ahead, inclusive.
 
@@ -50,15 +50,19 @@ Without a Gemini key, study tools return labeled excerpts, practice prompts, key
 
 ## Connect your school (D2L)
 
-Students open **Sync classes → Connect your school** (`/connect`): download the ClassSync extension, load it in Chrome/Edge/Brave, pick their school (University of North Georgia is listed; any other school pastes a D2L link), and sign in to D2L as usual. Their classes, assignments and announcements appear in a review dialog and are merged only after they approve. Later syncs add only what changed and keep local completion, scores and read state. The extension zip is built by `scripts/pack-extension.mjs` during `pnpm dev`/`pnpm build`; CI and Vercel builds point it at the live site, https://classsync-two.vercel.app (override with `CLASSSYNC_SITE_URL`). Details: [docs/d2l-sync/extension.md](docs/d2l-sync/extension.md).
+Students open **Sync classes → Connect your school** (`/connect`): download the ClassSync extension, load it in Chrome/Edge/Brave, pick their school (University of North Georgia is listed; any other school pastes a D2L link), and sign in to D2L as usual. Their classes, assignments, announcements, grades (with D2L's category weights) and dates found in each class syllabus appear in a review dialog and are merged only after they approve. Any class's Syllabus tab can also scan an uploaded or pasted syllabus for due dates (Gemini when configured, otherwise a basic date finder). Later syncs add only what changed and keep local completion, scores and read state. The extension zip is built by `scripts/pack-extension.mjs` during `pnpm dev`/`pnpm build`; CI and Vercel builds point it at the live site, https://classsync-two.vercel.app (override with `CLASSSYNC_SITE_URL`). Details: [docs/d2l-sync/extension.md](docs/d2l-sync/extension.md).
 
 ## Configure Gemini
 
-ClassSync uses Google Gemini because MLH provides free credits to hackathon participants. Create a key in Google AI Studio, copy `.env.example` to `.env.local`, set `GEMINI_API_KEY`, and optionally `GEMINI_MODEL` (default `gemini-flash-latest`). Restart the server. Set a usage cap in Google AI Studio.
+ClassSync uses Google Gemini because MLH provides free credits to hackathon participants. Create a Free Tier key in Google AI Studio, copy `.env.example` to `.env.local`, set `GEMINI_API_KEY`, and restart the server. The app pins `gemini-3.5-flash-lite`, which Google lists with free-tier token pricing. Keep billing disabled on the Google Cloud project; requests stop at the free quota instead of switching to paid usage.
 
 **Chat** (`POST /api/ai/chat`) uses tool calling. Gemini asks for specific data, the browser runs the lookup (`src/lib/chat-tools.ts`) against the local workspace, and only those rows are sent back. Tools are read-only. The server is stateless, allows at most five lookups per question, and counts every round trip toward a limit of 120 per user per hour. **Study tools** (`POST /api/ai`) send the material you choose when you press a generation button. The key is never imported by client code. `GET /api/ai` exposes only configuration availability. AI output is advisory and all evaluator scores are estimates.
 
 Authenticated Supabase users can call paid AI. For local development without Supabase, set `ALLOW_LOCAL_AI=true`; this bypass only works in development on a loopback hostname. Production always requires an authenticated account. Per-process limits allow 20 study-tool requests and 120 chat round trips per user per hour. **Before a public multi-instance deployment, replace this with a shared rate limiter and configure provider budgets.** The local bypass is for a trusted local machine, not a public proxy.
+
+## School calendar subscription
+
+Paste a school `.ics` subscription link on the existing Calendar page and press **Sync**. The school-calendar link is only shown on the Calendar page. School events appear on the existing Calendar page alongside assignments. The link stays in this browser and is excluded from exports/cloud saves; cached events are saved with the workspace. Refresh is manual. See [calendar behavior and limits](docs/school-calendar.md).
 
 ## Configure Supabase
 
@@ -108,3 +112,12 @@ tests/feed.test.ts            Combined announcement filters and sorting
 The app starts with an empty workspace; no sample data is seeded. Course creation, advanced calendar events, PDF/DOCX extraction, streaming AI output, production-wide quotas, conflict resolution, and Canvas import are future work. Supabase and live Gemini require your credentials and have not been exercised against an account by default. No secrets belong in Git; `.env*` is ignored except `.env.example`.
 
 Notes and material attachments: upload PDF, Word (.doc/.docx), or PNG/JPG/WebP/GIF images up to 10 MB through the Notes / Material page or a course's materials tab. Files persist in IndexedDB in the current browser, with image previews and downloads. Cloud saves and workspace JSON backups contain text notes only; attached files must be downloaded separately. Uploads do not extract document text or perform OCR.
+
+
+## Production AI setup on free tiers
+
+Set `GEMINI_API_KEY` as a server-only Production secret in Vercel. Keep the Google project on Free tier with billing disabled. Hosted AI also requires `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` from a Supabase Free project, with email/password sign-in configured; never use a service-role key in frontend configuration. Add `https://classsync-two.vercel.app` as the Supabase Auth site URL.
+
+After changing environment variables, deploy current `main` using `.github/workflows/deploy-vercel.yml` (Actions > Deploy to Vercel Production > Run workflow). Vercel Hobby requires the deployment commit author to have project access; a blocked deployment does not activate new environment settings. Preserve teammates’ changes when preparing an authorized deployment commit.
+
+Verify Vercel reports Ready and `/api/ai` reports `available: true`. This endpoint only confirms configuration, not a successful model response. Sign in to ClassSync and test an AI question before calling the chatbot operational. Free quota exhaustion must show an error without enabling billing or changing to paid usage.

@@ -84,3 +84,35 @@ test('never deletes manual work, and rejects bad payloads without changes', () =
   assert.throws(() => mergeImport(manual, { ...payload(), data: { ...payload().data, courses: [] } }), 'assignment course must exist');
   assert.equal(manual.courses.length, 1);
 });
+
+test("D2L grade weights replace the default bucket but never the student's own categories", () => {
+  const first = mergeImport(emptyWorkspace(), payload()).state;
+  const weighted = payload();
+  weighted.data.courses[0] = { ...weighted.data.courses[0], categories: [{ name: 'Labs', weight: 40 }, { name: 'Exams', weight: 60 }, { name: 'Coursework', weight: 0 }] };
+  weighted.data.assignments[0] = { ...weighted.data.assignments[0], category: 'Labs' };
+  const updated = mergeImport(first, weighted).state;
+  assert.deepEqual(updated.courses[0].categories.map(c => c.name), ['Labs', 'Exams', 'Coursework']);
+  assert.equal(updated.assignments.find(a => a.id === 'd2l-dropbox-101-11')!.category, 'Labs', 'ungraded items follow D2L categories');
+
+  const custom: AcademicState = { ...first, courses: first.courses.map(c => ({ ...c, categories: [{ name: 'Mine', weight: 100 }, { name: 'Coursework', weight: 0 }] })) };
+  const kept = mergeImport(custom, weighted).state;
+  assert.deepEqual(kept.courses[0].categories.map(c => c.name), ['Mine', 'Coursework'], 'custom categories kept');
+  assert.equal(kept.assignments.find(a => a.id === 'd2l-dropbox-101-11')!.category, 'Coursework', 'keeps its valid category');
+});
+
+test('points follow D2L until the student enters a score', () => {
+  const first = mergeImport(emptyWorkspace(), payload()).state;
+  const next = payload();
+  next.data.assignments[1] = { ...next.data.assignments[1], points: 15 };
+  assert.equal(mergeImport(first, next).state.assignments.find(a => a.id === 'd2l-item-101-77')!.points, 15);
+  const scored: AcademicState = { ...first, assignments: first.assignments.map(a => a.id === 'd2l-item-101-77' ? { ...a, earned: 80 } : a) };
+  assert.equal(mergeImport(scored, next).state.assignments.find(a => a.id === 'd2l-item-101-77')!.points, 100);
+});
+
+test('syllabus files ride along with the payload', async () => {
+  const { importPayloadSchema } = await import('../src/lib/d2l-import');
+  const parsed = importPayloadSchema.parse({ ...payload(), syllabi: [{ courseId: 'd2l-101', title: 'Syllabus', fileName: 'syllabus.pdf', mimeType: 'application/pdf', base64: 'JVBERi0=' }] });
+  assert.equal(parsed.syllabi.length, 1);
+  assert.deepEqual(importPayloadSchema.parse(payload()).syllabi, []);
+  assert.throws(() => importPayloadSchema.parse({ ...payload(), syllabi: [{ courseId: 'x', title: 'S', fileName: 's.exe', mimeType: 'application/x-msdownload', base64: 'x' }] }));
+});

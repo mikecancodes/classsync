@@ -1,10 +1,20 @@
 import { collectD2L } from './d2l-collect.js';
 import { toImportPayload } from './to-classsync.js';
+import { isSignedInD2LPage } from './d2l-pages.js';
 
 // Connect flow: ClassSync page → bridge → "connect" → connect.html asks for access →
 // D2L sign-in tab → when /d2l/home loads, read D2L → hand the import to ClassSync tabs.
 
 const sitePatterns = () => chrome.runtime.getManifest().content_scripts?.[0]?.matches ?? [];
+const BRIDGE_FILES = ['src/bridge-protocol.js', 'src/classsync-bridge.js'];
+
+// Chrome only runs manifest content scripts on pages loaded after install, so add the bridge
+// to ClassSync tabs that are already open; the page then notices the extension without a refresh
+chrome.runtime.onInstalled.addListener(async () => {
+  for (const tab of await siteTabs()) {
+    try { await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: BRIDGE_FILES }); } catch { /* tab can't be scripted */ }
+  }
+});
 
 chrome.runtime.onMessage.addListener((message, sender, reply) => {
   const handlers = {
@@ -77,7 +87,7 @@ async function openD2L(origin) {
   else await chrome.tabs.create({ url: `${origin}/d2l/home` });
 }
 
-// After connecting (or when a sync needed a fresh sign-in), sync once D2L's homepage loads
+// After connecting (or when a sync needed a fresh sign-in), sync once a signed-in D2L page loads
 chrome.tabs.onUpdated.addListener(async (_tabId, change, tab) => {
   if (change.status !== 'complete' || !tab.url) return;
   const { awaitingLogin } = await chrome.storage.local.get('awaitingLogin');
@@ -85,7 +95,7 @@ chrome.tabs.onUpdated.addListener(async (_tabId, change, tab) => {
   const settings = await getSettings();
   if (!settings.d2lOrigin) return;
   const url = new URL(tab.url);
-  if (url.origin === settings.d2lOrigin && url.pathname.startsWith('/d2l/home')) {
+  if (isSignedInD2LPage(url, settings.d2lOrigin)) {
     await chrome.storage.local.set({ awaitingLogin: false });
     startSync();
   }
@@ -105,6 +115,8 @@ function runSync(settings) {
 }
 
 async function doSync(settings) {
+  // Bring the student back to ClassSync right away, where progress and the review appear
+  if (!(await focusSite())) await openSite();
   await saveStatus({ state: 'running', message: `Reading your classes from ${settings.schoolName} D2L…` });
   const collected = await collectFromD2L(settings.d2lOrigin);
   if (!collected.ok) {
@@ -120,9 +132,8 @@ async function doSync(settings) {
   await chrome.storage.local.set({ pendingImport: { payload, school: settings.schoolName, at: new Date().toISOString() }, lastPayload: payload });
   const counts = { courses: payload.data.courses.length, assignments: payload.data.assignments.length, announcements: payload.data.announcements.length };
   await saveStatus({ state: 'ready', message: 'Review your classes in ClassSync.', counts, warnings });
-  const delivered = await notifyPages('import-ready', {});
-  if (delivered) await focusSite();
-  else await openSite();
+  // A tab still loading misses this; its bridge reports the pending import when it says hello
+  if (await notifyPages('import-ready', {})) await focusSite();
 }
 
 // Prefer an open D2L tab: requests from inside the page are same-origin, so the
@@ -161,17 +172,17 @@ async function notifyPages(type, data) {
 
 async function focusSite() {
   const [tab] = await siteTabs();
-  if (tab?.id != null) {
-    await chrome.tabs.update(tab.id, { active: true });
-    if (tab.windowId != null) await chrome.windows.update(tab.windowId, { focused: true });
-  }
+  if (tab?.id == null) return false;
+  await chrome.tabs.update(tab.id, { active: true });
+  if (tab.windowId != null) await chrome.windows.update(tab.windowId, { focused: true });
+  return true;
 }
 
 // No ClassSync tab open: open it; the bridge's hello reports the pending import on load
 async function openSite() {
   const { siteOrigin } = await chrome.storage.local.get('siteOrigin');
   const fallback = sitePatterns()[0]?.replace('/*', '');
-  if (siteOrigin || fallback) await chrome.tabs.create({ url: `${siteOrigin || fallback}/` });
+  if (siteOrigin || fallback) await chrome.tabs.create({ url: `${siteOrigin || fallback}/`, active: true });
 }
 
 async function saveStatus(status) {

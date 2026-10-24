@@ -8,12 +8,12 @@ import { stateSchema } from '../src/lib/model';
 test('migration starts empty for the old seeded workspace and rejects future versions', () => {
   const legacy = { ...testState(), version: 1 as const };
   const migrated = migrateWorkspace(legacy);
-  assert.equal(migrated.version, 2);
+  assert.equal(migrated.version, 3);
   assert.deepEqual(migrated.courses, []);
   assert.deepEqual(migrated.assignments, []);
   assert.deepEqual(migrated.materials, []);
   assert.deepEqual(migrated.announcements, []);
-  assert.throws(() => migrateWorkspace({ ...legacy, version: 3 }));
+  assert.throws(() => migrateWorkspace({ ...legacy, version: 4 }));
   assert.throws(() => migrateWorkspace({ ...legacy, unknownFutureData: [] }));
 });
 

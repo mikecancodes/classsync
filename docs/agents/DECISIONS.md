@@ -22,6 +22,7 @@ ClassSync is being built for an **MLH hackathon**. Several choices follow from t
 | 12 | Sample data | **No seeded data in the app.** Users start with an empty workspace and add or import their own; fake records live only in `tests/` fixtures | Implemented |
 | 13 | Deployment | **Deploy to Vercel Production after every change** and confirm it reaches `Ready` (see AGENTS.md). Currently deployed via Vercel Drop, not Git-connected, so a push does not deploy | In effect |
 | 14 | Getting the extension | **Download from the site** (`/classsync-extension.zip`) with a guided 3-step **Connect your school** page; no Chrome Web Store. School picker = searchable list (UNG first, `https://ung.view.usg.edu`) + paste any D2L link | Implemented |
+| 15 | Syllabus dates and grades | Syllabi (found in D2L Content during Sync, or uploaded/pasted on a class's Syllabus tab) are scanned by **Gemini, with a rule-based fallback**; found dates become **assignments after review**. D2L **grade categories/weights, quiz and discussion scores, and graded items without an assignment** are imported | Implemented (final grade not stored yet: needs a model field) |
 
 ## 1. Hybrid storage
 
@@ -47,10 +48,10 @@ D2L tab ── extension reads D2L ──▶ ClassSync tab (content script / ext
 
 ## 3. Gemini
 
-- Swap the provider inside `/api/ai` only. Browser code never sees a key. New env var: `GEMINI_API_KEY` (server only), plus optional `GEMINI_MODEL`.
+- Swap the provider inside `/api/ai` only. Browser code never sees a key. Use `GEMINI_API_KEY` server-side and keep the Google project on its Free Tier with billing disabled. The app pins `gemini-3.5-flash-lite` so quota exhaustion cannot move requests to a paid model.
 - **Why Gemini:** we're in an MLH hackathon and MLH gives participants free Gemini credits (about $10/month plus a student plan, per MLH's partner page). Claim them through MyMLH / MLH Software Lab.
-- Set a usage cap in Google AI Studio. Anyone can create an account, so the cap is the real cost limit until the rate limiter is shared across instances.
-- Keep the existing guarantees: authentication for paid use, rate limit, input limits, untrusted-content instructions, honest error labels.
+- Keep the Google project on Free Tier and do not enable billing; when free quota is exhausted, requests should stop rather than incur charges.
+- Keep the existing guarantees: authentication for hosted AI use, rate limit, input limits, untrusted-content instructions, honest error labels.
 
 ## 4. Tool-calling chatbot
 
@@ -66,7 +67,7 @@ D2L tab ── extension reads D2L ──▶ ClassSync tab (content script / ext
 - Theme them with the CSS tokens in `src/app/globals.css`. Keep dark mode.
 - This relaxes DEVELOPMENT.md's "avoid new dependencies" for shadcn/ui and the Radix primitives it brings. Other new dependencies still need a reason.
 
-## 6–7. Model changes (one migration, v3)
+## 6–7. Model changes (future migration after calendar v3)
 
 Bundle these into a single versioned migration, following ARCHITECTURE.md's migration rules:
 
@@ -103,3 +104,15 @@ Per AGENTS.md: pull `main` before editing, then deploy to Vercel Production afte
 - The zip is built by `scripts/pack-extension.mjs` during `pnpm dev` and `pnpm build`. CI and Vercel builds point the zip at the live site, **https://classsync-two.vercel.app** (override with `CLASSSYNC_SITE_URL`). Local builds are localhost-only.
 - No hourly background sync: syncing happens after connecting, when the student presses Sync, or from the extension popup, so review dialogs never pop up on their own.
 - Chrome, Edge and Brave only (Manifest V3 + Load unpacked).
+
+## School calendar addition
+
+Workspace v3 adds cached school-calendar events only. Optional points, dueTime and platform changes above remain pending and require a later version. The Calendar page has the .ics link field and calendar Sync control; Home retains its D2L/To-do Sync behavior. No preview flow is added. Feed links stay browser-local and out of cloud saves/exports.
+
+## 15. Syllabus dates and grades
+
+- **Syllabus sources:** during Sync the extension downloads the first PDF/Word file in Content whose title or module mentions "syllabus" (≤ 8 MB). On any class's Syllabus tab, students can also scan an uploaded PDF/Word file or the pasted syllabus text.
+- **Scanning:** `/api/ai/syllabus` sends PDFs to Gemini as a file and Word/text as text, with structured JSON output (`src/lib/syllabus.ts`), using the same free-tier model as chat. Without AI (no key or not signed in), `src/lib/syllabus-rules.ts` finds lines pairing a date with a deliverable word. PDFs then need AI or pasted text.
+- **Review:** results appear with checkboxes in the import review (or on the Syllabus tab). Items matching an existing assignment (same class, within 2 days, mostly the same words) start unchecked. Added items use a matching grade category or a weight-0 "From syllabus" category, with points from the syllabus or the 100 placeholder (decision 6). The D2L syllabus file is also saved to the class's materials (this browser).
+- **Grades:** grade categories become ClassSync categories with D2L's weights (points gradebooks use each category's share of max points), replacing only the untouched default bucket. Quiz/discussion scores match gradebook items by name. Graded items with no assignment are added as completed. Text, calculated and final-grade items are skipped. Until the student enters a score, D2L's points and category stay current on later syncs.
+- **Not yet:** D2L's released final grade has no field in the workspace model.

@@ -91,3 +91,41 @@ test('payload is accepted by the app review screen and merges into a workspace',
   assert.equal(summary.newCourses.length, 2);
   assert.ok(state.announcements.some((a: any) => a.id === 'd2l-news-101-1'));
 });
+
+test('grade categories, quiz scores, extra graded items and syllabi are imported', () => {
+  const graded = structuredClone(raw) as any;
+  graded.courses[1] = {
+    enrollment: { OrgUnit: { Id: 202, Name: 'Calculus I', Code: 'MATH-201' } },
+    news: [], folders: [],
+    categories: [
+      { Id: 1, Name: 'Quizzes', Weight: 30, Grades: [{ Id: 501 }] },
+      { Id: 2, Name: 'Exams', Weight: 70, Grades: [{ Id: 502 }] },
+    ],
+    grades: [
+      { GradeObjectIdentifier: '501', GradeObjectName: 'Quiz 7', GradeObjectType: 1, PointsNumerator: 9, PointsDenominator: 10 },
+      { GradeObjectIdentifier: '502', GradeObjectName: 'Midterm', GradeObjectType: 1, PointsNumerator: 84, PointsDenominator: 100, ReleasedDate: '2026-10-10T15:00:00.000Z' },
+      { GradeObjectIdentifier: '503', GradeObjectName: 'Final Calculated Grade', GradeObjectType: 7, PointsNumerator: 88, PointsDenominator: 100 },
+      { GradeObjectIdentifier: '504', GradeObjectName: 'Participation comments', GradeObjectType: 4, PointsNumerator: null, PointsDenominator: null },
+    ],
+    syllabus: { title: 'Course Syllabus', fileName: 'MATH201-syllabus.pdf', mimeType: 'application/pdf', base64: 'JVBERi0=' },
+  };
+  const { payload } = toImportPayload(graded);
+  assert.ok(importSchema.safeParse(payload).success, JSON.stringify(importSchema.safeParse(payload).error?.issues));
+  const calc: any = payload.data.courses.find((c: any) => c.id === 'd2l-202');
+  assert.deepEqual(calc.categories, [{ name: 'Quizzes', weight: 30 }, { name: 'Exams', weight: 70 }, { name: 'Coursework', weight: 0 }]);
+  const quiz = payload.data.assignments.find((a: any) => a.id === 'd2l-item-202-77');
+  assert.deepEqual([quiz.points, quiz.earned, quiz.status, quiz.category], [10, 9, 'done', 'Quizzes']);
+  const midterm = payload.data.assignments.find((a: any) => a.id === 'd2l-grade-202-502');
+  assert.deepEqual([midterm.title, midterm.earned, midterm.points, midterm.category, midterm.status], ['Midterm', 84, 100, 'Exams', 'done']);
+  assert.ok(!payload.data.assignments.some((a: any) => /Final Calculated|Participation comments/.test(a.title)), 'final grades and text items skipped');
+  assert.deepEqual(payload.syllabi, [{ courseId: 'd2l-202', title: 'Course Syllabus', fileName: 'MATH201-syllabus.pdf', mimeType: 'application/pdf', base64: 'JVBERi0=' }]);
+  assert.ok(importPayloadSchema.safeParse(payload).success);
+});
+
+test('points-based gradebooks turn category max points into weights', async () => {
+  const { mapCategories } = await import('../src/to-classsync.js');
+  const mapped: any = mapCategories([{ Id: 1, Name: 'Homework', MaxPoints: 200, Grades: [{ Id: 9 }] }, { Id: 2, Name: 'Tests', MaxPoints: 600 }]);
+  assert.deepEqual(mapped.list, [{ name: 'Homework', weight: 25 }, { name: 'Tests', weight: 75 }, { name: 'Coursework', weight: 0 }]);
+  assert.equal(mapped.byGradeObject.get('9'), 'Homework');
+  assert.equal(mapCategories([]), null);
+});
