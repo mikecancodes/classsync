@@ -61,6 +61,21 @@ test('Word documents become line-separated text', () => {
   assert.match(text, /Quiz 1 & review/);
   assert.match(text, /Exam 2\s*\n+\s*Nov 3/);
   assert.throws(() => docxToText(new Uint8Array([1, 2, 3])), /couldn’t be read/);
+  // 40 MB of text compresses to a few KB: must be refused without inflating it all
+  const bomb = zipSync({ 'word/document.xml': new Uint8Array(40 * 1024 * 1024).fill(97) }, { level: 9 });
+  assert.ok(bomb.length < 200_000, `bomb is ${bomb.length} bytes`);
+  const started = Date.now();
+  assert.throws(() => docxToText(bomb), /too large/);
+  assert.ok(Date.now() - started < 2000, 'stops early');
+  // Same bomb, but its headers claim the text is only 1 KB
+  const lying = bomb.slice();
+  const view = new DataView(lying.buffer);
+  for (let i = 0; i < lying.length - 4; i++) {
+    const signature = view.getUint32(i, true);
+    if (signature === 0x04034b50) view.setUint32(i + 22, 1024, true); // local header: uncompressed size
+    if (signature === 0x02014b50) view.setUint32(i + 24, 1024, true); // central directory: uncompressed size
+  }
+  assert.throws(() => docxToText(lying), /too large/, 'counts real output, not declared size');
   assert.deepEqual([...base64ToBytes(btoa('abc'))], [97, 98, 99]);
 });
 
