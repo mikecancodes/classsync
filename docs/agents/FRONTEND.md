@@ -40,7 +40,7 @@ These route names are recommended mappings into the existing application, not a 
 | Lecture Notes | `/notes` (new) | Course-linked notes, keyword search, editor, create/edit/delete, summary action |
 | To-Do List | `/tasks` (new) | Personal tasks, Today/Upcoming/Completed groups, progress, persistence |
 | Calendar | `/calendar` | Course-colored deadlines, quizzes, exams, personal tasks, clickable details |
-| My Classes | `/courses` | Course cards and links to associated assignments and notes |
+| My Classes | `/courses` | Add and remove course cards; removing a course confirms and deletes its linked assignments, materials, and announcements |
 | Course detail | `/courses/[id]` | Preserve assignments, notes/materials, syllabus, and grades |
 | Study assistant | `/assistant` | Preserve study tools alongside the global chatbot |
 | Grade calculator | `/grades` | Preserve deterministic grade calculations and scenarios |

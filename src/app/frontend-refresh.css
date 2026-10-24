@@ -125,7 +125,20 @@ main { padding-bottom: 95px; }
 .focus-bottom-links { display: flex; justify-content: space-between; padding: 23px 2px; }
 .focus-bottom-links a { color: var(--muted); }
 .focus-bottom-links a:hover { color: var(--blue); }
+.course-card { position: relative; }
+.course-card-link { display: block; }
+.course-card-link .course-card-top { padding-right: 34px; }
+.course-remove-button { position: absolute; top: 18px; right: 18px; width: 32px; height: 32px; color: var(--muted); }
+.course-remove-button:hover,.danger-button { color: #b64848; }
+.danger-button { border-color: #e8caca; }
+.danger-button:hover { background: #fff2f2; border-color: #d99b9b; }
+.course-page-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+[data-theme=dark] .danger-button { color: #f0a1a1; border-color: #6a4444; }
+[data-theme=dark] .danger-button:hover { background: #3c2929; border-color: #986060; }
+.course-remove-button:focus-visible { z-index: 1; }
 @media(max-width:760px) {
+  .course-remove-button { top: 10px; right: 10px; }
+  .course-page-actions { width: 100%; }
   .dashboard-page .page-heading { align-items: flex-start; gap: 15px; margin-bottom: 25px; }
   .dashboard-page .page-heading h1 { font-size: 24px; }
   .dashboard-page .page-heading p { font-size: 12px; }

@@ -23,7 +23,7 @@ Updated after the branding/dashboard/chatbot refresh. “Existing” means sourc
 | Notes | Global Notes / Material tab with course selector and existing create/edit/delete | Keyword search |
 | Planner | Generic local catch-up checklist | Deterministic daily Plan My Week using deadline, priority, duration, workload |
 | Calendar | Monthly assignment dates and editing | Course colors, personal tasks, detailed event display; week view optional |
-| Classes | Required five-course sample set and detail tabs; existing saved courses preserved | LMS metadata |
+| Classes | Add and remove courses, linked coursework/material cleanup, course cards, and detail tabs | LMS metadata |
 | Imports | Authenticated preview-only API, backup restore, internal fixture merge helper, D2L extension prototype; Sync classes opens a to-do dialog | Extension → app tab review and merge (decision 2) |
 | Persistence | Version-2 localStorage with validated v1 migration and announcements; revision-checked manual cloud save/load with explicit conflict resolution | v3 migration (optional points, dueTime, lowercase platform) and signed-in auto-save (decisions 1, 6–8) |
 | Grade tools | Weighted calculation, projection, syllabus parsing | Preserve behavior during frontend work |
@@ -58,6 +58,7 @@ Apply the relevant checks to the feature being delivered. This is a target check
 ### Assignments and classes
 
 - [ ] All required assignment fields are editable and displayed in a readable detail view.
+- [ ] Removing a course clearly confirms that its assignments, materials, and announcements will also be deleted, then updates the workspace and course route.
 - [ ] Course, date, platform, priority, and completion filters compose correctly and can be reset.
 - [ ] Nearest-deadline sorting is stable; completion does not create an earned score.
 - [ ] Each class opens only its associated assignments and notes; empty courses remain usable.
