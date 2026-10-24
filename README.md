@@ -112,3 +112,12 @@ tests/feed.test.ts            Combined announcement filters and sorting
 The app starts with an empty workspace; no sample data is seeded. Course creation, advanced calendar events, PDF/DOCX extraction, streaming AI output, production-wide quotas, conflict resolution, and Canvas import are future work. Supabase and live Gemini require your credentials and have not been exercised against an account by default. No secrets belong in Git; `.env*` is ignored except `.env.example`.
 
 Notes and material attachments: upload PDF, Word (.doc/.docx), or PNG/JPG/WebP/GIF images up to 10 MB through the Notes / Material page or a course's materials tab. Files persist in IndexedDB in the current browser, with image previews and downloads. Cloud saves and workspace JSON backups contain text notes only; attached files must be downloaded separately. Uploads do not extract document text or perform OCR.
+
+
+## Production AI setup on free tiers
+
+Set `GEMINI_API_KEY` as a server-only Production secret in Vercel. Keep the Google project on Free tier with billing disabled. Hosted AI also requires `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` from a Supabase Free project, with email/password sign-in configured; never use a service-role key in frontend configuration. Add `https://classsync-two.vercel.app` as the Supabase Auth site URL.
+
+After changing environment variables, deploy current `main` using `.github/workflows/deploy-vercel.yml` (Actions > Deploy to Vercel Production > Run workflow). Vercel Hobby requires the deployment commit author to have project access; a blocked deployment does not activate new environment settings. Preserve teammates’ changes when preparing an authorized deployment commit.
+
+Verify Vercel reports Ready and `/api/ai` reports `available: true`. This endpoint only confirms configuration, not a successful model response. Sign in to ClassSync and test an AI question before calling the chatbot operational. Free quota exhaustion must show an error without enabling billing or changing to paid usage.
