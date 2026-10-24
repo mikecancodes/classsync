@@ -36,7 +36,7 @@ In this Codex Windows environment, pnpm is bundled at `C:/Users/mjstr/.cache/cod
 - Global collapsible chatbot with current-workspace local answers and optional server-side AI. Conversation survives page navigation and resets on reload.
 - Study assistant: summaries, study guides, catch-up plans, content questions, and rubric-based draft evaluation.
 - Local browser persistence, JSON export/restore, optional Supabase email/password auth, explicit cloud save/load, and database RLS.
-- Authenticated, validated future LMS import preview contract. No Chrome extension, live LMS sync, or assignment submission.
+- Authenticated, validated LMS import preview contract, plus a read-only D2L browser extension prototype in [`extension/`](extension/README.md) that produces its payloads. No import commit or assignment submission yet.
 
 ## Local demo behavior
 

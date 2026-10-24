@@ -73,7 +73,7 @@ Recommended sequence:
 
 Repeated Demo Sync must be idempotent: no duplicate assignments or announcements. Do not silently delete manual work, reset completion, or overwrite notes. Keep original sample IDs stable across date refreshes.
 
-The existing `/api/imports/preview` accepts authenticated version-1 course/assignment/material payloads and **does not write data**. Its nested workspace schema now accepts legacy data or version 2 with announcements; summary counts currently cover courses, assignments, and materials. Extend its versioned contract deliberately if needed. A local demo import must not weaken server authentication or RLS. Future real adapters need permitted data access, student preview/approval, deduplication, and a transactional commit design. No Chrome extension, live LMS login, private scraping, or automatic submission is in this MVP scope.
+The existing `/api/imports/preview` accepts authenticated version-1 course/assignment/material payloads and **does not write data**. Its nested workspace schema now accepts legacy data or version 2 with announcements; summary counts currently cover courses, assignments, and materials. Extend its versioned contract deliberately if needed. A local demo import must not weaken server authentication or RLS. Future real adapters need permitted data access, student preview/approval, deduplication, and a transactional commit design. A read-only D2L browser extension prototype in `extension/` produces this payload from the student's own session (see `docs/d2l-sync/extension.md`). Automatic submission is out of scope.
 
 ## Assistant and planner service boundaries
 

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>ClassSync settings</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="page">
+  <h1>ClassSync settings</h1>
+
+  <form id="settings">
+    <h2>1. Your D2L</h2>
+    <label>D2L address
+      <input name="d2lOrigin" type="url" placeholder="https://d2l.yourschool.edu" required>
+    </label>
+
+    <h2>2. ClassSync (optional)</h2>
+    <p class="hint">Leave blank to only read D2L and download the data as a file.</p>
+    <label>ClassSync app address
+      <input name="appUrl" type="url" placeholder="https://classsync.vercel.app or http://127.0.0.1:3000">
+    </label>
+    <label>Supabase project URL
+      <input name="supabaseUrl" type="url" placeholder="https://xxxx.supabase.co">
+    </label>
+    <label>Supabase anon / publishable key
+      <input name="supabaseAnonKey" type="text" autocomplete="off" placeholder="the public key, never the service_role key">
+    </label>
+
+    <button type="submit">Save and grant access</button>
+    <p id="settings-status" class="status" role="status"></p>
+  </form>
+
+  <form id="signin">
+    <h2>3. Sign in to ClassSync</h2>
+    <p id="signed-in-as" class="hint"></p>
+    <label>Email <input name="email" type="email" autocomplete="username"></label>
+    <label>Password <input name="password" type="password" autocomplete="current-password"></label>
+    <div class="row">
+      <button type="submit">Sign in</button>
+      <button type="button" id="signout" class="secondary">Sign out</button>
+    </div>
+    <p id="signin-status" class="status" role="status"></p>
+  </form>
+
+  <script src="options.js" type="module"></script>
+</body>
+</html>
