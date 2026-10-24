@@ -128,7 +128,8 @@ Workspace v3 adds cached school-calendar events only. Optional points, dueTime a
 - `/grades` lists every class (current grade, letter, graded count, whether weights total 100%). Each card opens `/grades/<class>`, which the class page's Grades tab also shows.
 - The calculator uses `grade()` from `model.ts` for the current grade (graded work only, blanks excluded, zeros counted), so it matches the dashboard and course cards. `src/lib/grade-math.ts` adds per-category averages and contributions, a projection that assumes one score on all remaining work (empty categories included), and the target solver.
 - Score, points, category and weight edits save straight to the workspace. Renaming a category moves its assignments. Categories can be added, and removed only when empty. **What-if mode** works on a copy that's thrown away on exit, and can add hypothetical items.
-- Replaces the previous single calculator in `panels.tsx`. Its syllabus weight extraction moved into the new page, keeping still-used categories at 0% so nothing breaks.
+- Replaces the previous single calculator in `panels.tsx`.
+- **Weights come from the syllabus.** Syllabus scans (AI or the basic finder) return the grading breakdown as well as dates. The calculator's "Weights from the syllabus" panel reads the class's saved syllabus file (from D2L sync or an upload), an uploaded PDF/Word file, the Syllabus tab text or pasted text. It shows the weights and which assignments will move, then applies them (`src/lib/syllabus-weights.ts`): each assignment moves to the category its title fits (Midterm → Exams, Lab Report 3 → Lab Reports), and leftovers keep their old category at 0%. It's suggested automatically while a class still has a single 100% category. During a D2L sync, the review offers the syllabus weights (checked by default) for classes D2L gave no weights.
 
 
 ## 17. DigitalOcean chat provider (merged into decision 3)

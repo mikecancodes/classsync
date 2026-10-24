@@ -260,3 +260,7 @@
 .score-input { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .score-input input { width: 76px; }
 @media (max-width: 640px) { .gradebook-item { grid-template-columns: 1fr; } }
+.weights-plan ul { list-style: none; padding: 0; margin: 8px 0; display: grid; gap: 4px; }
+.weights-plan li { display: flex; justify-content: space-between; max-width: 360px; }
+.syllabus-weights h2 { display: flex; gap: 8px; align-items: center; }
+.weights-offer { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; margin: 6px 0; }

@@ -26,6 +26,6 @@ export async function POST(request: Request) {
     if (text.length < 40) return Response.json({ error: 'This PDF has no selectable text (it may be a scanned image). Paste the syllabus text instead.' }, { status: 422 });
   }
 
-  try { return Response.json({ items: await extractSyllabus({ course: body.course, today: body.today, text }) }); }
+  try { return Response.json(await extractSyllabus({ course: body.course, today: body.today, text })); }
   catch { return Response.json({ error: 'The AI service couldn’t read this syllabus right now.' }, { status: 502 }); }
 }

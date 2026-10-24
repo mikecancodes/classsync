@@ -63,10 +63,12 @@ test('syllabus extraction asks for JSON and validates what comes back', async ()
     let body: any;
     globalThis.fetch = async (_url, options) => {
       body = JSON.parse(String(options?.body));
-      return Response.json({ choices: [{ finish_reason: 'stop', message: { role: 'assistant', content: 'Sure!\n{"items":[{"title":"Exam 2","date":"2026-11-03","type":"exam"},{"title":"Bad","date":"soon","type":"exam"}]}' } }] });
+      return Response.json({ choices: [{ finish_reason: 'stop', message: { role: 'assistant', content: 'Sure!\n{"items":[{"title":"Exam 2","date":"2026-11-03","type":"exam"},{"title":"Bad","date":"soon","type":"exam"}],"weights":[{"name":"Exams","weight":60},{"name":"Labs","weight":40},{"name":"exams","weight":10}]}' } }] });
     };
-    const items = await extractSyllabus({ course: { name: 'Biology', code: 'BIOL 1107' }, today: '2026-10-24', text: 'Exam 2 on Nov 3' });
-    assert.deepEqual(items, [{ title: 'Exam 2', date: '2026-11-03', type: 'exam' }]);
+    const result = await extractSyllabus({ course: { name: 'Biology', code: 'BIOL 1107' }, today: '2026-10-24', text: 'Exam 2 on Nov 3' });
+    assert.deepEqual(result.items, [{ title: 'Exam 2', date: '2026-11-03', type: 'exam' }]);
+    assert.deepEqual(result.weights, [{ name: 'Exams', weight: 60 }, { name: 'Labs', weight: 40 }], 'duplicate category names dropped');
+    assert.match(body.messages[0].content, /grading breakdown/i);
     assert.equal(body.response_format.type, 'json_schema');
     assert.match(body.messages[0].content, /untrusted/i);
   } finally {

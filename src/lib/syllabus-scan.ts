@@ -1,6 +1,6 @@
-import { Course, dateKey } from './model';
+import { Course, dateKey, extractWeights } from './model';
 import { supabase } from './supabase';
-import { PDF_MIME, parseSyllabusItems, type SyllabusItem } from './syllabus';
+import { PDF_MIME, parseSyllabusItems, parseSyllabusWeights, type SyllabusItem, type SyllabusWeight } from './syllabus';
 import { findSyllabusDates } from './syllabus-rules';
 import { base64ToBytes, docxToText } from './document-text';
 
@@ -8,7 +8,7 @@ import { base64ToBytes, docxToText } from './document-text';
 // rule-based date finder (which needs text, so PDFs require AI).
 
 export type ScanSource = { kind: 'pdf'; base64: string } | { kind: 'docx'; base64: string } | { kind: 'text'; text: string };
-export type ScanResult = { items: SyllabusItem[]; method: 'ai' | 'rules'; note?: string };
+export type ScanResult = { items: SyllabusItem[]; weights: SyllabusWeight[]; method: 'ai' | 'rules'; note?: string };
 
 async function aiAccess(): Promise<{ usable: boolean; token?: string; reason: string }> {
   const status = await fetch('/api/ai', { cache: 'no-store' }).then(r => r.json()).catch(() => ({ available: false }));
@@ -32,12 +32,12 @@ export async function scanSyllabus(source: ScanSource, course: Pick<Course, 'nam
       });
       const json = await response.json();
       if (!response.ok) throw new Error(json.error || 'AI scan failed');
-      return { items: parseSyllabusItems(json), method: 'ai' };
+      return { items: parseSyllabusItems(json), weights: parseSyllabusWeights(json), method: 'ai' };
     } catch (err) {
       aiFailed = err instanceof Error ? err.message : 'AI scan failed';
     }
   }
   const reason = aiFailed || access.reason;
   if (text === undefined) throw new Error(`${reason}. PDF syllabi need AI to scan; you can paste the syllabus text into the Syllabus tab and scan that instead.`);
-  return { items: findSyllabusDates(text, today), method: 'rules', note: `${reason}, so the basic date finder was used. Check the results carefully.` };
+  return { items: findSyllabusDates(text, today), weights: parseSyllabusWeights({ weights: extractWeights(text) }), method: 'rules', note: `${reason}, so the basic finder was used. Check the results carefully.` };
 }

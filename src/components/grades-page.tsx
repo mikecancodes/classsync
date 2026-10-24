@@ -3,7 +3,8 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from 'react';
 import Link from 'next/link';
 import { ArrowUpRight, Calculator, FlaskConical, Plus, RotateCcw, Target, Trash2 } from 'lucide-react';
-import { AcademicState, Assignment, Course, dateKey, extractWeights, formatDate, grade, letter } from '@/lib/model';
+import { AcademicState, Assignment, Course, dateKey, formatDate, grade, letter } from '@/lib/model';
+import { SyllabusWeightsPanel } from './syllabus-weights-panel';
 
 type Category = Course['categories'][number];
 import { categoryBreakdown, requiredAverage, weightTotal, weightsValid } from '@/lib/grade-math';
@@ -49,10 +50,7 @@ export function CourseGradebook({ course, data, setData, notify }: { course: Cou
   const [target, setTarget] = useState(90);
   const [rowError, setRowError] = useState<Record<string, string>>({});
   const [newCategory, setNewCategory] = useState('');
-  const [weightText, setWeightText] = useState('');
-  const [proposed, setProposed] = useState<Category[] | null>(null);
-  const [extractError, setExtractError] = useState('');
-  useEffect(() => { setDraft(null); setRowError({}); setProposed(null); setWeightText(course.syllabus); }, [course.id]);
+  useEffect(() => { setDraft(null); setRowError({}); }, [course.id]);
 
   const whatIf = draft !== null;
   const working: Working = draft ?? { categories: course.categories, assignments: data.assignments };
@@ -110,16 +108,7 @@ export function CourseGradebook({ course, data, setData, notify }: { course: Cou
     setDraft(d => d && { ...d, assignments: [...d.assignments, { id: `what-if-${crypto.randomUUID()}`, courseId: course.id, title: 'Hypothetical item', due: dateKey(), status: 'todo', category, points: 100, earned: null, description: '' }] });
   }
 
-  function applyExtracted() {
-    if (!proposed) return;
-    const names = new Set(proposed.map(p => p.name));
-    if (names.size !== proposed.length) return setExtractError('Remove duplicate category names.');
-    const orphaned = [...new Set(mine.map(a => a.category))].filter(name => !names.has(name));
-    // Keep categories that assignments still use, at weight 0, so nothing becomes invalid
-    setCategories(() => [...proposed, ...orphaned.map(name => ({ name, weight: 0 }))]);
-    setProposed(null); setExtractError('');
-    notify(orphaned.length ? `Weights applied. ${orphaned.join(', ')} kept at 0% because assignments use them.` : 'Weights applied');
-  }
+
 
   return <div className="gradebook">
     <section className="panel form-panel gradebook-summary">
@@ -144,6 +133,8 @@ export function CourseGradebook({ course, data, setData, notify }: { course: Cou
       </div>
     </section>
 
+    {!whatIf && <SyllabusWeightsPanel course={course} data={data} setData={setData} notify={notify} />}
+
     <section className="panel form-panel">
       <div className="section-heading"><h2><Calculator size={18} /> Categories</h2><span className={weightsValid(workingCourse) ? 'badge done' : 'badge todo'}>Total {total.toFixed(1)}%</span></div>
       <div className="gradebook-table" role="table" aria-label="Grade categories">
@@ -161,14 +152,6 @@ export function CourseGradebook({ course, data, setData, notify }: { course: Cou
         <input aria-label="New category name" value={newCategory} maxLength={80} onChange={e => setNewCategory(e.target.value)} placeholder="New category, e.g. Labs" />
         <button className="secondary-button" disabled={!newCategory.trim()}><Plus size={15} />Add category</button>
       </form>
-      <details>
-        <summary>Set weights from syllabus text</summary>
-        <p className="muted">Paste the grading section, one category per line, like “Exams 40%”.</p>
-        <textarea rows={5} value={weightText} onChange={e => setWeightText(e.target.value)} aria-label="Syllabus grading text" />
-        <button className="secondary-button" onClick={() => { const found = extractWeights(weightText); setProposed(found.length ? found : null); setExtractError(found.length ? '' : 'No weights found. Use a category and percentage on each line.'); }}>Find weights</button>
-        {proposed && <div className="extraction-preview">{proposed.map(p => <p key={p.name}>{p.name}<strong>{p.weight}%</strong></p>)}<button className="primary-button" onClick={applyExtracted}>Use these weights</button></div>}
-        {extractError && <p className="error" role="alert">{extractError}</p>}
-      </details>
     </section>
 
     {rows.map(row => {
