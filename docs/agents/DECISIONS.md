@@ -23,6 +23,7 @@ ClassSync is being built for an **MLH hackathon**. Several choices follow from t
 | 13 | Deployment | **Deploy to Vercel Production after every change** and confirm it reaches `Ready` (see AGENTS.md). Currently deployed via Vercel Drop, not Git-connected, so a push does not deploy | In effect |
 | 14 | Getting the extension | **Download from the site** (`/classsync-extension.zip`) with a guided 3-step **Connect your school** page; no Chrome Web Store. School picker = searchable list (UNG first, `https://ung.view.usg.edu`) + paste any D2L link | Implemented |
 | 15 | Syllabus dates and grades | Syllabi (found in D2L Content during Sync, or uploaded/pasted on a class's Syllabus tab) are scanned by **Gemini, with a rule-based fallback**; found dates become **assignments after review**. D2L **grade categories/weights, quiz and discussion scores, and graded items without an assignment** are imported | Implemented (final grade not stored yet: needs a model field) |
+| 16 | Grades page | `/grades` overview card per class → `/grades/<class>` calculator with D2L assignments and weights already filled in; edits save directly, what-if mode never saves; replaces the old single-page calculator | Implemented |
 
 ## 1. Hybrid storage
 
@@ -116,3 +117,10 @@ Workspace v3 adds cached school-calendar events only. Optional points, dueTime a
 - **Review:** results appear with checkboxes in the import review (or on the Syllabus tab). Items matching an existing assignment (same class, within 2 days, mostly the same words) start unchecked. Added items use a matching grade category or a weight-0 "From syllabus" category, with points from the syllabus or the 100 placeholder (decision 6). The D2L syllabus file is also saved to the class's materials (this browser).
 - **Grades:** grade categories become ClassSync categories with D2L's weights (points gradebooks use each category's share of max points), replacing only the untouched default bucket. Quiz/discussion scores match gradebook items by name. Graded items with no assignment are added as completed. Text, calculated and final-grade items are skipped. Until the student enters a score, D2L's points and category stay current on later syncs.
 - **Not yet:** D2L's released final grade has no field in the workspace model.
+
+## 16. Grades page
+
+- `/grades` lists every class (current grade, letter, graded count, whether weights total 100%). Each card opens `/grades/<class>`, which the class page's Grades tab also shows.
+- The calculator uses `grade()` from `model.ts` for the current grade (graded work only, blanks excluded, zeros counted), so it matches the dashboard and course cards. `src/lib/grade-math.ts` adds per-category averages and contributions, a projection that assumes one score on all remaining work (empty categories included), and the target solver.
+- Score, points, category and weight edits save straight to the workspace. Renaming a category moves its assignments. Categories can be added, and removed only when empty. **What-if mode** works on a copy that's thrown away on exit, and can add hypothetical items.
+- Replaces the previous single calculator in `panels.tsx`. Its syllabus weight extraction moved into the new page, keeping still-used categories at 0% so nothing breaks.

@@ -26,7 +26,7 @@ Updated after the branding/dashboard/chatbot refresh. “Existing” means sourc
 | Classes | Add and remove courses, linked coursework/material cleanup, course cards, and detail tabs | LMS metadata |
 | Imports | `/connect` flow, D2L extension download, bridge to the app, import review + idempotent merge (`src/lib/d2l-import.ts`), authenticated preview API, backup restore | Real-account test at more schools; points optional (decision 6) to drop the 100-point placeholder |
 | Persistence | Version-3 localStorage with validated v1/v2 migration and school-calendar cache; revision-checked manual cloud save/load with explicit conflict resolution | Future migration (optional points, dueTime, lowercase platform; v3 is the calendar cache) and signed-in auto-save (decisions 1, 6–8) |
-| Grade tools | Weighted calculation, projection, syllabus parsing | Preserve behavior during frontend work |
+| Grade tools | `/grades` overview + per-class calculator (`src/components/grades-page.tsx`, math in `src/lib/grade-math.ts`): editable scores/weights/categories, what-if, target solver, syllabus weight extraction | Optional points (decision 6) |
 
 Do not check off a target feature merely because a visual placeholder exists. Update this table after implementing and verifying a target.
 
