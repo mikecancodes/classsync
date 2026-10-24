@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Connect ClassSync to D2L</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="page">
+  <h1>Connect ClassSync to <span id="school">your school</span></h1>
+  <p>ClassSync needs permission to <strong>read</strong> your classes, due dates and announcements from <code id="origin"></code>.</p>
+  <ul class="hint">
+    <li>It only reads. It never submits work or changes anything in D2L.</li>
+    <li>It uses your own D2L sign-in. ClassSync never sees your password.</li>
+    <li>You review everything in ClassSync before it's added.</li>
+  </ul>
+  <div class="row">
+    <button id="allow">Allow access</button>
+  </div>
+  <p id="status" class="status" role="status"></p>
+  <script src="connect.js" type="module"></script>
+</body>
+</html>

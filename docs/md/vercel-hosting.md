@@ -32,6 +32,7 @@ In **Project → Settings → Environment Variables**, add the values below and 
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Only for sign-in/cloud features | Production and Preview | Public/publishable anon key. Database security depends on the configured Row Level Security policies. Never use the service-role key here. |
 | `GEMINI_API_KEY` | Optional | Production and Preview | Store as a Secret. Server-side only; never add a `NEXT_PUBLIC_` prefix. The AI routes also require an authenticated user in hosted environments. |
 | `GEMINI_MODEL` | Optional | Production and Preview | Non-secret model name; defaults to `gemini-flash-latest`. |
+| `CLASSSYNC_SITE_URL` | Recommended | Production | The live site address, e.g. `https://classsync.vercel.app`. Baked into the downloadable extension (`/classsync-extension.zip`) so it can talk to the live site. Without it the extension only works with localhost. |
 | `ALLOW_LOCAL_AI` | Do not set on Vercel | None | Local-development bypass only. The server requires loopback and development mode for it. |
 
 The two `NEXT_PUBLIC_*` variables are included in client-side code, so they are public values. Do not put credentials or private keys in variables with that prefix. Vercel applies changed variables to new deployments; redeploy after changing them.

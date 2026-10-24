@@ -5,7 +5,7 @@
 const COLORS = ['blue', 'purple', 'green', 'orange'];
 const CATEGORY = 'Coursework';
 const PLACEHOLDER_POINTS = 100;
-const LIMITS = { courses: 50, assignments: 1000, materials: 200 };
+const LIMITS = { courses: 50, assignments: 1000, announcements: 300 };
 
 const clip = (text, max) => (text ?? '').toString().slice(0, max);
 const normalize = title => (title ?? '').trim().toLowerCase();
@@ -123,28 +123,25 @@ export function toImportPayload(raw) {
   }
   assignmentList.sort((a, b) => a.due.localeCompare(b.due));
 
-  // announcements become course materials so the study assistant can read them
-  const materials = announcements
-    .map(({ courseId, ou, item }) => {
-      const posted = item.StartDate ?? item.CreatedDate;
-      return {
-        id: `d2l-news-${ou}-${item.Id}`,
-        courseId,
-        title: clip(`Announcement: ${item.Title?.trim() || 'Untitled'}`, 160),
-        text: clip([posted && `Posted ${localDateKey(posted)}`, item.Body?.Text?.trim()].filter(Boolean).join('\n\n'), 40000),
-        kind: 'material',
-        posted: posted ?? '',
-      };
-    })
+  const today = localDateKey(new Date().toISOString());
+  const announcementList = announcements
+    .map(({ courseId, ou, item }) => ({
+      id: `d2l-news-${ou}-${item.Id}`,
+      courseId,
+      platform: 'D2L',
+      title: clip(item.Title?.trim() || 'Untitled announcement', 160),
+      description: clip(item.Body?.Text?.trim() ?? '', 2000),
+      posted: localDateKey(item.StartDate ?? item.CreatedDate) ?? today,
+      read: false,
+    }))
     .sort((a, b) => b.posted.localeCompare(a.posted))
-    .slice(0, LIMITS.materials)
-    .map(({ posted, ...material }) => material);
-  if (announcements.length > LIMITS.materials) warnings.push(`Only the ${LIMITS.materials} newest announcements were included.`);
+    .slice(0, LIMITS.announcements);
+  if (announcements.length > LIMITS.announcements) warnings.push(`Only the ${LIMITS.announcements} newest announcements were included.`);
 
   if (courses.length === 0) warnings.push('No active courses found in D2L.');
 
   return {
-    payload: { version: 1, source: 'd2l', data: { courses, assignments: assignmentList, materials } },
+    payload: { version: 1, source: 'd2l', data: { version: 2, courses, assignments: assignmentList, materials: [], announcements: announcementList } },
     warnings,
   };
 }

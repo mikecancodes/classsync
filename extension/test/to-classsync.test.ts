@@ -2,9 +2,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { z } from 'zod';
 import { stateSchema } from '../../src/lib/model';
+import { importPayloadSchema, mergeImport } from '../../src/lib/d2l-import';
+import { testState } from '../../tests/fixtures';
 import { toImportPayload, localDateKey } from '../src/to-classsync.js';
 
-// Same shape as src/app/api/imports/preview/route.ts
+// Same shape as src/app/api/imports/preview/route.ts (the review screen uses importPayloadSchema)
 const importSchema = z.object({ version: z.literal(1), source: z.enum(['canvas', 'd2l', 'manual']), data: stateSchema });
 
 const raw = {
@@ -47,7 +49,7 @@ test('payload passes the app import schema', () => {
 
 test('maps courses, assignments and announcements', () => {
   const { payload, warnings } = toImportPayload(raw);
-  const { courses, assignments, materials } = payload.data;
+  const { courses, assignments, materials, announcements } = payload.data;
 
   assert.equal(courses.length, 2);
   assert.equal(courses[0].code.length, 30, 'long codes are clipped to the schema limit');
@@ -66,8 +68,10 @@ test('maps courses, assignments and announcements', () => {
   assert.ok(!assignments.some((a: any) => a.title === 'Exempt quiz'));
   assert.ok(!assignments.some((a: any) => a.courseId === 'd2l-999'));
 
-  assert.equal(materials.length, 1, 'hidden announcements are skipped');
-  assert.equal(materials[0].title, 'Announcement: Office hours moved');
+  assert.equal(materials.length, 0);
+  assert.equal(announcements.length, 1, 'hidden announcements are skipped');
+  assert.deepEqual([announcements[0].title, announcements[0].platform, announcements[0].read], ['Office hours moved', 'D2L', false]);
+  assert.equal(announcements[0].description, 'Now on Wednesday.');
 
   assert.ok(warnings.some((w: string) => w.includes('Reading log')));
   assert.ok(warnings.some((w: string) => w.includes('Bonus')));
@@ -79,3 +83,11 @@ test('converts UTC due times to local calendar dates', () => {
   assert.equal(localDateKey('2026-10-25T03:59:00.000Z'), '2026-10-24');
 });
 
+
+test('payload is accepted by the app review screen and merges into a workspace', () => {
+  const { payload } = toImportPayload(raw);
+  assert.ok(importPayloadSchema.safeParse(payload).success);
+  const { state, summary } = mergeImport(testState(), payload);
+  assert.equal(summary.newCourses.length, 2);
+  assert.ok(state.announcements.some((a: any) => a.id === 'd2l-news-101-1'));
+});

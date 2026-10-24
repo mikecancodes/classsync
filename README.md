@@ -36,7 +36,7 @@ pnpm start
 - Persistent desktop chat in the right column, with a collapsible mobile panel, current-workspace local answers, and optional server-side AI. Conversation survives page navigation and resets on reload.
 - Study assistant: summaries, study guides, catch-up plans, content questions, and rubric-based draft evaluation.
 - Local browser persistence, JSON export/restore, optional Supabase email/password auth, explicit cloud save/load, and database RLS.
-- Authenticated, validated LMS import preview contract, plus a read-only D2L browser extension prototype in [`extension/`](extension/README.md) that produces its payloads. No import commit or assignment submission yet.
+- Authenticated, validated LMS import preview contract, plus a read-only D2L browser extension ([`extension/`](extension/README.md)) with a guided **Connect your school** page, import review and idempotent merge into the local workspace. No assignment submission.
 
 ## Local demo behavior
 
@@ -47,6 +47,10 @@ The first visit generates realistic sample coursework with deadlines relative to
 The global chatbot answers questions about today, tomorrow, the next seven days, overdue work, and courses using current workspace data. With Gemini configured and a signed-in account, it switches to AI chat that looks up assignments, announcements, grades, and notes through read-only tools; otherwise it answers locally with rules. Schedule suggestions are deadline order only; capacity-aware Plan My Week remains future work.
 
 Without a Gemini key, study tools return labeled excerpts, practice prompts, keyword matches, and a catch-up checklist. They are **not AI-generated answers**. The demo evaluator does not invent a score. Uploads support `.txt`, `.md`, and `.csv` up to 150 KB and 40,000 characters; paste extracted text for PDFs/Word. Raw files are not retained. Material text is stored with the workspace. Rubrics are limited to 20,000 characters.
+
+## Connect your school (D2L)
+
+Students open **Sync classes → Connect your school** (`/connect`): download the ClassSync extension, load it in Chrome/Edge/Brave, pick their school (University of North Georgia is listed; any other school pastes a D2L link), and sign in to D2L as usual. Their classes, assignments and announcements appear in a review dialog and are merged only after they approve. Later syncs add only what changed and keep local completion, scores and read state. The extension zip is built by `scripts/pack-extension.mjs` during `pnpm dev`/`pnpm build`; set `CLASSSYNC_SITE_URL` in Vercel so the download works on the live site. Details: [docs/d2l-sync/extension.md](docs/d2l-sync/extension.md).
 
 ## Configure Gemini
 
@@ -97,8 +101,8 @@ tests/frontend.test.ts        Migration, sync, dates, and chatbot tests
 tests/feed.test.ts            Combined announcement filters and sorting
 ```
 
-`POST /api/imports/preview` requires a Supabase bearer token and accepts `{ "version": 1, "source": "canvas" | "d2l" | "manual", "data": { "courses": [], "assignments": [], "materials": [] } }`, using the full domain schemas in `src/lib/model.ts`. The outer import contract remains version 1; its nested workspace accepts legacy data or version 2 with announcements and normalizes to version 2. It validates uniqueness and references and returns a normalized preview plus counts and `requiresApproval: true`. It never writes data. A future extension must add an origin/permission policy, student preview/approval UI, deduplication, and a transactional import commit endpoint. The current workspace PUT is for explicit full-workspace saves, not automatic LMS ingestion.
+`POST /api/imports/preview` requires a Supabase bearer token and accepts `{ "version": 1, "source": "canvas" | "d2l" | "manual", "data": { "courses": [], "assignments": [], "materials": [] } }`, using the full domain schemas in `src/lib/model.ts`. The outer import contract remains version 1; its nested workspace accepts legacy data or version 2 with announcements and normalizes to version 2. It validates uniqueness and references and returns a normalized preview plus counts and `requiresApproval: true`. It never writes data. The D2L extension does not use this endpoint: it hands imports to the open ClassSync tab, where the student approves them and `mergeImport` (`src/lib/d2l-import.ts`) deduplicates by stable ID. The current workspace PUT is for explicit full-workspace saves, not automatic LMS ingestion.
 
 ## MVP boundaries
 
-The app starts with an empty workspace; no sample data is seeded. Course creation, advanced calendar events, PDF/DOCX extraction, streaming AI output, production-wide quotas, conflict resolution, and LMS import commit are future work. Supabase and live Gemini require your credentials and have not been exercised against an account by default. No secrets belong in Git; `.env*` is ignored except `.env.example`.
+The app starts with an empty workspace; no sample data is seeded. Course creation, advanced calendar events, PDF/DOCX extraction, streaming AI output, production-wide quotas, conflict resolution, and Canvas import are future work. Supabase and live Gemini require your credentials and have not been exercised against an account by default. No secrets belong in Git; `.env*` is ignored except `.env.example`.

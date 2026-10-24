@@ -1,5 +1,5 @@
-# ClassSync D2L extension (prototype)
+# ClassSync D2L extension
 
-Chrome extension that reads your D2L courses, due dates and announcements and sends them to ClassSync's `/api/imports/preview` for review. Load it at `chrome://extensions` → Developer mode → **Load unpacked** → this folder.
+Reads your D2L classes, due dates and announcements and hands them to the open ClassSync tab, where you review them before they're added. Students get it from ClassSync's **Connect your school** page (`/connect`). Developers can load this folder at `chrome://extensions` → Developer mode → **Load unpacked**.
 
 Full docs: [docs/d2l-sync/extension.md](../docs/d2l-sync/extension.md)

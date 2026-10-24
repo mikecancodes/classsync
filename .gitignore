@@ -8,3 +8,5 @@ node_modules/
 out/
 .vercel
 supabase/.temp/
+# Built by scripts/pack-extension.mjs on every dev/build
+public/classsync-extension.zip

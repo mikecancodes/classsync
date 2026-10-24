@@ -24,7 +24,7 @@ Updated after the branding/dashboard/chatbot refresh. “Existing” means sourc
 | Planner | Generic local catch-up checklist | Deterministic daily Plan My Week using deadline, priority, duration, workload |
 | Calendar | Monthly assignment dates and editing | Course colors, personal tasks, detailed event display; week view optional |
 | Classes | Add and remove courses, linked coursework/material cleanup, course cards, and detail tabs | LMS metadata |
-| Imports | Authenticated preview-only API, backup restore, internal fixture merge helper, D2L extension prototype; Sync classes opens a to-do dialog | Extension → app tab review and merge (decision 2) |
+| Imports | `/connect` flow, D2L extension download, bridge to the app, import review + idempotent merge (`src/lib/d2l-import.ts`), authenticated preview API, backup restore | Real-account test at more schools; points optional (decision 6) to drop the 100-point placeholder |
 | Persistence | Version-2 localStorage with validated v1 migration and announcements; revision-checked manual cloud save/load with explicit conflict resolution | v3 migration (optional points, dueTime, lowercase platform) and signed-in auto-save (decisions 1, 6–8) |
 | Grade tools | Weighted calculation, projection, syllabus parsing | Preserve behavior during frontend work |
 
