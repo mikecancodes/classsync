@@ -15,9 +15,9 @@ Use one shared workspace as the source of truth so that completing or editing wo
 
 The current workspace is stored under `classsync-workspace-v2` and contains courses, assignments, materials, and announcements (v1 data migrates automatically; its original storage key remains as a recovery copy). Extend it through a validated, versioned migration before adding persisted fields or entities. Preserve existing notes, grades, coursework, and settings. Keep theme storage separate. Use local calendar dates for coursework; avoid parsing `YYYY-MM-DD` as UTC and shifting the displayed day.
 
-## Demo data and sync
+## Data and sync
 
-Seed realistic Computer Networks, Data Structures, Criminal Justice, Computer Architecture, and Algorithm Analysis courses, with assignments such as Socket Programming Lab, Priority Queue Assignment, Chapter 5 Quiz, Cache Memory Discussion, and Algorithm Analysis Homework. Include multiple announcements and course-linked notes. Generate dates relative to the current date only on first seed or explicit demo refresh, not on each render.
+The app starts with an empty workspace and seeds no sample data ([decision 12](../agents/DECISIONS.md)). Sample courses such as Computer Networks or Data Structures may appear only in test fixtures under `tests/`.
 
 Load and normalize fixture JSON through a small service boundary into the shared workspace model. The interface must label every simulated connection and refresh result **Demo**. The current Sync classes button only opens a To-do list. Future fixture-import refreshes must be idempotent: merge by stable source identity, create no duplicates, preserve manual records and local completion/read choices, and avoid silently replacing the user's saved workspace. Report invalid data without partially applying it.
 
@@ -81,7 +81,7 @@ Preserve the existing Next.js App Router, React, TypeScript, Tailwind, Lucide, S
 - `src/app/[[...slug]]/page.tsx`: route entry.
 - `src/components/class-sync.tsx` and `src/components/panels.tsx`: current application UI.
 - `src/lib/model.ts`: domain types, validation, date helpers, and grade logic.
-- `src/lib/demo.ts`: relative-date demo seed.
+- `src/lib/workspace.ts`: empty workspace and migrations (no seed data).
 - `src/app/api/ai/route.ts`: server-side AI boundary.
 - `src/app/api/imports/preview/route.ts`: authenticated, preview-only LMS contract.
 

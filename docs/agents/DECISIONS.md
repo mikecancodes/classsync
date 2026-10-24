@@ -2,23 +2,31 @@
 
 Decided by the team on 2026-10-24 after reviewing every spec document for conflicts. **These override older wording elsewhere** (including the original frontend brief) until the other guides are updated to match. Each decision is *decided*, not yet *implemented*, unless its status says otherwise.
 
+## Context
+
+ClassSync is being built for an **MLH hackathon**. Several choices follow from that: AI runs on **Google Gemini because MLH gives participants free Gemini credits**; hosting and the database use free tiers (Vercel Hobby, Supabase Free), so the project costs nothing to run during the competition. Claim MLH perks (Gemini credits, a free .tech domain) through MyMLH / the MLH Software Lab.
+
 | # | Topic | Decision | Status |
 |---|---|---|---|
-| 1 | Where data lives | **Hybrid:** browser workspace is the working copy; auto-saves to Supabase when signed in | Not implemented (cloud save is still manual) |
+| 1 | Where data lives | **Hybrid with optional login:** browser workspace is the working copy; auto-saves to Supabase when signed in | Login exists (optional); auto-save not implemented (cloud save is still manual) |
 | 2 | Getting D2L data into the app | **Extension → open ClassSync tab → review screen → merge** | Not implemented (extension currently calls the preview API) |
-| 3 | AI provider | **Google Gemini** (free MLH credits) behind `/api/ai` | Not implemented (OpenAI today) |
+| 3 | AI provider | **Google Gemini**, chosen for the free MLH hackathon credits, behind `/api/ai` | Not implemented (OpenAI today) |
 | 4 | Chatbot design | **Tool calling**, tools run in the browser against the workspace | Not implemented (sends whole workspace today) |
-| 5 | UI components | **shadcn/ui** on top of the existing Tailwind tokens | Not implemented |
+| 5 | UI components | **shadcn/ui** on top of the existing Tailwind tokens | Not implemented (styled native controls today) |
 | 6 | Assignments without points | **`points` becomes optional**; grade math skips items without points | Not implemented (extension uses a placeholder of 100 for now) |
 | 7 | Due times | **Optional `dueTime`** next to the existing date-only `due` | Not implemented |
 | 8 | Platform values | Data uses lowercase **`d2l` · `canvas` · `manual`**; the UI shows "D2L", "Canvas", "Manual" | Not implemented (announcements use `'D2L' \| 'Canvas'`) |
+| 9 | Live LMS data | The read-only browser extension in `extension/` is the live D2L path; official OAuth stays future work | Extension prototype exists |
 | 10 | Dashboard layout | **Top tabs, top-left ClassSync logo, center announcement feed with class/priority/status filters and sorting, persistent right-side desktop chat**; mobile chat collapses | Implemented |
 | 11 | Sync classes interaction | Opens a **To-do list** of current incomplete coursework with a class filter and completion controls. Actual class-sync logic is deferred | Implemented UI; sync backend deferred |
-| 9 | Live LMS data | The read-only browser extension in `extension/` is the live D2L path; official OAuth stays future work | Extension prototype exists |
+| 12 | Sample data | **No seeded data in the app.** Users start with an empty workspace and add or import their own; fake records live only in `tests/` fixtures | Implemented |
+| 13 | Deployment | **Deploy to Vercel Production after every change** and confirm it reaches `Ready` (see AGENTS.md). Currently deployed via Vercel Drop, not Git-connected, so a push does not deploy | In effect |
 
 ## 1. Hybrid storage
 
-- The localStorage workspace (`classsync-workspace-v2`) stays the source the UI reads, so demo mode and offline use keep working with no account.
+- **Login stays optional.** Everything works without an account; signing in adds cloud backup and sync across devices, and gates the paid AI. (Considered and rejected: removing login entirely.)
+- **Supabase is for sync and backup, not space.** Measured: the old demo workspace was 7.8 KB and a heavy semester (6 courses, 240 assignments with instructions, 60 announcements, 40 long notes) is about 900 KB, under a fifth of the ~5 MB browser limit. If files (PDFs, slides) are ever stored, use IndexedDB or Supabase Storage rather than localStorage.
+- The localStorage workspace (`classsync-workspace-v2`) stays the source the UI reads, so offline use keeps working with no account.
 - When signed in, changes **auto-save** to the existing `public.workspaces` JSONB row (debounced, e.g. 2 seconds after the last edit). On sign-in, compare `updated_at` and ask before replacing either copy. Never silently overwrite.
 - This replaces "Keep cloud save/load explicit" in ARCHITECTURE.md. Manual Save/Load can remain as a backup control.
 - The normalized tables in `docs/d2l-sync/` remain a **later** option, not current work.
@@ -28,18 +36,19 @@ Decided by the team on 2026-10-24 after reviewing every spec document for confli
 ```
 D2L tab ── extension reads D2L ──▶ ClassSync tab (content script / externally_connectable)
                                      └─ review screen: "12 new assignments, 3 updated, 5 announcements"
-                                          └─ user approves → merge into workspace (same rules as Demo Sync)
+                                          └─ user approves → merge into workspace (rules below)
                                                └─ auto-save to Supabase if signed in (decision 1)
 ```
 
-- Merge by `platform` + source ID, as Demo Sync does. Keep local edits, completion and read state. Never delete manual work.
+- Merge by `platform` + source ID, so repeated imports never create duplicates. Keep local edits, completion and read state. Never delete manual work. (Demo Sync, which used to define these rules, was removed with the sample data in decision 12.)
 - The review step is required: imports never apply silently.
 - `/api/imports/preview` stays as a server-side validator. Being signed in is optional for importing.
 
 ## 3. Gemini
 
 - Swap the provider inside `/api/ai` only. Browser code never sees a key. New env var: `GEMINI_API_KEY` (server only), plus optional `GEMINI_MODEL`.
-- Claim credits through MLH (MyMLH / MLH Software Lab). Set a usage cap in Google AI Studio.
+- **Why Gemini:** we're in an MLH hackathon and MLH gives participants free Gemini credits (about $10/month plus a student plan, per MLH's partner page). Claim them through MyMLH / MLH Software Lab.
+- Set a usage cap in Google AI Studio. Anyone can create an account, so the cap is the real cost limit until the rate limiter is shared across instances.
 - Keep the existing guarantees: authentication for paid use, rate limit, input limits, untrusted-content instructions, honest error labels.
 
 ## 4. Tool-calling chatbot
@@ -77,4 +86,12 @@ When a decision ships, flip its status above, update the "Baseline and target ga
 
 ## 10–11. Latest dashboard correction
 
-The user’s sketch and follow-up supersede older sidebar/deadline-first layouts and the old Demo Sync button. Home shows announcements by default, top tabs are Home / My Assignments / Lecture Notes / Material, branding is at the top left, and desktop chat reserves the right column. Sync classes opens the current-workspace To-do list in the left section immediately and must not claim an import occurred. The shadcn migration in decision 5 remains pending; the current delivered UI still uses the existing styled native controls.
+The user’s sketch and follow-up supersede older sidebar/deadline-first layouts and the old Demo Sync button (removed in decision 12). Home shows announcements by default, top tabs are Home / My Assignments / Lecture Notes / Material, branding is at the top left, and desktop chat reserves the right column. Sync classes opens the current-workspace To-do list in the left section immediately and must not claim an import occurred. The shadcn migration in decision 5 remains pending; the current delivered UI still uses the existing styled native controls.
+
+## 12. No sample data
+
+The app ships an empty workspace (`emptyWorkspace()` in `src/lib/workspace.ts`). Real data comes from the user, the D2L extension (decision 2) or a backup restore. Synthetic records exist only in `tests/fixtures.ts`.
+
+## 13. Deployment
+
+Per AGENTS.md: pull `main` before editing, then deploy to Vercel Production after changes and verify the deployment is `Ready`. The project is uploaded with Vercel Drop today, so pushing to GitHub does not deploy. Connecting the GitHub repo to Vercel (`docs/d2l-sync/vercel-hosting.md`) would make every push to `main` deploy automatically. That's a possible follow-up, not a decision yet.

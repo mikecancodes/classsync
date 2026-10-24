@@ -17,7 +17,7 @@ The repository uses Next.js App Router, React, TypeScript, Tailwind CSS, Lucide 
 | Shell, dashboard, assignment editor, calendar | `src/components/class-sync.tsx` |
 | Assistant, grades, materials, settings | `src/components/panels.tsx` |
 | Domain schemas, date helpers, grade math | `src/lib/model.ts` |
-| Relative-date seed data | `src/lib/demo.ts` |
+| Synthetic test data (app ships empty) | `tests/fixtures.ts` |
 | Supabase browser client | `src/lib/supabase.ts` |
 | Server auth, body limits, rate limiting | `src/lib/server.ts` |
 | Study generation endpoint | `src/app/api/ai/route.ts` |
@@ -58,7 +58,7 @@ Use stable IDs, validated references, bounded strings and arrays, positive estim
 
 - Use local calendar-date helpers for date-only coursework; avoid converting `YYYY-MM-DD` through UTC and shifting the day.
 - Current overdue rule: due date is earlier than today and status is not done. Specify consistent windows for tomorrow, this week, and Due Soon.
-- Regenerate sample dates only for initial demo seeding or an explicit demo refresh, not on every render or reload.
+- The app seeds no sample data (DECISIONS.md, decision 12). Test fixtures generate their own relative dates.
 - Grade calculations remain deterministic. Blank earned scores are excluded, zeros count, and completion does not imply grading.
 - Validate category weights; projections require 100% total. Never label the dashboard's course average as GPA or an AI estimate as an official grade.
 

@@ -80,7 +80,7 @@ src/app/[[...slug]]/page.tsx   Catch-all route entry
 src/components/class-sync.tsx Dashboard, navigation, coursework, calendar
 src/components/panels.tsx     Assistant, grades, materials, settings
 src/lib/model.ts             Domain types, validation, deterministic math
-src/lib/demo.ts              Realistic demo seed
+tests/fixtures.ts            Synthetic test data (the app itself starts empty)
 src/lib/workspace.ts         v1 migration and demo fixture merge helper
 src/lib/academic-assistant.ts Deterministic local chatbot and date windows
 src/lib/feed.ts               Pure announcement filtering and sorting
@@ -100,4 +100,4 @@ tests/feed.test.ts            Combined announcement filters and sorting
 
 ## MVP boundaries
 
-Demo courses and announcements are seeded. Course creation, advanced calendar events, PDF/DOCX extraction, streaming AI output, production-wide quotas, conflict resolution, and LMS import commit are future work. Supabase and live OpenAI require your credentials and have not been exercised against an account by default. No secrets belong in Git; `.env*` is ignored except `.env.example`.
+The app starts with an empty workspace; no sample data is seeded. Course creation, advanced calendar events, PDF/DOCX extraction, streaming AI output, production-wide quotas, conflict resolution, and LMS import commit are future work. Supabase and live OpenAI require your credentials and have not been exercised against an account by default. No secrets belong in Git; `.env*` is ignored except `.env.example`.
