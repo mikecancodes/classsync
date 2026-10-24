@@ -10,7 +10,7 @@ ClassSync gets data from two places:
 > Field names below come from the D2L API docs (docs.valence.desire2learn.com). Schools run different
 > versions, so confirm against real responses with a test script before relying on a field.
 
-> The extension is **out of scope for the current frontend MVP** (see `AGENTS.md`). The app already has a validation contract for imports, `POST /api/imports/preview` with `source: "d2l"`, which a future extension can send data through for student review before saving.
+> The extension prototype is in `extension/` (see [extension.md](extension.md)). The app already has a validation contract for imports, `POST /api/imports/preview` with `source: "d2l"`, which a future extension can send data through for student review before saving.
 
 ## API basics
 

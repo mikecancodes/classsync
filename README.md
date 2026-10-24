@@ -35,7 +35,7 @@ In this Codex Windows environment, pnpm is bundled at `C:/Users/mjstr/.cache/cod
 - Deterministic weighted grade calculator and hypothetical ungraded-category scenarios. Syllabus extraction supports category/percentage lines and requires review before applying.
 - Study assistant: summaries, study guides, catch-up plans, content questions, and rubric-based draft evaluation.
 - Local browser persistence, JSON export/restore, optional Supabase email/password auth, explicit cloud save/load, and database RLS.
-- Authenticated, validated future LMS import preview contract. No Chrome extension, live LMS sync, or assignment submission.
+- Authenticated, validated LMS import preview contract, plus a read-only D2L browser extension prototype in [`extension/`](extension/README.md) that produces its payloads. No import commit or assignment submission yet.
 
 ## Local demo behavior
 

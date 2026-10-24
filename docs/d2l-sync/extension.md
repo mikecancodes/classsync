@@ -1,6 +1,6 @@
 # D2L browser extension
 
-> **Status: prototype, kept outside the app.** `AGENTS.md` puts a Chrome extension out of scope for the frontend MVP. This code lives in `extension/`, shares no code with the Next.js app and doesn't change it. It only *talks* to the app's existing `POST /api/imports/preview` endpoint.
+> **Status: prototype, kept outside the app.** This code lives in `extension/`, shares no code with the Next.js app and doesn't change it. It only *talks* to the app's existing `POST /api/imports/preview` endpoint.
 
 The extension reads the signed-in student's D2L data and turns it into ClassSync's import format. It then either sends it to ClassSync for review or saves it as a JSON file.
 

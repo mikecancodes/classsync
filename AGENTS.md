@@ -21,7 +21,8 @@ These guides describe the target product; they do not claim all features are imp
 - The branding target is a **brain logo** beside **ClassSync**, with the tagline **All your classes. One place.** The current graduation-cap branding is a known implementation gap.
 - Follow the user's current task scope. A request for documentation does not authorize implementing every roadmap item.
 - Keep demo mode functional without credentials. Never imply demo LMS data or rule-based responses come from live services.
-- Do not implement a Chrome extension, automatic assignment submission, private-account scraping, or authentication bypass as part of the frontend MVP.
+- The D2L browser extension lives in `extension/` (see [docs/d2l-sync/extension.md](docs/d2l-sync/extension.md)). Keep it separate from the Next.js app, read-only toward the LMS (GET requests with the student's own session), and sending data only through the authenticated import endpoint. Run `pnpm exec tsx --test extension/test/*.test.ts` after changing `src/lib/model.ts`.
+- Do not implement automatic assignment submission or authentication bypass.
 
 ## Working conventions
 
