@@ -105,3 +105,8 @@ Apply the relevant checks to the feature being delivered. This is a target check
 ## Git handoff
 
 Keep commits scoped and exclude `.env.local`, dependencies, build output, and private student fixtures. Respect the user's requested repository visibility and push scope. When pushing is requested, verify the target remote and confirm the pushed commit exists remotely before reporting success. Do not change visibility or claim a push succeeded based only on a local commit.
+
+
+### DigitalOcean chat provider
+
+`AI_CHAT_PROVIDER=digitalocean` uses a server-only inference model access key and explicit model ID, while retaining Supabase authentication and browser-run read-only workspace tools. `tests/digitalocean.test.ts` covers call/result IDs, reasoning exclusion, unknown tool rejection, missing keys, and quota failures without fallback. Live activation still requires a funded promotional-credit account, a scoped key, and a signed-in end-to-end test. Study tools and PDF syllabus scans remain on Gemini.

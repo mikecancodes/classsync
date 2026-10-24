@@ -116,3 +116,8 @@ Workspace v3 adds cached school-calendar events only. Optional points, dueTime a
 - **Review:** results appear with checkboxes in the import review (or on the Syllabus tab). Items matching an existing assignment (same class, within 2 days, mostly the same words) start unchecked. Added items use a matching grade category or a weight-0 "From syllabus" category, with points from the syllabus or the 100 placeholder (decision 6). The D2L syllabus file is also saved to the class's materials (this browser).
 - **Grades:** grade categories become ClassSync categories with D2L's weights (points gradebooks use each category's share of max points), replacing only the untouched default bucket. Quiz/discussion scores match gradebook items by name. Graded items with no assignment are added as completed. Text, calculated and final-grade items are skipped. Until the student enters a score, D2L's points and category stay current on later syncs.
 - **Not yet:** D2L's released final grade has no field in the workspace model.
+
+
+## 16. Optional DigitalOcean chat provider
+
+The user requested DigitalOcean Serverless Inference for the global chatbot. Select it explicitly with `AI_CHAT_PROVIDER=digitalocean`, an inference-scoped `DIGITALOCEAN_MODEL_ACCESS_KEY`, and `DIGITALOCEAN_MODEL`. Preserve hosted authentication, input/rate limits, and read-only browser tools. Use promotional credits without auto-reload; do not claim DigitalOcean is an unlimited free tier. Study/PDF syllabus generation stays on Gemini. Live activation requires a usable DigitalOcean key and an end-to-end signed-in test.

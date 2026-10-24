@@ -121,3 +121,10 @@ Set `GEMINI_API_KEY` as a server-only Production secret in Vercel. Keep the Goog
 After changing environment variables, deploy current `main` using `.github/workflows/deploy-vercel.yml` (Actions > Deploy to Vercel Production > Run workflow). Vercel Hobby requires the deployment commit author to have project access; a blocked deployment does not activate new environment settings. Preserve teammates’ changes when preparing an authorized deployment commit.
 
 Verify Vercel reports Ready and `/api/ai` reports `available: true`. This endpoint only confirms configuration, not a successful model response. Sign in to ClassSync and test an AI question before calling the chatbot operational. Free quota exhaustion must show an error without enabling billing or changing to paid usage.
+
+
+## DigitalOcean chatbot
+
+To use DigitalOcean Serverless Inference for chat, set `AI_CHAT_PROVIDER=digitalocean`, `DIGITALOCEAN_MODEL_ACCESS_KEY` (server-only secret), and `DIGITALOCEAN_MODEL` (an exact model ID supporting function tools). Redeploy after configuring these values. The chatbot keeps its authenticated, read-only workspace tool loop and displays the selected provider. Study generation and PDF syllabus scans continue to use Gemini.
+
+DigitalOcean inference is usage-based, not an unlimited free tier. Use promotional credits only, leave auto-reload disabled, and configure a key spend limit within the remaining credit. Never add funds or enable automatic top-ups to keep the demo running. Provider errors do not fall back to another paid provider. If credits or the key are unavailable, AI chat remains unavailable and the user may explicitly choose local answers. `/api/ai` reports `chatAvailable` and `chatProvider` separately from Gemini study-tool availability.
