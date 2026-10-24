@@ -9,12 +9,12 @@ import { scanSyllabus } from '@/lib/syllabus-scan';
 import { PDF_MIME } from '@/lib/syllabus';
 import { base64ToBytes } from '@/lib/document-text';
 import { materialFile } from '@/lib/material-files';
-import { SyllabusProposalList, defaultSelection } from './syllabus-scan';
+import { ScannedText, SyllabusProposalList, defaultSelection } from './syllabus-scan';
 import { applyWeightPlan, needsWeights, planWeights } from '@/lib/syllabus-weights';
 import type { SyllabusWeight } from '@/lib/syllabus';
 
 const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? '' : 's'}`;
-type SyllabusScanState = { file: SyllabusFile; courseName: string; status: 'scanning' | 'done' | 'error'; message?: string; proposals: SyllabusProposal[]; weights: SyllabusWeight[]; offerWeights: boolean };
+type SyllabusScanState = { file: SyllabusFile; courseName: string; status: 'scanning' | 'done' | 'error'; message?: string; proposals: SyllabusProposal[]; weights: SyllabusWeight[]; offerWeights: boolean; scannedText?: string };
 
 function Details({ label, items }: { label: string; items: string[] }) {
   if (!items.length) return null;
@@ -64,7 +64,7 @@ export function ImportReview({ data, payload, school, onApply, onCancel }: { dat
           const proposals = proposeAssignments(scan.items, course, merged);
           // Offer the syllabus's weights only when D2L didn't provide any for this class
           const offerWeights = scan.weights.length > 0 && needsWeights(course);
-          setScans(current => current.map((s, i) => i === index ? { ...s, status: 'done', message: scan.method === 'ai' ? undefined : scan.note, proposals, weights: scan.weights, offerWeights } : s));
+          setScans(current => current.map((s, i) => i === index ? { ...s, status: 'done', message: scan.method === 'ai' ? undefined : scan.note, proposals, weights: scan.weights, offerWeights, scannedText: scan.scannedText } : s));
           setSelected(current => new Set([...current, ...defaultSelection(proposals)]));
           if (offerWeights) setUseWeights(current => new Set([...current, file.courseId]));
         })
@@ -120,7 +120,7 @@ export function ImportReview({ data, payload, school, onApply, onCancel }: { dat
           {scan.status === 'error' && <p className="muted">{scan.message}</p>}
           {scan.status === 'done' && <>{scan.message && <p className="muted">{scan.message}</p>}
             {scan.offerWeights && <label className="weights-offer"><input type="checkbox" checked={useWeights.has(scan.file.courseId)} onChange={() => setUseWeights(current => { const next = new Set(current); if (next.has(scan.file.courseId)) next.delete(scan.file.courseId); else next.add(scan.file.courseId); return next; })} /> Use the syllabus grading weights: {scan.weights.map(w => `${w.name} ${w.weight}%`).join(', ')}</label>}
-            <SyllabusProposalList proposals={scan.proposals} selected={selected} onToggle={toggle} /></>}
+            <SyllabusProposalList proposals={scan.proposals} selected={selected} onToggle={toggle} /><ScannedText text={scan.scannedText} /></>}
         </div>)}
       </div>}
       <div className="modal-actions">

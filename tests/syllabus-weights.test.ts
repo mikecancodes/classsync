@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { applyWeightPlan, matchCategory, needsWeights, planWeights } from '../src/lib/syllabus-weights';
 import { parseSyllabusWeights } from '../src/lib/syllabus';
-import { AcademicState, Assignment, extractWeights, stateSchema } from '../src/lib/model';
+import { AcademicState, Assignment, stateSchema } from '../src/lib/model';
+import { findSyllabusWeights } from '../src/lib/syllabus-rules';
 import { emptyWorkspace } from '../src/lib/workspace';
 
 const weights = [{ name: 'Exams', weight: 45 }, { name: 'Lab Reports', weight: 25 }, { name: 'Homework', weight: 20 }, { name: 'Participation', weight: 10 }];
@@ -43,6 +44,23 @@ test('weights parse from AI output and from pasted syllabus text', () => {
   assert.deepEqual(parseSyllabusWeights({ weights: [{ name: ' Exams: ', weight: 40 }, { name: 'Labs', weight: '25' }, { name: 'Bad', weight: 0 }, { name: 'Huge', weight: 140 }, { name: '', weight: 10 }, { name: 'labs', weight: 5 }] }),
     [{ name: 'Exams', weight: 40 }, { name: 'Labs', weight: 25 }]);
   assert.deepEqual(parseSyllabusWeights('nope'), []);
-  const fromText = parseSyllabusWeights({ weights: extractWeights('Grading\nExams 45%\nLab Reports - 25%\nHomework: 20%\nParticipation 10 %') });
+  const fromText = parseSyllabusWeights({ weights: findSyllabusWeights('Grading\nExams 45%\nLab Reports - 25%\nHomework: 20%\nParticipation 10 %') });
   assert.deepEqual(fromText.map(w => [w.name, w.weight]), [['Exams', 45], ['Lab Reports', 25], ['Homework', 20], ['Participation', 10]]);
+});
+
+test('the syllabus viewer finds D2L, uploaded, or titled syllabus files in that order', async () => {
+  const { findSyllabusMaterial } = await import('../src/components/syllabus-viewer');
+  const base = state();
+  const m = (id: string, title: string) => ({ id, courseId: 'bio', title, text: '', kind: 'material' as const });
+  assert.equal(findSyllabusMaterial({ ...base, materials: [m('x', 'Course Syllabus.pdf'), m('syllabus-bio', 'Syllabus · mine.pdf'), m('d2l-syllabus-bio', 'Syllabus · d2l.pdf')] }, 'bio')?.id, 'd2l-syllabus-bio');
+  assert.equal(findSyllabusMaterial({ ...base, materials: [m('x', 'Course Syllabus.pdf'), m('syllabus-bio', 'Syllabus · mine.pdf')] }, 'bio')?.id, 'syllabus-bio');
+  assert.equal(findSyllabusMaterial({ ...base, materials: [m('notes', 'Week 1 notes'), m('x', 'Course Syllabus.pdf')] }, 'bio')?.id, 'x');
+  assert.equal(findSyllabusMaterial({ ...base, materials: [m('notes', 'Week 1 notes')] }, 'bio'), undefined);
+});
+
+test('weight finder handles labels, parentheses and several weights per line', () => {
+  assert.deepEqual(findSyllabusWeights('Grading: Exams 70%'), [{ name: 'Exams', weight: 70 }]);
+  assert.deepEqual(findSyllabusWeights('Homework (20%), Quizzes (10%) and Final Project (30%)'), [{ name: 'Homework', weight: 20 }, { name: 'Quizzes', weight: 10 }, { name: 'Final Project', weight: 30 }]);
+  assert.deepEqual(findSyllabusWeights('Total 100%\nYour final grade is 100%'), []);
+  assert.deepEqual(findSyllabusWeights('Late work loses 10% per day'), [], 'penalty sentences are not categories');
 });

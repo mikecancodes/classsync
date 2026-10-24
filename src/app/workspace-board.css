@@ -264,3 +264,7 @@
 .weights-plan li { display: flex; justify-content: space-between; max-width: 360px; }
 .syllabus-weights h2 { display: flex; gap: 8px; align-items: center; }
 .weights-offer { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; margin: 6px 0; }
+.syllabus-viewer h2 { display: flex; gap: 8px; align-items: center; }
+.syllabus-frame { width: 100%; height: 640px; border: 1px solid var(--border); border-radius: 8px; background: #fff; }
+.syllabus-text, .scanned-text pre { white-space: pre-wrap; max-height: 420px; overflow: auto; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 12px; line-height: 1.6; background: var(--hover); }
+.scanned-text { margin: 8px 0; }

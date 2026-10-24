@@ -2,19 +2,22 @@
 
 import { useState, type Dispatch, type SetStateAction } from 'react';
 import { FileText, LoaderCircle, Scale, Upload } from 'lucide-react';
-import { AcademicState, Course, extractWeights } from '@/lib/model';
+import { AcademicState, Course } from '@/lib/model';
+import { findSyllabusWeights } from '@/lib/syllabus-rules';
 import { applyWeightPlan, needsWeights, planWeights, type WeightPlan } from '@/lib/syllabus-weights';
 import { parseSyllabusWeights, DOCX_MIME, PDF_MIME } from '@/lib/syllabus';
 import { scanSyllabus, type ScanSource } from '@/lib/syllabus-scan';
 import { fileToBase64 } from '@/lib/document-text';
 import { materialFile } from '@/lib/material-files';
+import { ScannedText } from './syllabus-scan';
+import { findSyllabusMaterial } from './syllabus-viewer';
 
 const MAX_BYTES = 8 * 1024 * 1024;
 const kindOf = (file: File) => file.type === PDF_MIME || /\.pdf$/i.test(file.name) ? 'pdf' : file.type === DOCX_MIME || /\.docx$/i.test(file.name) ? 'docx' : null;
 
 // Pulls the grading breakdown from the class syllabus into the calculator, after review
 export function SyllabusWeightsPanel({ course, data, setData, notify }: { course: Course; data: AcademicState; setData: Dispatch<SetStateAction<AcademicState>>; notify: (message: string) => void }) {
-  const savedSyllabus = data.materials.find(m => m.courseId === course.id && /syllabus/i.test(m.title));
+  const savedSyllabus = findSyllabusMaterial(data, course.id);
   const hasText = Boolean(course.syllabus.trim());
   const suggest = needsWeights(course) && (Boolean(savedSyllabus) || hasText);
   const [open, setOpen] = useState(false);
@@ -23,6 +26,7 @@ export function SyllabusWeightsPanel({ course, data, setData, notify }: { course
   const [note, setNote] = useState('');
   const [plan, setPlan] = useState<WeightPlan | null>(null);
   const [pasted, setPasted] = useState('');
+  const [scanned, setScanned] = useState<string | undefined>();
 
   function review(weights: { name: string; weight: number }[], method: string) {
     if (!weights.length) { setPlan(null); setError('No grading weights were found. Paste the grading section (e.g. “Exams 40%”) below.'); return; }
@@ -31,9 +35,10 @@ export function SyllabusWeightsPanel({ course, data, setData, notify }: { course
   }
 
   async function scan(source: ScanSource) {
-    setBusy(true); setError(''); setNote(''); setPlan(null);
+    setBusy(true); setError(''); setNote(''); setPlan(null); setScanned(undefined);
     try {
       const result = await scanSyllabus(source, course);
+      setScanned(result.scannedText);
       review(result.weights, result.method === 'ai' ? 'Read with AI. Check them against the syllabus.' : result.note ?? '');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Couldn’t read the syllabus.');
@@ -80,10 +85,11 @@ export function SyllabusWeightsPanel({ course, data, setData, notify }: { course
     <details>
       <summary>Or paste the grading section</summary>
       <textarea rows={4} value={pasted} onChange={e => setPasted(e.target.value)} placeholder={'Exams 40%\nLabs 25%\nHomework 20%\nParticipation 15%'} aria-label="Grading section" />
-      <button type="button" className="secondary-button" disabled={!pasted.trim()} onClick={() => review(parseSyllabusWeights({ weights: extractWeights(pasted) }), 'Read from the pasted text.')}>Find weights</button>
+      <button type="button" className="secondary-button" disabled={!pasted.trim()} onClick={() => review(parseSyllabusWeights({ weights: findSyllabusWeights(pasted) }), 'Read from the pasted text.')}>Find weights</button>
     </details>
     {busy && <p role="status" className="notice"><LoaderCircle size={14} className="spin" /> Reading the syllabus…</p>}
     {error && <p role="alert" className="error">{error}</p>}
+    <ScannedText text={scanned} />
     {plan && <div className="weights-plan">
       {note && <p className="muted">{note}</p>}
       <ul>{plan.categories.filter(c => c.weight > 0).map(c => <li key={c.name}>{c.name}<strong>{c.weight}%</strong></li>)}</ul>

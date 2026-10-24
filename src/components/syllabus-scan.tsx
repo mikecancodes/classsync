@@ -23,6 +23,12 @@ export function SyllabusProposalList({ proposals, selected, onToggle }: { propos
 
 export const defaultSelection = (proposals: SyllabusProposal[]) => new Set(proposals.filter(p => !p.duplicateOf).map(p => p.assignment.id));
 
+// Shows the exact text the scanner read, so students can check what was (and wasn't) picked up
+export function ScannedText({ text }: { text?: string }) {
+  if (text === undefined) return null;
+  return <details className="scanned-text"><summary>Text that was scanned ({text.length.toLocaleString()} characters)</summary>{text.trim() ? <pre>{text.slice(0, 20000)}</pre> : <p className="muted">No text was found.</p>}</details>;
+}
+
 // Course page: scan an uploaded syllabus file or the pasted Syllabus text for due dates
 export function SyllabusScan({ course, data, setData, notify }: { course: Course; data: AcademicState; setData: Dispatch<SetStateAction<AcademicState>>; notify: (message: string) => void }) {
   const [busy, setBusy] = useState(false);
@@ -30,11 +36,13 @@ export function SyllabusScan({ course, data, setData, notify }: { course: Course
   const [note, setNote] = useState('');
   const [proposals, setProposals] = useState<SyllabusProposal[] | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [scanned, setScanned] = useState<string | undefined>();
 
   async function run(source: ScanSource) {
-    setBusy(true); setError(''); setNote(''); setProposals(null);
+    setBusy(true); setError(''); setNote(''); setProposals(null); setScanned(undefined);
     try {
       const result = await scanSyllabus(source, course);
+      setScanned(result.scannedText);
       const next = proposeAssignments(result.items, course, data);
       setProposals(next); setSelected(defaultSelection(next));
       setNote(result.method === 'ai' ? `Found ${result.items.length} dated item${result.items.length === 1 ? '' : 's'} with AI. Check them before adding.` : result.note ?? '');
@@ -68,6 +76,7 @@ export function SyllabusScan({ course, data, setData, notify }: { course: Course
     {busy && <p role="status" className="notice"><LoaderCircle size={14} className="spin" /> Reading the syllabus…</p>}
     {error && <p role="alert" className="error">{error}</p>}
     {note && <p className="notice">{note}</p>}
+    <ScannedText text={scanned} />
     {proposals && <>
       <SyllabusProposalList proposals={proposals} selected={selected} onToggle={id => setSelected(current => { const next = new Set(current); if (next.has(id)) next.delete(id); else next.add(id); return next; })} />
       <div className="inline"><button type="button" className="primary-button" disabled={!selected.size} onClick={add}>Add {selected.size} to assignments</button><button type="button" className="secondary-button" onClick={() => setProposals(null)}>Discard</button></div>

@@ -79,3 +79,21 @@ export function findSyllabusDates(text: string, today: string): SyllabusItem[] {
   }
   return items.sort((a, b) => a.date.localeCompare(b.date)).slice(0, 200);
 }
+
+// Grading weights from syllabus text, e.g. "Exams 40%", "Grading: Labs - 25%",
+// "Homework (20%)", several per line. The label is the words just before each percent.
+export function findSyllabusWeights(text: string): { name: string; weight: number }[] {
+  const found: { name: string; weight: number }[] = [];
+  const pattern = /([A-Za-z][A-Za-z &/'-]{1,60}?)\s*[:–—-]?\s*\(?\s*(\d{1,3}(?:\.\d+)?)\s*%/g;
+  for (const line of text.split(/\r?\n/)) {
+    for (const match of line.matchAll(pattern)) {
+      // "Grading: Exams" → "Exams"; drop list words left over from a previous item
+      const name = match[1].split(/[:;,]/).pop()!.replace(/^\s*(and|plus|&)\s+/i, '').replace(/[\s'-]+$/, '').trim();
+      const weight = Number(match[2]);
+      // Sentences ("your final grade is 100%", "late work loses 10%") aren't categories
+      const sentence = /\b(is|are|of|be|worth|than|to|by|at|up|loses?|earns?|receives?|gets?)$/i.test(name) || /\btotal\b/i.test(name);
+      if (name.length >= 2 && weight > 0 && weight <= 100 && !sentence && !/^(grade|grading|final grade)$/i.test(name)) found.push({ name, weight });
+    }
+  }
+  return found;
+}
