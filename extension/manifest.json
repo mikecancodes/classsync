@@ -1,18 +1,40 @@
 {
   "manifest_version": 3,
   "name": "ClassSync D2L Sync",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Reads your D2L (Brightspace) classes, due dates and announcements and hands them to ClassSync for your review.",
-  "background": { "service_worker": "src/background.js", "type": "module" },
-  "action": { "default_popup": "popup.html", "default_title": "ClassSync" },
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "ClassSync"
+  },
   "options_page": "options.html",
-  "permissions": ["storage", "scripting", "tabs"],
-  "host_permissions": ["http://127.0.0.1:3000/*", "http://localhost:3000/*"],
-  "optional_host_permissions": ["https://*/*"],
+  "permissions": [
+    "storage",
+    "unlimitedStorage",
+    "scripting",
+    "tabs"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1:3000/*",
+    "http://localhost:3000/*"
+  ],
+  "optional_host_permissions": [
+    "https://*/*"
+  ],
   "content_scripts": [
     {
-      "matches": ["http://127.0.0.1:3000/*", "http://localhost:3000/*"],
-      "js": ["src/bridge-protocol.js", "src/classsync-bridge.js"],
+      "matches": [
+        "http://127.0.0.1:3000/*",
+        "http://localhost:3000/*"
+      ],
+      "js": [
+        "src/bridge-protocol.js",
+        "src/classsync-bridge.js"
+      ],
       "run_at": "document_idle"
     }
   ]
