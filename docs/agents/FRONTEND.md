@@ -15,14 +15,18 @@ Build ClassSync as a working academic dashboard for a one-day university hackath
 
 Keep the existing grade calculator and course workflows functional throughout. Build actual interactions and persistence, not decorative controls.
 
+## Simplicity and usability
+
+The main goal is a simple, friendly dashboard with three clear sections: Sync / To-do list on the left, centered announcements, and ClassSync AI on the right. Put the logo at the top left. Keep top tabs obvious and controls plainly labeled. Avoid duplicate deadlines, promotional cards, extra metrics, and competing actions. Keep the three Home sections left to right at every viewport size. Use a minimum usable workspace width with horizontal scrolling on narrow phones; never stack them top to bottom.
+
 ## Brand and visual system
 
 - Product: **ClassSync**. Tagline: **All your classes. One place.**
-- Logo: a simple **brain** icon or SVG beside the product name at the upper right. Use Lucide React's Brain icon or a small accessible SVG. Do not use a cloud; replace the existing graduation cap when implementing this branding change.
+- Logo: a simple **brain** icon or SVG beside the product name at the upper left. Use Lucide React's Brain icon or a small accessible SVG. Do not use a cloud; replace the existing graduation cap when implementing this branding change.
 - Light mode: white and light-gray surfaces, charcoal text, blue primary accents, purple AI accents. Preserve dark-mode support with readable contrast.
 - Use rounded cards, subtle shadows, clean typography, consistent spacing, and restrained hover transitions.
 - Build dialogs, menus, tabs, toasts and similar controls from shadcn/ui (decision 5), themed by the CSS tokens in `src/app/globals.css`; avoid scattered hard-coded theme variants. Use existing Tailwind support where useful.
-- Desktop: horizontal top navigation with Home, My Assignments, and Lecture Notes / Material; ClassSync brain logo at the top right; center workspace and persistent right-side chat. Secondary pages live under More. Mobile: wrapping top tabs and a collapsible chat drawer, without horizontal overflow.
+- Desktop: horizontal top navigation with Home, My Assignments, and Lecture Notes / Material; ClassSync brain logo at the top left; center workspace and persistent right-side chat. Secondary pages live under More. Mobile: wrapping top tabs and a collapsible chat drawer, without horizontal overflow.
 - Use semantic controls, visible focus, associated labels, keyboard-accessible dialogs, readable contrast, and reduced-motion support. Icons alone need accessible names. Color must not be the only status signal.
 
 ## Pages and routing
@@ -44,14 +48,14 @@ These route names are recommended mappings into the existing application, not a 
 
 ### Home
 
-The approved sketch places announcements in the center and chat in a dedicated right column. Announcements are visible on arrival. Provide real Class, Priority, Read status, and Sort by controls; combine filters, offer Reset, and show a useful empty state. Sort by newest, oldest, or priority with stable tie-breaks. Use high/medium/low announcement priority; legacy records without priority use medium. Keep deadlines in a secondary expandable section. Do not restore the left sidebar, dashboard course-card grid, or a floating desktop chat overlay.
+The approved sketch places announcements in the center and chat in a dedicated right column. Announcements are visible on arrival. Provide real Class, Priority, Read status, and Sort by controls; combine filters, offer Reset, and show a useful empty state. Sort by newest, oldest, or priority with stable tie-breaks. Use high/medium/low announcement priority; legacy records without priority use medium. Keep coursework in a dedicated left Sync / To-do section. Clicking Sync classes reveals its class-filtered list without a modal on Home. Do not duplicate deadlines below the center feed. Do not restore the left sidebar, dashboard course-card grid, or a floating desktop chat overlay.
 
 
 - Suggested welcome: “Good morning! Here’s everything happening with your classes.” If time-specific, derive the greeting from the student's local time.
 - Home prioritizes the announcement feed over summary cards. Coursework counts remain derived from shared data where displayed. Due Soon means today through the next seven local calendar days, excluding completed work.
 - Announcements: course, LMS source (D2L or Canvas), title, short description, posted date, and read/unread status. Sort newest first and persist read state.
 - Upcoming Deadlines: incomplete work sorted by due date; make overdue work visible separately.
-- **Sync classes** opens a To-do list dialog immediately. It shows current incomplete assignments with a class filter and completion controls. The sync operation is a future integration hook; this button does not import data or claim a successful sync.
+- **Sync classes** reveals the To-do list in the left section immediately. It shows current incomplete assignments with a class filter and completion controls. The sync operation is a future integration hook; this button does not import data or claim a successful sync.
 
 ### My Assignments
 

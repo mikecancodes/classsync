@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Check, ChevronDown, SlidersHorizontal } from 'lucide-react';
+import { Check, SlidersHorizontal } from 'lucide-react';
 import { AcademicState, Assignment, formatDate } from '@/lib/model';
 import { filterAnnouncements, type FeedFilters } from '@/lib/feed';
 
@@ -18,8 +18,6 @@ const initialFilters: FeedFilters = { course: 'all', priority: 'all', read: 'all
 export function Dashboard({ data, today, onEdit, onComplete, onAnnouncementToggle }: Props) {
   const [filters, setFilters] = useState(initialFilters);
   const rows = filterAnnouncements(data, filters);
-  const pending = data.assignments.filter(item => item.status !== 'done' && (filters.course === 'all' || item.courseId === filters.course))
-    .sort((a, b) => a.due.localeCompare(b.due) || a.id.localeCompare(b.id));
   const unread = data.announcements.filter(item => !item.read).length;
   const filtered = Object.keys(initialFilters).some(key => filters[key as keyof FeedFilters] !== initialFilters[key as keyof FeedFilters]);
   const set = (key: keyof FeedFilters, value: string) => setFilters(current => ({ ...current, [key]: value }));
@@ -48,6 +46,5 @@ export function Dashboard({ data, today, onEdit, onComplete, onAnnouncementToggl
         </article>;
       })}
     </section>
-    <details className="board-deadlines"><summary><span>Assignment deadlines <small>{pending.length} to do{pending.some(item => item.due < today) ? ' · Includes overdue work' : ''}</small></span><ChevronDown size={16} /></summary><ul>{pending.slice(0, 5).map(item => <li key={item.id}><button className="focus-check" aria-label={`Complete ${item.title}`} onClick={() => onComplete(item)}><Check size={14} /></button><button onClick={() => onEdit(item)}>{item.title}</button><span className={item.due < today ? 'board-late' : ''}>{item.due < today ? 'Overdue · ' : ''}{formatDate(item.due)}</span></li>)}</ul>{!pending.length && <p className="muted">No incomplete assignments for this class.</p>}<Link href="/assignments">All assignments <ArrowRight size={14} /></Link></details>
   </div>;
 }

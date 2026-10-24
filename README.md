@@ -28,7 +28,7 @@ pnpm start
 
 ## Included MVP
 
-- Top tabs for Home, My Assignments, and Lecture Notes / Material, with the ClassSync logo at the top right. Home centers announcements with class, priority, read status, and sorting controls; deadlines are secondary.
+- Top tabs for Home, My Assignments, and Lecture Notes / Material, with the ClassSync logo at the top left. Home centers announcements with class, priority, read status, and sorting controls; deadlines are secondary.
 - Course pages with assignment CRUD, completion tracking, earned scores, editable syllabus, and text/Markdown materials.
 - Searchable assignment list with status and course filters. All dates are local calendar dates; deadlines are considered overdue on the following day.
 - Monthly calendar, responsive navigation, keyboard focus states, and persistent light/dark modes.
@@ -42,7 +42,7 @@ pnpm start
 
 The first visit generates realistic sample coursework with deadlines relative to that visit. Thereafter the version-2 workspace is stored under `classsync-workspace-v2` in localStorage. Legacy v1 data migrates through validation and its original key remains as a recovery copy. Invalid stored data is preserved and automatic writes are paused. Theme is saved separately. Completed status does not imply a score; record earned points explicitly.
 
-**Sync classes** opens a To-do list with current incomplete coursework, a class filter, and completion controls. Actual class sync is not implemented. Existing data stays in the shared workspace. Due Soon means incomplete work due today through seven local calendar days ahead, inclusive.
+**Sync classes** reveals the left-side To-do list with current incomplete coursework, a class filter, and completion controls. Actual class sync is not implemented. Existing data stays in the shared workspace. Due Soon means incomplete work due today through seven local calendar days ahead, inclusive.
 
 The global chatbot answers questions about today, tomorrow, the next seven days, overdue work, and courses using current workspace data. Schedule suggestions are deadline order only; capacity-aware Plan My Week remains future work.
 

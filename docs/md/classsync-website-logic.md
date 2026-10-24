@@ -25,7 +25,7 @@ Live Brightspace (D2L) data comes from the read-only browser extension prototype
 
 ## Approved dashboard layout
 
-The latest user correction supersedes earlier dashboard layouts: place the ClassSync brain logo at the top right, top tabs for Home / My Assignments / Lecture Notes / Material, announcements in the center with class, priority, read-state filters and sorting, and a persistent chat column on the right. Mobile keeps top navigation and opens chat as a collapsible panel. Secondary tools live under More. Do not restore a desktop left sidebar or hide announcements behind a disclosure.
+The latest user correction supersedes earlier dashboard layouts: place the ClassSync brain logo at the top left, top tabs for Home / My Assignments / Lecture Notes / Material, announcements in the center with class, priority, read-state filters and sorting, and a persistent chat column on the right. Mobile keeps top navigation and opens chat as a collapsible panel. Secondary tools live under More. Do not restore a desktop left sidebar or hide announcements behind a disclosure.
 
 ## Home dashboard
 
@@ -59,7 +59,7 @@ The classes page derives assignment totals and upcoming deadlines from shared st
 
 ## Global local assistant
 
-Mount one persistent desktop right-side chat panel across pages; collapse it only on mobile. It reads the current shared workspace, including edits made after the panel was opened. In demo mode label it **Local assistant / rule-based** and do not send student data externally.
+Mount one persistent desktop left-side chat panel across pages; collapse it only on mobile. It reads the current shared workspace, including edits made after the panel was opened. In demo mode label it **Local assistant / rule-based** and do not send student data externally.
 
 Support deterministic local answers for:
 

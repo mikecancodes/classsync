@@ -129,3 +129,91 @@
   .board-post-meta time { margin-left: 0; }
 }
 @media(max-height:550px) and (max-width:900px) { .docked-chat { top: 10px; bottom: 10px; z-index: 60; } }
+
+/* Latest correction: three sections, with the brand at the top left. */
+.workspace-brand-area { order: -1; justify-content: flex-start; }
+.workspace-brand-area .brand { order: -1; }
+.workspace-tabs { margin-left: auto; }
+.home-board { --todo-width: 235px; }
+.home-board .main-shell { margin-left: calc(var(--todo-width) + 24px); }
+.home-board main { padding-top: 30px; padding-left: 24px; padding-right: 24px; }
+.home-board .board-heading { position: relative; justify-content: center; text-align: center; padding: 0 75px 0; min-height: 110px; }
+.home-board .board-unread { position: absolute; right: 0; top: 45px; }
+.sync-sidebar { position: fixed; top: 102px; left: 20px; bottom: 20px; width: var(--todo-width); overflow: auto; padding: 22px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: 13px; }
+.sync-sidebar h2 { font-size: 16px; }
+.sync-sidebar>p { font-size: 11px; color: var(--muted); margin: 8px 0 19px; }
+.sync-sidebar>.primary-button { width: 100%; justify-content: center; font-size: 12px; padding: 11px; }
+.sync-sidebar-placeholder { color: var(--muted); font-size: 12px; line-height: 1.8; padding: 24px 0; }
+.sync-sidebar label { display: grid; gap: 7px; font-size: 11px; color: var(--muted); margin-top: 24px; }
+.sync-sidebar select { width: 100%; padding: 8px; min-width: 0; font-size: 11px; background: var(--surface); }
+.sync-sidebar-count { font-size: 11px; color: var(--muted); padding: 20px 0 0; }
+.sync-sidebar ul { list-style: none; padding: 0; margin: 0; }
+.sync-sidebar li { display: flex; gap: 9px; align-items: flex-start; padding: 17px 0; border-bottom: 1px solid var(--border); }
+.sync-sidebar li>div { min-width: 0; }
+.sync-sidebar li strong { display: block; font-size: 12px; line-height: 1.6; font-weight: 550; overflow-wrap: anywhere; }
+.sync-sidebar li span,.sync-sidebar li small { display: block; color: var(--muted); font-size: 10px; margin-top: 5px; }
+.sync-sidebar .focus-check { margin-top: 3px; width: 18px; height: 18px; }
+.sync-sidebar li small.board-late { color: #bd735a; }
+@media(min-width:761px) and (max-width:1100px) {
+  .home-board { --todo-width: 175px; --chat-width: 245px; }
+  .home-board main { padding-left: 16px; padding-right: 16px; }
+  .sync-sidebar { left: 12px; padding: 17px 12px; }
+  .home-board .board-heading { padding: 0; flex-direction: column; gap: 10px; }
+  .home-board .board-unread { position: static; }
+  .home-board .board-heading h1 { font-size: 24px; }
+  .home-board .board-filters label { flex: 1 1 40%; min-width: 0; }
+  .home-board .board-post { padding: 17px; }
+  .home-board .board-post-title { display: block; }
+  .home-board .priority-label { display: inline-block; margin-top: 8px; }
+}
+@media(min-width:761px) and (max-width:900px) {
+  .workspace-brand-area { justify-content: flex-start; }
+  .home-board .main-shell { margin-left: 195px; margin-right: 265px; }
+  .home-board .docked-chat { display: flex; width: 245px; right: 12px; top: 142px; box-shadow: none; }
+  .home-board .docked-launcher,.home-board .mobile-chat-collapse { display: none; }
+  .home-board .sync-sidebar { top: 142px; }
+  .home-board .docked-chat .chat-heading { padding: 14px 10px; gap: 7px; }
+  .home-board .chat-heading h2 { font-size: 14px; }
+  .home-board .chat-brain { width: 32px; height: 32px; }
+}
+@media(max-width:760px) {
+  .workspace-brand-area { justify-content: flex-start; }
+  .home-board .main-shell { margin: 0; }
+  .sync-sidebar { position: static; width: auto; margin: 20px 17px 0; padding: 18px; max-height: 380px; }
+  .sync-sidebar-placeholder { padding: 15px 0 0; }
+  .home-board .board-heading { padding: 0; min-height: auto; margin: 5px 0 25px; }
+  .home-board .board-unread { position: static; }
+  .home-board .board-heading>div { flex: 1; }
+}
+
+/* Home is explicitly a left-to-right workspace at every viewport size. */
+.home-board {
+  display: grid;
+  grid-template-columns: minmax(160px, 20%) minmax(300px, 1fr) minmax(220px, 28%);
+  grid-template-rows: auto 1fr;
+  gap: 20px;
+  padding: 0 16px 20px;
+  min-width: 720px;
+  align-items: start;
+}
+.home-board>.workspace-header { grid-column: 1 / -1; grid-row: 1; margin: 0 -16px; }
+.home-board>.sync-sidebar { grid-column: 1; grid-row: 2; position: sticky; top: 102px; left: auto; bottom: auto; width: 100%; height: calc(100vh - 122px); margin: 0; }
+.home-board>.main-shell { grid-column: 2; grid-row: 2; margin: 0; min-width: 0; }
+.home-board main { padding: 0; max-width: none; }
+.home-board>.docked-chat { grid-column: 3; grid-row: 2; position: sticky; display: flex; top: 102px; right: auto; bottom: auto; width: 100%; height: calc(100vh - 122px); box-shadow: none; }
+.home-board>.docked-launcher,.home-board .mobile-chat-collapse { display: none; }
+.home-board .board-heading { padding: 12px 0; min-height: 110px; flex-direction: column; gap: 8px; }
+.home-board .board-unread { position: static; }
+.home-board .board-filters label { min-width: 0; flex: 1 1 40%; }
+.home-board .filter-symbol { width: 100%; }
+@media(max-width:900px) {
+  .home-board { gap: 12px; padding-left: 12px; padding-right: 12px; }
+  .home-board>.workspace-header { margin: 0 -12px; }
+  .home-board>.sync-sidebar,.home-board>.docked-chat { top: 142px; height: calc(100vh - 162px); }
+  .home-board .sync-sidebar { padding: 15px 10px; }
+  .home-board .board-heading h1 { font-size: 23px; }
+  .home-board .board-post { padding: 16px; }
+  .home-board .board-post-title { display: block; }
+  .home-board .priority-label { margin-top: 7px; display: inline-block; }
+  .home-board .docked-chat .chat-heading { padding: 14px 10px; }
+}

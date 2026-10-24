@@ -15,10 +15,10 @@ Updated after the branding/dashboard/chatbot refresh. “Existing” means sourc
 
 | Feature | Baseline | Next target |
 | --- | --- | --- |
-| Dashboard | Top tabs, logo top right, center announcement feed with class/priority/status/sort filters, secondary deadlines, Sync classes | Broader search and filters |
+| Dashboard | Top tabs, logo top left, center announcement feed with class/priority/status/sort filters, left Sync / To-do section, Sync classes | Broader search and filters |
 | Brand | Brain logo and “All your classes. One place.” tagline | Preserve branding |
 | Assignments | CRUD, completion, search, status/course filters, due-date sorting | Platform, priority, duration, due/platform/priority filters |
-| AI | Desktop right-side chatbot and mobile drawer, session history across routes, structured local answers, optional server AI; study tools preserved | Gemini provider and browser-run tool calling (decisions 3–4) |
+| AI | Desktop left-side chatbot and mobile drawer, session history across routes, structured local answers, optional server AI; study tools preserved | Gemini provider and browser-run tool calling (decisions 3–4) |
 | Tasks | No separate task entity/page | Persistent To-Do List and completion progress |
 | Notes | Global Notes / Material tab with course selector and existing create/edit/delete | Keyword search |
 | Planner | Generic local catch-up checklist | Deterministic daily Plan My Week using deadline, priority, duration, workload |
@@ -91,7 +91,7 @@ Apply the relevant checks to the feature being delivered. This is a target check
 
 ### Presentation and handoff
 
-- [ ] Top tabs, top-right brain branding, centered filterable announcements, reserved desktop chat column, and light/dark contrast match the approved sketch.
+- [ ] Top tabs, top-left brain branding, centered filterable announcements, reserved desktop chat column, and light/dark contrast match the approved sketch.
 - [ ] Check desktop and a narrow mobile viewport, navigation, panel/dialog focus, empty states, and reduced motion.
 - [ ] No unintended horizontal overflow, clipped forms, or obstructed mobile controls.
 - [ ] Report installation/start commands, checks run, demo features, limitations, and integration extension points.
