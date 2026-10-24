@@ -18,7 +18,7 @@ These guides describe the target product; they do not claim all features are imp
 - This repository already uses Next.js App Router, React, TypeScript, Tailwind CSS, and Lucide React. Preserve that stack and the existing server routes.
 - The supplied frontend brief proposes React/Vite and allows TypeScript if configured. Apply its product and frontend requirements to this Next.js application. A Vite migration is a separate task requiring an explicit request; do not reinitialize the project.
 - Keep existing course pages, grade calculations, optional Supabase integration, and secure OpenAI endpoints working when adding the new frontend features.
-- The branding target is a **brain logo** beside **ClassSync**, with the tagline **All your classes. One place.** The current graduation-cap branding is a known implementation gap.
+- The branding target is a **brain logo** beside **ClassSync**, with the tagline **All your classes. One place.** The brain mark and tagline are implemented.
 - Follow the user's current task scope. A request for documentation does not authorize implementing every roadmap item.
 - Keep demo mode functional without credentials. Never imply demo LMS data or rule-based responses come from live services.
 - The D2L browser extension lives in `extension/` (see [docs/d2l-sync/extension.md](docs/d2l-sync/extension.md)). Keep it separate from the Next.js app, read-only toward the LMS (GET requests with the student's own session), and sending data only through the authenticated import endpoint. Run `pnpm exec tsx --test extension/test/*.test.ts` after changing `src/lib/model.ts`.

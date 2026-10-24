@@ -6,6 +6,11 @@ The repository uses Next.js App Router, React, TypeScript, Tailwind CSS, Lucide 
 
 | Area | Current location |
 | --- | --- |
+| Persistent workspace shell | `src/app/layout.tsx` |
+| Local assistant and date windows | `src/lib/academic-assistant.ts` |
+| Migration and Demo Sync | `src/lib/workspace.ts` |
+| Chat panel | `src/components/chatbot.tsx` |
+| Dashboard counts and announcements | `src/components/dashboard-summary.tsx`, `src/components/announcements.tsx` |
 | Route entry | `src/app/[[...slug]]/page.tsx` |
 | Shell, dashboard, assignment editor, calendar | `src/components/class-sync.tsx` |
 | Assistant, grades, materials, settings | `src/components/panels.tsx` |
@@ -32,7 +37,7 @@ The following are proposed fields/entities, not existing schema guarantees:
 | --- | --- |
 | Course | `platform: 'd2l' | 'canvas' | 'manual'`; stable source course identity |
 | Assignment | Platform/source identity, priority, estimated minutes; retain existing title/course/due/status/category/points/earned/description |
-| Announcement | ID, course ID, platform/source identity, title, description, posted timestamp, read status |
+| Announcement (implemented) | ID, course ID, D2L/Canvas platform, title, description, posted local date, read status |
 | Personal task | ID, title, optional course ID, due date, priority, completion |
 | Note | Reuse material ID, course ID, title, text, and kind; extend only if necessary |
 
@@ -40,7 +45,7 @@ Use stable IDs, validated references, bounded strings and arrays, positive estim
 
 ## Persistence and migration
 
-- Current localStorage key: `classsync-workspace-v1`. Current state contains courses, assignments, and materials. Theme is stored separately.
+- Current key: `classsync-workspace-v2`; state has version 2, courses, assignments, materials, and announcements. Unversioned/v1 data migrates through the same strict schema. The original v1 key stays as a recovery copy. Invalid storage disables autosave; unsupported versions and unknown top-level fields are rejected. Theme is separate.
 - Add a versioned migration before changing persisted schemas. Preserve existing coursework, notes, scores, and settings; validate the migrated result before replacing the stored copy.
 - Update backup export/restore, cloud payload validation, import validation, and seeds together with schema changes. A newer payload must not silently lose fields through an older parser.
 - Read and write browser storage only on the client. Handle unavailable/quota-exceeded storage and invalid backups visibly without deleting the user's original data.
@@ -57,7 +62,7 @@ Use stable IDs, validated references, bounded strings and arrays, positive estim
 
 ## Demo LMS import service
 
-Build a local JSON normalization service for sample assignments and announcements. Clearly label connections and refresh results **Demo**. Keep platform adapters separate from the shared normalized model.
+`syncDemo` validates and merges bundled samples by stable ID. It preserves existing assignment/course/material edits and manual work; sample announcements refresh while retaining read state. Missing demo records are re-added, and incompatible new assignment categories are skipped. Clearly label connections and refresh results **Demo**. Keep platform adapters separate from the shared normalized model.
 
 Recommended sequence:
 
@@ -68,10 +73,11 @@ Recommended sequence:
 
 Repeated Demo Sync must be idempotent: no duplicate assignments or announcements. Do not silently delete manual work, reset completion, or overwrite notes. Keep original sample IDs stable across date refreshes.
 
-The existing `/api/imports/preview` accepts authenticated version-1 course/assignment/material payloads and **does not write data or support announcements yet**. Extend its versioned contract deliberately if needed. A local demo import must not weaken server authentication or RLS. Future real adapters need permitted data access, student preview/approval, deduplication, and a transactional commit design. A read-only D2L browser extension prototype in `extension/` produces this payload from the student's own session (see `docs/d2l-sync/extension.md`). Automatic submission is out of scope.
+The existing `/api/imports/preview` accepts authenticated version-1 course/assignment/material payloads and **does not write data**. Its nested workspace schema now accepts legacy data or version 2 with announcements; summary counts currently cover courses, assignments, and materials. Extend its versioned contract deliberately if needed. A local demo import must not weaken server authentication or RLS. Future real adapters need permitted data access, student preview/approval, deduplication, and a transactional commit design. A read-only D2L browser extension prototype in `extension/` produces this payload from the student's own session (see `docs/d2l-sync/extension.md`). Automatic submission is out of scope.
 
 ## Assistant and planner service boundaries
 
+- Implemented local chatbot uses current shared state; history survives route navigation but is not persisted across reloads. Schedule answers are explicitly deadline-order suggestions, not the future capacity-aware planner.
 - Local chatbot intent handlers should query structured current workspace data rather than rely on canned answers. Return exact matching assignments and explain empty/unsupported results.
 - Use one shared planner for Plan My Week and schedule questions. Stable ordering should account for deadlines, priority, estimated duration, and workload; explain tie-breakers and capacity assumptions.
 - Preserve `/api/ai` as the provider boundary. Validate inputs, enforce limits, verify authentication for paid production usage, and keep credentials server-only.

@@ -1,19 +1,47 @@
-import { AcademicState, offsetDate } from './model';
+import { AcademicState, offsetDate, stateSchema } from './model';
+
 export function demoState(): AcademicState {
- const categories = [{name:'Assignments',weight:30},{name:'Quizzes',weight:15},{name:'Midterm',weight:25},{name:'Final',weight:30}];
- const courses: AcademicState['courses'] = [
-  {id:'cs201',code:'CS 201',name:'Data Structures',professor:'Dr. Sarah Chen',schedule:'Mon / Wed · 10:00 – 11:15 AM',color:'blue',categories,syllabus:'Data Structures — Fall semester\nAssignments 30%\nQuizzes 15%\nMidterm 25%\nFinal 30%\nTopics: linked lists, trees, graphs, hashing, and complexity. Office hours: Wednesday 2–4 PM.'},
-  {id:'math210',code:'MATH 210',name:'Linear Algebra',professor:'Dr. James Wilson',schedule:'Tue / Thu · 9:00 – 10:15 AM',color:'purple',categories,syllabus:'Linear Algebra\nAssignments 30%\nQuizzes 15%\nMidterm 25%\nFinal 30%\nTopics: vector spaces, matrices, eigenvalues, and linear transformations.'},
-  {id:'psych101',code:'PSYCH 101',name:'Intro to Psychology',professor:'Dr. Emily Parker',schedule:'Mon / Wed · 1:00 – 2:15 PM',color:'green',categories,syllabus:'Introduction to Psychology\nAssignments 30%\nQuizzes 15%\nMidterm 25%\nFinal 30%\nTopics: cognition, memory, learning, and social behavior.'},
-  {id:'eng102',code:'ENG 102',name:'Academic Writing',professor:'Prof. Michael Brooks',schedule:'Tue / Thu · 11:00 – 12:15 PM',color:'orange',categories,syllabus:'Academic Writing\nAssignments 30%\nQuizzes 15%\nMidterm 25%\nFinal 30%\nBuild arguments with evidence, analyze sources, and revise with intention.'}
- ];
- const assignments: AcademicState['assignments'] = [
-  {id:'a1',courseId:'cs201',title:'Binary Search Tree Implementation',due:offsetDate(1),status:'progress',category:'Assignments',points:100,earned:null,description:'Implement insert, search, and delete. Include complexity analysis and tests.'},
-  {id:'a2',courseId:'math210',title:'Problem Set 6: Eigenvalues',due:offsetDate(2),status:'todo',category:'Assignments',points:50,earned:null,description:'Complete problems 1–12 and show your calculations.'},
-  {id:'a3',courseId:'psych101',title:'Cognitive Psychology Quiz',due:offsetDate(3),status:'todo',category:'Quizzes',points:20,earned:null,description:'Review working memory, attention, and retrieval practice.'},
-  {id:'a4',courseId:'eng102',title:'Research Essay — First Draft',due:offsetDate(4),status:'progress',category:'Assignments',points:100,earned:null,description:'Write 1,500 words with a clear thesis and at least five scholarly sources.'},
-  {id:'a5',courseId:'cs201',title:'Graph Traversal Worksheet',due:offsetDate(-1),status:'todo',category:'Assignments',points:25,earned:null,description:'Trace breadth-first and depth-first search on the provided graphs.'},
-  ...courses.flatMap((c,i)=>[{id:`graded-${i}`,courseId:c.id,title:'Foundations assignment',due:offsetDate(-10),status:'done' as const,category:'Assignments',points:100,earned:[94,88,96,91][i],description:'Graded work from the first half of the semester.'},{id:`quiz-${i}`,courseId:c.id,title:'Week 5 checkpoint',due:offsetDate(-5),status:'done' as const,category:'Quizzes',points:20,earned:[18,17,19,18][i],description:'Feedback: strong progress. Review the marked questions.'}])
- ];
- return {courses,assignments,materials:[{id:'m1',courseId:'cs201',kind:'notes',title:'Week 7 · Trees & traversal',text:'A binary search tree stores keys with smaller values in the left subtree and larger values in the right subtree. In-order traversal visits left subtree, root, then right subtree, producing sorted order. Search, insertion, and deletion cost O(h), where h is the tree height. Balanced trees maintain height O(log n), while a skewed tree can have height O(n). Deleting a node with two children requires replacing its key with its in-order successor, then deleting that successor.'},{id:'m2',courseId:'math210',kind:'notes',title:'Week 7 · Eigenvalues',text:'An eigenvector is a nonzero vector v such that Av = lambda v. Solve det(A - lambda I) = 0 to find eigenvalues. For each eigenvalue, solve (A - lambda I)v = 0 for eigenvectors. A matrix is diagonalizable when it has a basis of eigenvectors.'},{id:'m3',courseId:'psych101',kind:'notes',title:'Memory & learning',text:'Working memory holds a limited amount of information temporarily. Long-term memory stores knowledge over extended periods. Retrieval practice strengthens later recall. Spaced practice spreads learning over time and typically improves retention compared with cramming.'},{id:'m4',courseId:'eng102',kind:'material',title:'Building a strong argument',text:'An academic argument begins with a specific, debatable thesis. Each paragraph supports a claim with evidence and explains why the evidence matters. Address counterarguments fairly. Cite sources consistently and distinguish your analysis from source material.'}]};
+  const categories = [
+    { name: 'Assignments', weight: 30 }, { name: 'Quizzes', weight: 15 },
+    { name: 'Midterm', weight: 25 }, { name: 'Final', weight: 30 },
+  ];
+  const definitions = [
+    ['demo-networks', 'CS 310', 'Computer Networks', 'Dr. Maya Patel', 'blue'],
+    ['cs201', 'CS 201', 'Data Structures', 'Dr. Sarah Chen', 'purple'],
+    ['demo-justice', 'CJ 101', 'Criminal Justice', 'Prof. Jordan Ellis', 'green'],
+    ['demo-architecture', 'CS 250', 'Computer Architecture', 'Dr. James Wilson', 'orange'],
+    ['demo-algorithms', 'CS 330', 'Algorithm Analysis', 'Dr. Elena Rivera', 'blue'],
+  ] as const;
+  const courses = definitions.map(([id, code, name, professor, color]) => ({
+    id, code, name, professor, color, categories,
+    schedule: 'See your syllabus for meeting times',
+    syllabus: `${name}\nAssignments 30%\nQuizzes 15%\nMidterm 25%\nFinal 30%\nDemo syllabus. Confirm your actual grading policy with your instructor.`,
+  }));
+  const titles = ['Socket Programming Lab', 'Priority Queue Assignment', 'Chapter 5 Quiz', 'Cache Memory Discussion', 'Algorithm Analysis Homework'];
+  const assignments = courses.map((c, i) => ({
+    id: `demo-work-${c.id}`, courseId: c.id, title: titles[i], due: offsetDate(i + 1),
+    status: i === 0 ? 'progress' : 'todo', category: i === 2 ? 'Quizzes' : 'Assignments',
+    points: 100, earned: null, description: 'Demo coursework. Review your notes, complete the practice problems, and explain your reasoning.',
+  }));
+  const notes = [
+    'TCP provides a reliable ordered byte stream. UDP sends independent datagrams without guaranteeing delivery. Sockets identify communication endpoints using addresses and ports.',
+    'A priority queue retrieves the highest-priority item. Binary heaps support insertion and removal in O(log n), and peeking in O(1). Test duplicate priorities and empty queues.',
+    'The justice system includes law enforcement, courts, and corrections. Due process protects fair treatment. Compare the responsibilities of each institution using course examples.',
+    'Caches exploit temporal and spatial locality. A cache hit retrieves data from a faster level. Compare direct-mapped and set-associative designs and account for miss penalties.',
+    'Asymptotic analysis describes how resource use grows with input size. Distinguish worst-case and average-case behavior. State assumptions when comparing algorithms.',
+  ];
+  return stateSchema.parse({
+    version: 2, courses,
+    assignments: [...assignments,
+      { ...assignments[0], id: 'demo-overdue', title: 'Network Protocols Worksheet', due: offsetDate(-1), status: 'todo' },
+      ...courses.map((c, i) => ({ ...assignments[i], id: `demo-graded-${c.id}`, title: 'Foundations checkpoint', status: 'done', due: offsetDate(-5), earned: [92, 94, 88, 90, 96][i] })),
+    ],
+    materials: courses.map((c, i) => ({ id: `demo-note-${c.id}`, courseId: c.id, kind: 'notes', title: `${c.name} · Key concepts`, text: notes[i] })),
+    announcements: courses.slice(0, 3).map((c, i) => ({
+      id: `demo-announcement-${c.id}`, courseId: c.id, platform: i % 2 ? 'Canvas' : 'D2L',
+      title: ['Lab resources are ready', 'A little help with priority queues', 'Your next quiz: what to review'][i],
+      description: ['Review the socket examples in your notes before starting the lab. Bring questions to your next class.', 'Start with the heap operations and test edge cases. Your saved course notes include a quick refresher.', 'Revisit the roles of courts, law enforcement, and corrections. Focus on explaining the differences.'][i],
+      posted: offsetDate(-i), read: false,
+    })),
+  });
 }

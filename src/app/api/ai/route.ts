@@ -2,6 +2,9 @@ import OpenAI from 'openai';
 import { z } from 'zod';
 import { authenticate, allowRequest, readBody } from '@/lib/server';
 const schema=z.object({task:z.enum(['summary','guide','catchup','question','evaluate']),content:z.string().trim().min(20).max(40000),question:z.string().max(2000).optional(),rubric:z.string().max(20000).optional()});
+export async function GET() {
+ return Response.json({ available: Boolean(process.env.OPENAI_API_KEY) }, { headers: { 'Cache-Control': 'no-store' } });
+}
 export async function POST(request:Request) {
  try {
   const body=schema.parse(await readBody(request,100000));

@@ -1,0 +1,70 @@
+/* Shared dashboard and assistant additions. Theme colors inherit the app tokens. */
+:root { --ai: #7553cf; --ai-soft: #f3effc; }
+[data-theme=dark] { --ai: #bd9bff; --ai-soft: #302542; }
+.brand-mark { transform: none; background: linear-gradient(145deg, #4668ee, #8760d2); }
+.demo-sync { font-size: 10px; color: var(--blue); }
+.announcement-feed { padding: 22px; margin: 0 0 26px; }
+.announcement-feed .section-heading { flex-wrap: wrap; }
+.demo-source { font-size: 9px; color: var(--muted); }
+.announcement-item { padding: 17px 0; border-top: 1px solid var(--border); }
+.announcement-item:last-child { padding-bottom: 0; }
+.announcement-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 10px; color: var(--muted); margin-bottom: 10px; }
+.announcement-meta>span:first-child { font-weight: 600; color: var(--text); }
+.announcement-meta time { margin-left: auto; }
+.source-badge { border-radius: 4px; padding: 3px 6px; background: var(--soft); color: var(--blue); font-size: 9px; }
+.source-badge.canvas { background: var(--ai-soft); color: var(--ai); }
+.announcement-item h3 { font-size: 13px; margin-bottom: 6px; }
+.announcement-item p { color: var(--muted); font-size: 11px; }
+.read-toggle { display: flex; align-items: center; gap: 6px; border: 0; background: none; color: var(--blue); font-size: 10px; padding: 9px 0 0; }
+.announcement-item.read .read-toggle { color: var(--muted); }
+.compact-feed { padding: 0; margin: 0; }
+.notification-popover { max-height: 75vh; overflow: auto; width: min(420px, calc(100vw - 30px)); }
+.notification-popover .announcement-item p { border: 0; padding: 0; }
+.notification-popover .announcement-item h3 { font-size: 12px; }
+.chat-launcher { position: fixed; right: 26px; bottom: 23px; z-index: 40; display: flex; align-items: center; gap: 10px; border: 1px solid #9678d5; background: #7654ca; color: white; box-shadow: 0 7px 24px #4c2c8d30; padding: 14px 18px; border-radius: 16px; font-size: 12px; font-weight: 600; }
+.chat-launcher:hover { background: #6542b9; transform: translateY(-2px); }
+.chat-launcher-hidden { visibility: hidden; }
+.chat-panel { position: fixed; top: 92px; bottom: 22px; right: 22px; width: min(420px, calc(100vw - 32px)); z-index: 45; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border); border-radius: 18px; box-shadow: 0 18px 65px #20213c30; overflow: hidden; }
+.chat-heading { display: flex; align-items: center; gap: 12px; padding: 20px; background: var(--ai-soft); border-bottom: 1px solid var(--border); }
+.chat-heading h2 { font-size: 17px; }
+.chat-heading p { font-size: 10px; color: var(--muted); margin-top: 5px; }
+.chat-heading>.icon-button { margin-left: auto; color: var(--ai); }
+.chat-brain { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 13px; background: var(--surface); color: var(--ai); }
+.chat-mode { padding: 12px 20px; border-bottom: 1px solid var(--border); }
+.chat-mode label { margin: 0 0 4px; display: flex; align-items: center; gap: 7px; font-size: 11px; }
+.chat-mode input[type=checkbox] { width: 14px; height: 14px; margin: 0; accent-color: var(--ai); }
+.chat-mode small { color: var(--muted); font-size: 10px; display: block; line-height: 1.6; }
+.chat-history { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 22px 20px; }
+.chat-intro { text-align: center; padding: 4px 10px 19px; }
+.chat-intro>span { display: inline-grid; place-items: center; width: 65px; height: 65px; background: var(--ai-soft); color: var(--ai); border-radius: 22px; margin-bottom: 15px; }
+.chat-intro h3 { font-size: 17px; line-height: 1.5; }
+.chat-intro p { font-size: 11px; color: var(--muted); margin: 9px 0; }
+.chat-suggestions { display: grid; gap: 9px; }
+.chat-suggestions button { display: flex; align-items: center; justify-content: space-between; gap: 10px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); text-align: left; padding: 12px; color: var(--ai); font-size: 11px; }
+.chat-suggestions button:hover { background: var(--ai-soft); }
+.chat-message { border-radius: 12px 12px 12px 3px; padding: 13px 15px; background: var(--hover); margin: 13px 15px 13px 0; overflow-wrap: anywhere; }
+.chat-message.user { background: var(--ai-soft); border-radius: 12px 12px 3px 12px; margin-left: 25px; margin-right: 0; }
+.chat-message small { color: var(--ai); font-size: 9px; }
+.chat-message p { white-space: pre-wrap; font-size: 12px; line-height: 1.75; margin-top: 6px; }
+.chat-thinking { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 11px; }
+.chat-error { margin: 0; padding: 10px 20px; color: #c85749; font-size: 11px; max-height: 100px; overflow: auto; }
+.chat-composer { display: flex; align-items: center; gap: 8px; margin: 0 16px; border: 1px solid var(--border); border-radius: 10px; padding: 5px; }
+.chat-composer input { border: 0; background: transparent; min-width: 0; padding: 10px 8px; font-size: 12px; }
+.chat-composer button { border: 0; border-radius: 8px; padding: 10px; background: #7654ca; color: white; display: grid; place-items: center; }
+.chat-footnote { font-size: 9px; color: var(--muted); text-align: center; padding: 11px 14px 14px; }
+main { padding-bottom: 95px; }
+.toast { bottom: 88px; }
+@media(max-width:760px) {
+  .demo-sync { padding: 8px; gap: 5px; font-size: 9px; }
+  .demo-sync svg { width: 13px; }
+  .topbar-actions { gap: 4px; }
+  .chat-panel { top: 72px; bottom: max(10px, env(safe-area-inset-bottom)); right: 10px; width: calc(100vw - 20px); }
+  .chat-heading { padding: 14px 16px; }
+  .chat-history { padding: 16px; }
+  .chat-intro>span { height: 45px; width: 45px; margin-bottom: 10px; }
+  .chat-launcher { right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); padding: 13px 16px; }
+  .announcement-feed { padding: 17px; }
+  .compact-feed { padding: 0; }
+  .stat-card>div>span { display: block; min-height: 27px; }
+}
+@media(max-height:550px) { .chat-panel { top: 10px; bottom: 10px; } .chat-intro { display: none; } .chat-mode { padding: 5px 15px; } }
