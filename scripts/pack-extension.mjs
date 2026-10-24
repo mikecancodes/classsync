@@ -23,14 +23,18 @@ export function siteOrigin(env = process.env) {
   return url.origin;
 }
 
-// Adds the live site to where the bridge script runs and what the extension may message
+const LOCAL = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//;
+
+// Points the bridge script and host access at the live site only. Localhost entries are
+// dropped so another app on this computer's port 3000 can't talk to a student's extension;
+// they stay in extension/manifest.json for developers loading the folder unpacked.
 export function withSite(manifest, origin) {
   if (!origin) return manifest;
   const pattern = `${origin}/*`;
   const next = structuredClone(manifest);
-  const add = list => (list.includes(pattern) ? list : [pattern, ...list]);
-  next.host_permissions = add(next.host_permissions ?? []);
-  next.content_scripts[0].matches = add(next.content_scripts[0].matches);
+  const live = list => [pattern, ...list.filter(item => item !== pattern && !LOCAL.test(item))];
+  next.host_permissions = live(next.host_permissions ?? []);
+  next.content_scripts[0].matches = live(next.content_scripts[0].matches);
   return next;
 }
 

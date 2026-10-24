@@ -51,7 +51,7 @@ App side: `src/components/connect-page.tsx`, `src/components/import-review.tsx`,
 
 ## Packaging
 
-`scripts/pack-extension.mjs` zips `extension/` (without `test/`) into `public/classsync-extension.zip` on every `pnpm dev` and `pnpm build`, or by hand with `pnpm pack:extension`. It adds the live site to the zipped manifest from `CLASSSYNC_SITE_URL` (or Vercel's `VERCEL_PROJECT_PRODUCTION_URL`). **Set `CLASSSYNC_SITE_URL` in Vercel**, otherwise the downloaded extension only talks to localhost. The zip is generated, so it's git-ignored.
+`scripts/pack-extension.mjs` zips `extension/` (without `test/`) into `public/classsync-extension.zip` on every `pnpm dev` and `pnpm build`, or by hand with `pnpm pack:extension`. It points the zipped manifest at the live site from `CLASSSYNC_SITE_URL` (or Vercel's `VERCEL_PROJECT_PRODUCTION_URL`) and **removes the localhost entries**, so other apps on a student's computer can't reach the bridge. **Set `CLASSSYNC_SITE_URL` in Vercel**, otherwise the downloaded extension only talks to localhost. The zip is generated, so it's git-ignored.
 
 Developers can also load `extension/` directly with Load unpacked. That works with `http://127.0.0.1:3000` and `http://localhost:3000`.
 
@@ -91,6 +91,7 @@ If the app's model changes (`src/lib/model.ts`), the extension tests show whethe
 ## Security notes
 
 - D2L access is requested per school after a click, never "all websites". **Disconnect** in the extension's settings removes it.
+- Live-site zips run the bridge only on the live site (localhost entries are stripped at pack time).
 - The bridge only accepts same-window, same-origin messages tagged `classsync-app`, of six types. It never runs page-supplied code or URLs other than a validated https D2L origin, which the student must still approve.
 - No passwords or tokens are handled: D2L uses the browser's own sign-in, and the extension no longer talks to Supabase.
 - Announcements and instructions are imported as **plain text** (`Body.Text`), never HTML.
