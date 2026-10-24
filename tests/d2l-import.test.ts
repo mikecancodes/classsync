@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { emptyWorkspace } from '../src/lib/workspace';
 import { mergeImport } from '../src/lib/d2l-import';
-import { AcademicState } from '../src/lib/model';
+import { AcademicState, stateSchema } from '../src/lib/model';
 
 // Same shape the extension's converter produces (extension/src/to-classsync.js)
 function payload(overrides: Partial<AcademicState> = {}) {
@@ -115,4 +115,25 @@ test('syllabus files ride along with the payload', async () => {
   assert.equal(parsed.syllabi.length, 1);
   assert.deepEqual(importPayloadSchema.parse(payload()).syllabi, []);
   assert.throws(() => importPayloadSchema.parse({ ...payload(), syllabi: [{ courseId: 'x', title: 'S', fileName: 's.exe', mimeType: 'application/x-msdownload', base64: 'x' }] }));
+});
+
+test('unsync removes only D2L-imported classes and everything attached to them', async () => {
+  const { removeImported } = await import('../src/lib/d2l-import');
+  const imported = mergeImport(emptyWorkspace(), payload()).state;
+  const mine = { id: 'my-course', code: 'ART 100', name: 'Drawing', professor: '', schedule: '', color: 'orange' as const, categories: [{ name: 'Projects', weight: 100 }], syllabus: '' };
+  const state: AcademicState = {
+    ...imported,
+    courses: [...imported.courses, mine],
+    assignments: [...imported.assignments, { id: 'sketch', courseId: 'my-course', title: 'Sketchbook', due: '2026-11-01', status: 'todo', category: 'Projects', points: 10, earned: null, description: '' }],
+    materials: [{ id: 'd2l-syllabus-d2l-101', courseId: 'd2l-101', title: 'Syllabus', text: '', kind: 'material' }, { id: 'my-notes', courseId: 'my-course', title: 'Notes', text: 'x', kind: 'notes' }],
+  };
+  const { state: next, counts, materialIds } = removeImported(state);
+  assert.deepEqual(next.courses.map(c => c.id), ['my-course']);
+  assert.deepEqual(next.assignments.map(a => a.id), ['sketch']);
+  assert.deepEqual(next.materials.map(m => m.id), ['my-notes']);
+  assert.equal(next.announcements.length, 0);
+  assert.deepEqual(counts, { courses: 1, assignments: 2, announcements: 1, materials: 1 });
+  assert.deepEqual(materialIds, ['d2l-syllabus-d2l-101']);
+  assert.ok(stateSchema.safeParse(next).success);
+  assert.equal(mergeImport(next, payload()).summary.newCourses.length, 1, 'next sync imports it again as new');
 });

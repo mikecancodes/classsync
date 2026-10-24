@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react';
 import { CheckCircle2, Copy, Download, ExternalLink, LoaderCircle, Plug, RefreshCw, Search } from 'lucide-react';
 import { School, customSchool, findSchools, normalizeD2LUrl, schoolForOrigin } from '@/lib/schools';
 import type { ExtensionHandle } from '@/lib/extension-bridge';
+import type { AcademicState } from '@/lib/model';
+import { UnsyncButton } from './unsync-button';
+import type { Dispatch, SetStateAction } from 'react';
 
 const SCHOOL_KEY = 'classsync-d2l-school';
 
@@ -18,7 +21,7 @@ function saveSchool(school: School) {
   try { localStorage.setItem(SCHOOL_KEY, JSON.stringify(school)); } catch { /* still works for this visit */ }
 }
 
-export function ConnectPage({ extension }: { extension: ExtensionHandle }) {
+export function ConnectPage({ extension, data, setData, notify }: { extension: ExtensionHandle; data: AcademicState; setData: Dispatch<SetStateAction<AcademicState>>; notify: (message: string) => void }) {
   const [school, setSchool] = useState<School | null>(null);
   const [query, setQuery] = useState('');
   const [link, setLink] = useState('');
@@ -97,6 +100,7 @@ export function ConnectPage({ extension }: { extension: ExtensionHandle }) {
             ? <button type="button" className="primary-button" onClick={() => extension.send('sync-now')}><RefreshCw size={16} />Sync now</button>
             : <button type="button" className="primary-button" disabled={!extension.installed || connecting} onClick={connect}>{connecting ? <LoaderCircle size={16} className="spin" /> : <Plug size={16} />}Connect to {school.shortName} D2L</button>}
           <a className="secondary-button" href={`${school.d2lOrigin}/d2l/home`} target="_blank" rel="noopener noreferrer"><ExternalLink size={15} />Open my D2L</a>
+          <UnsyncButton data={data} setData={setData} notify={notify} />
         </div>
         {!extension.installed && <p className="muted">Install the extension (step 1) to connect.</p>}
         {extension.progress && <p role="status" className={extension.progressState === 'error' || extension.progressState === 'needs_login' ? 'error' : 'notice'}>{extension.progress}</p>}

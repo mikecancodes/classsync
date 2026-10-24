@@ -12,6 +12,8 @@ Open ClassSync → **Sync classes** → **Connect your school** (or go to `/conn
 
 Afterwards, **Sync classes** pulls in new work any time. A second sync shows only what changed.
 
+**Unsync D2L data** (Settings → LMS integrations, or step 3 on `/connect`) removes every D2L-imported class with its assignments, announcements, scores and saved syllabus files, so the next Sync imports everything as new. It's useful for testing. Classes created by hand are kept. It doesn't disconnect the extension (use its Disconnect setting for that).
+
 ## How it works
 
 ```

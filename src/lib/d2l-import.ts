@@ -91,3 +91,28 @@ export function mergeImport(state: AcademicState, payload: unknown): { state: Ac
   });
   return { state: merged, summary };
 }
+
+// Removes everything a D2L import created (classes with d2l- IDs and all their
+// assignments, announcements and materials) so sync can be tested from scratch.
+// Classes the student added themselves are untouched.
+export function removeImported(state: AcademicState) {
+  const imported = new Set(state.courses.filter(c => c.id.startsWith('d2l-')).map(c => c.id));
+  const removedMaterials = state.materials.filter(m => imported.has(m.courseId));
+  const next: AcademicState = {
+    ...state,
+    courses: state.courses.filter(c => !imported.has(c.id)),
+    assignments: state.assignments.filter(a => !imported.has(a.courseId)),
+    announcements: state.announcements.filter(a => !imported.has(a.courseId)),
+    materials: state.materials.filter(m => !imported.has(m.courseId)),
+  };
+  return {
+    state: next,
+    materialIds: removedMaterials.map(m => m.id),
+    counts: {
+      courses: imported.size,
+      assignments: state.assignments.length - next.assignments.length,
+      announcements: state.announcements.length - next.announcements.length,
+      materials: removedMaterials.length,
+    },
+  };
+}
