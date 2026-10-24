@@ -6,6 +6,8 @@ The chatbot doesn't get all of the user's data pasted into its prompt. It gets a
 
 This keeps answers accurate ("what's due Friday" comes from a real query, not the model's memory) and keeps prompts small, which matters for local models.
 
+> **Decided (DECISIONS.md 3–4):** Gemini, with tools run **in the browser** against the local workspace, not against Supabase tables. The tool list and loop below still apply. Swap each Supabase query for the matching pure function in `src/lib/academic-assistant.ts`.
+
 ## Which model
 
 The current app calls OpenAI from the server (`src/app/api/ai/route.ts`), which works when hosted. A local model (e.g. Ollama) only works when the app runs on your own computer, because a hosted server can't reach `localhost` on your machine. The tools below work the same with either.

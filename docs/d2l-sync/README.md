@@ -25,13 +25,13 @@ Every row in every table belongs to one user (`user_id`), and Row Level Security
 
 ## How this relates to the current app
 
-The app on `main` (see [AGENTS.md](../../AGENTS.md) and [docs/agents/](../agents/)) is the source of truth. These docs are a **proposal** for a later phase and do not override those guides.
+The app on `main` (see [AGENTS.md](../../AGENTS.md), [docs/agents/](../agents/) and the [team decisions](../agents/DECISIONS.md)) is the source of truth. These docs are a **proposal** for a later phase and do not override those guides.
 
 | Topic | Current app | This proposal |
 |---|---|---|
-| Database | One `workspaces` row per user, JSONB document, manual cloud save | Normalized tables (`courses`, `items`, …) filled by automatic sync |
+| Database | One `workspaces` row per user, JSONB document, manual cloud save (**decided:** auto-save when signed in) | Normalized tables (`courses`, `items`, …): a later option, not current work |
 | D2L data | Demo data; `POST /api/imports/preview` validates future imports | Browser extension + iCal feed |
-| AI | Server-side OpenAI in `/api/ai` | Tool-calling chatbot; provider can be OpenAI (hosted) or a local model (local only) |
+| AI | Server-side OpenAI in `/api/ai` (**decided:** Gemini) | Tool-calling chatbot (**decided**, tools run in the browser) |
 | Extension | Prototype in `extension/`, separate from the app | Sends to the existing `/api/imports/preview`; future: direct sync into the tables above |
 
 The proposed SQL creates new tables and does **not** touch `workspaces`, so both can exist in one Supabase project. Adopting it means migrating the app's state model first, per the migration rules in [ARCHITECTURE.md](../agents/ARCHITECTURE.md).

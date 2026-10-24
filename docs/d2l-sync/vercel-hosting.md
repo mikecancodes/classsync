@@ -36,6 +36,7 @@ On the free Hobby plan, private-repo deploys can be limited to commits from the 
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase publishable/anon key | All | Public; safe because of RLS |
 | `OPENAI_API_KEY` | Your key | Production, Preview | **Secret.** Server only |
 | `OPENAI_MODEL` | e.g. `gpt-4.1-mini` | All | Optional |
+| `GEMINI_API_KEY` | From Google AI Studio (MLH credits) | Production, Preview | **Secret.** Server only. Replaces the OpenAI key once decision 3 ships |
 | `ALLOW_LOCAL_AI` | **don't set it** | — | Local-development bypass only. The app already refuses it outside loopback; keep it out of Vercel anyway |
 
 - `NEXT_PUBLIC_*` values are baked in at **build time**. After changing one, **redeploy** for it to take effect.

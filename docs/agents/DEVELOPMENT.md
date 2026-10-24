@@ -7,7 +7,7 @@
 3. Identify a small end-to-end feature slice and any persisted-data migration it requires.
 4. Read the installed Next.js guidance for affected framework APIs as required by AGENTS.md. Keep the existing Webpack scripts, which avoid a known worker problem in this Windows runtime.
 
-Prefer reusable components, pure data services, and conventional readable formatting. Avoid new dependencies when the existing stack suffices. Do not introduce a second router, Vite application, or duplicate storage layer without a migration task.
+Prefer reusable components, pure data services, and conventional readable formatting. Avoid new dependencies when the existing stack suffices; shadcn/ui and its Radix primitives are approved for UI (DECISIONS.md, decision 5). Do not introduce a second router, Vite application, or duplicate storage layer without a migration task.
 
 ## Baseline and target gaps
 
@@ -18,14 +18,14 @@ Updated after the branding/dashboard/chatbot refresh. “Existing” means sourc
 | Dashboard | Compact counts, five next deadlines, expandable overdue work/announcements, idempotent Demo Sync | Broader search and filters |
 | Brand | Brain logo and “All your classes. One place.” tagline | Preserve branding |
 | Assignments | CRUD, completion, search, status/course filters, due-date sorting | Platform, priority, duration, due/platform/priority filters |
-| AI | Global collapsible chatbot, session history across routes, structured local answers, optional server AI; study tools preserved | Credential-backed integration testing |
+| AI | Global collapsible chatbot, session history across routes, structured local answers, optional server AI; study tools preserved | Gemini provider and browser-run tool calling (decisions 3–4) |
 | Tasks | No separate task entity/page | Persistent To-Do List and completion progress |
 | Notes | Course-linked text materials with create/edit/delete | Global Lecture Notes page and keyword search |
 | Planner | Generic local catch-up checklist | Deterministic daily Plan My Week using deadline, priority, duration, workload |
 | Calendar | Monthly assignment dates and editing | Course colors, personal tasks, detailed event display; week view optional |
 | Classes | Required five-course sample set and detail tabs; existing saved courses preserved | LMS metadata |
-| Imports | Authenticated preview-only API, backup restore, idempotent Demo Sync | Approved live-source adapters |
-| Persistence | Version-2 localStorage with validated v1 migration and announcements; optional cloud save/load | Future task/priority migrations |
+| Imports | Authenticated preview-only API, backup restore, idempotent Demo Sync, D2L extension prototype | Extension → app tab review and merge (decision 2) |
+| Persistence | Version-2 localStorage with validated v1 migration and announcements; optional cloud save/load | v3 migration (optional points, dueTime, lowercase platform) and signed-in auto-save (decisions 1, 6–8) |
 | Grade tools | Weighted calculation, projection, syllabus parsing | Preserve behavior during frontend work |
 
 Do not check off a target feature merely because a visual placeholder exists. Update this table after implementing and verifying a target.
@@ -40,7 +40,7 @@ pnpm test
 pnpm build
 ```
 
-See README.md for Node requirements, Windows bundled pnpm path, local URL, and environment setup. `pnpm-workspace.yaml` configures the project-local store and permitted esbuild install script. Keep the lockfile in sync when dependencies change.
+See README.md for Node requirements, the Windows pnpm notes, local URL, and environment setup. `pnpm-workspace.yaml` configures the project-local store and permitted esbuild install script. Keep the lockfile in sync when dependencies change.
 
 For documentation-only changes, check links, accuracy, and `git diff --check`; a full application rebuild is unnecessary. For code changes, run type checking, relevant tests, and the production build. Test behavior rather than duplicating implementation details. Explain unavailable credential-dependent verification honestly.
 

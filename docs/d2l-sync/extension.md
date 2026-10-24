@@ -4,6 +4,8 @@
 
 The extension reads the signed-in student's D2L data and turns it into ClassSync's import format. It then either sends it to ClassSync for review or saves it as a JSON file.
 
+> **Decided next step (DECISIONS.md 2):** instead of only calling `/api/imports/preview`, the extension will hand data to an open ClassSync tab, which shows a review screen and merges it. When `points` becomes optional (decision 6), remove the placeholder of 100 from `to-classsync.js`.
+
 ## How it works
 
 ```
