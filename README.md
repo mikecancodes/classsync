@@ -54,7 +54,7 @@ Students open **Sync classes → Connect your school** (`/connect`): download th
 
 ## Configure Gemini
 
-ClassSync uses Google Gemini because MLH provides free credits to hackathon participants. Create a key in Google AI Studio, copy `.env.example` to `.env.local`, set `GEMINI_API_KEY`, and optionally `GEMINI_MODEL` (default `gemini-flash-latest`). Restart the server. Set a usage cap in Google AI Studio.
+ClassSync uses Google Gemini because MLH provides free credits to hackathon participants. Create a Free Tier key in Google AI Studio, copy `.env.example` to `.env.local`, set `GEMINI_API_KEY`, and restart the server. The app pins `gemini-3.5-flash-lite`, which Google lists with free-tier token pricing. Keep billing disabled on the Google Cloud project; requests stop at the free quota instead of switching to paid usage.
 
 **Chat** (`POST /api/ai/chat`) uses tool calling. Gemini asks for specific data, the browser runs the lookup (`src/lib/chat-tools.ts`) against the local workspace, and only those rows are sent back. Tools are read-only. The server is stateless, allows at most five lookups per question, and counts every round trip toward a limit of 120 per user per hour. **Study tools** (`POST /api/ai`) send the material you choose when you press a generation button. The key is never imported by client code. `GET /api/ai` exposes only configuration availability. AI output is advisory and all evaluator scores are estimates.
 

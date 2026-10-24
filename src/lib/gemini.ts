@@ -6,7 +6,9 @@ import type { ChatContent } from './chat-request';
 // it reads GEMINI_API_KEY. Gemini was chosen for the team's free MLH hackathon credits.
 
 export const geminiConfigured = () => Boolean(process.env.GEMINI_API_KEY);
-const model = () => process.env.GEMINI_MODEL || 'gemini-flash-latest';
+// Pin to a model listed on Google's free tier. The project must also remain on the
+// Free Tier with billing disabled so quota exhaustion can never turn into a charge.
+const model = () => 'gemini-3.5-flash-lite';
 
 let client: GoogleGenAI | null = null;
 function ai() {

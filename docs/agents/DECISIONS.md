@@ -47,10 +47,10 @@ D2L tab ── extension reads D2L ──▶ ClassSync tab (content script / ext
 
 ## 3. Gemini
 
-- Swap the provider inside `/api/ai` only. Browser code never sees a key. New env var: `GEMINI_API_KEY` (server only), plus optional `GEMINI_MODEL`.
+- Swap the provider inside `/api/ai` only. Browser code never sees a key. Use `GEMINI_API_KEY` server-side and keep the Google project on its Free Tier with billing disabled. The app pins `gemini-3.5-flash-lite` so quota exhaustion cannot move requests to a paid model.
 - **Why Gemini:** we're in an MLH hackathon and MLH gives participants free Gemini credits (about $10/month plus a student plan, per MLH's partner page). Claim them through MyMLH / MLH Software Lab.
-- Set a usage cap in Google AI Studio. Anyone can create an account, so the cap is the real cost limit until the rate limiter is shared across instances.
-- Keep the existing guarantees: authentication for paid use, rate limit, input limits, untrusted-content instructions, honest error labels.
+- Keep the Google project on Free Tier and do not enable billing; when free quota is exhausted, requests should stop rather than incur charges.
+- Keep the existing guarantees: authentication for hosted AI use, rate limit, input limits, untrusted-content instructions, honest error labels.
 
 ## 4. Tool-calling chatbot
 
