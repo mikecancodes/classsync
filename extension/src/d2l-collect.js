@@ -48,6 +48,15 @@ export async function collectD2L(origin) {
     return items;
   }
 
+  // Runs fn over items with at most `limit` requests in flight
+  async function mapLimit(items, limit, fn) {
+    const results = new Array(items.length);
+    let next = 0;
+    const worker = async () => { while (next < items.length) { const i = next++; results[i] = await fn(items[i]); } };
+    await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+    return results;
+  }
+
   try {
     const versions = await get('/d2l/api/versions/');
     const latest = code => versions.find(v => v.ProductCode === code)?.LatestVersion;
@@ -66,12 +75,11 @@ export async function collectD2L(origin) {
         get(`/d2l/api/le/${le}/${ou}/dropbox/folders/`, { optional: true }),
         get(`/d2l/api/le/${le}/${ou}/grades/values/myGradeValues/`, { optional: true }),
       ]);
-      // one request per assignment, so do them one at a time to stay well under D2L's rate limit
-      const foldersWithSubmissions = [];
-      for (const folder of folders ?? []) {
+      // one request per assignment; four at a time stays well under D2L's rate limit
+      const foldersWithSubmissions = await mapLimit(folders ?? [], 4, async folder => {
         const submissions = await get(`/d2l/api/le/${le}/${ou}/dropbox/folders/${folder.Id}/submissions/mysubmissions/`, { optional: true });
-        foldersWithSubmissions.push({ ...folder, MySubmissions: submissions ?? [] });
-      }
+        return { ...folder, MySubmissions: submissions ?? [] };
+      });
       courses.push({ enrollment, news: news ?? [], folders: foldersWithSubmissions, grades: grades ?? [] });
     }
 

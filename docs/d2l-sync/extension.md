@@ -22,7 +22,7 @@ ClassSync tab (/connect)          extension                                  sch
                                                  [Allow access] → chrome.permissions.request
                                                  checks /d2l/api/versions/ is real D2L
                                                  opens <origin>/d2l/home ─────────────▶ sign in
-                                                 tabs.onUpdated sees /d2l/home ◀───────
+                                                 signed-in D2L page loads ◀───────────
                                                  collectD2L → toImportPayload
 "import-ready" ◀────── bridge ◀── background (stores pendingImport, focuses the tab)
 "get-import" ─────────▶ … ─▶ payload → ImportReview dialog → mergeImport → workspace
@@ -31,7 +31,9 @@ ClassSync tab (/connect)          extension                                  sch
 
 - **The bridge** (`src/classsync-bridge.js`) is injected only on the ClassSync site (manifest `content_scripts`). It forwards just six message types (`src/bridge-protocol.js`). `connect` must carry a bare `https://` origin, and the student still has to approve Chrome's prompt for that exact site.
 - **Reading D2L** prefers an open D2L tab (same-origin requests always carry the session cookie) and otherwise calls from the background worker.
-- **If the session expired**, the extension opens D2L's sign-in and resumes automatically once `/d2l/home` loads.
+- **No refresh needed after installing:** on install/update the background injects the bridge into ClassSync tabs that are already open (a dead bridge from before an update removes itself).
+- **Back to ClassSync automatically:** once any signed-in D2L page loads (`src/d2l-pages.js`: not login/logout/SSO pages), the sync starts and ClassSync is brought to the front right away, showing progress and then the review.
+- **If the session expired**, the extension opens D2L's sign-in and resumes automatically after sign-in.
 - **No background schedule.** Syncs happen on connect, on Sync, or from the popup, so dialogs never appear on their own.
 
 ## Files
