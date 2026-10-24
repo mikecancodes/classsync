@@ -46,7 +46,7 @@ The first visit generates realistic sample coursework with deadlines relative to
 
 The global chatbot answers questions about today, tomorrow, the next seven days, overdue work, and courses using current workspace data. With Gemini configured and a signed-in account, it switches to AI chat that looks up assignments, announcements, grades, and notes through read-only tools; otherwise it answers locally with rules. Schedule suggestions are deadline order only; capacity-aware Plan My Week remains future work.
 
-Without a Gemini key, study tools return labeled excerpts, practice prompts, keyword matches, and a catch-up checklist. They are **not AI-generated answers**. The demo evaluator does not invent a score. Uploads support `.txt`, `.md`, and `.csv` up to 150 KB and 40,000 characters; paste extracted text for PDFs/Word. Raw files are not retained. Material text is stored with the workspace. Rubrics are limited to 20,000 characters.
+Without a Gemini key, study tools return labeled excerpts, practice prompts, keyword matches, and a catch-up checklist. They are **not AI-generated answers**. The demo evaluator does not invent a score. Study assistant text uploads support `.txt`, `.md`, and `.csv` up to 150 KB and 40,000 characters; paste extracted text for PDFs/Word. Raw files are not retained. Material text is stored with the workspace. Rubrics are limited to 20,000 characters.
 
 ## Connect your school (D2L)
 
@@ -106,3 +106,5 @@ tests/feed.test.ts            Combined announcement filters and sorting
 ## MVP boundaries
 
 The app starts with an empty workspace; no sample data is seeded. Course creation, advanced calendar events, PDF/DOCX extraction, streaming AI output, production-wide quotas, conflict resolution, and Canvas import are future work. Supabase and live Gemini require your credentials and have not been exercised against an account by default. No secrets belong in Git; `.env*` is ignored except `.env.example`.
+
+Notes and material attachments: upload PDF, Word (.doc/.docx), or PNG/JPG/WebP/GIF images up to 10 MB through the Notes / Material page or a course's materials tab. Files persist in IndexedDB in the current browser, with image previews and downloads. Cloud saves and workspace JSON backups contain text notes only; attached files must be downloaded separately. Uploads do not extract document text or perform OCR.

@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, BookOpen, ListTodo, CalendarDays, Sparkles, Calculator, Settings, RefreshCw, Search, Plus, ArrowUpRight, ArrowRight, Clock3, Check, ChevronLeft, ChevronRight, Sun, X, Pencil, Trash2, CheckCircle2, Cloud } from 'lucide-react';
 import { AcademicState, Assignment, Course, dateKey, formatDate, grade, letter, stateSchema } from '@/lib/model';
 import { WORKSPACE_KEY, LEGACY_KEY, emptyWorkspace, migrateWorkspace } from '@/lib/workspace';
+import { materialFile } from '@/lib/material-files';
 import { Chatbot } from './chatbot';
 import { Dashboard } from './dashboard';
 import { WorkspaceHeader } from './workspace-header';
@@ -114,13 +115,15 @@ export default function ClassSync() {
    }
  }
  function addCourse(input:{code:string;name:string;professor:string}) {const course:Course={id:crypto.randomUUID(),code:input.code.trim(),name:input.name.trim(),professor:input.professor.trim(),schedule:'',color:'blue',categories:[{name:'Assignments',weight:100}],syllabus:''};setData(current=>({...current,courses:[...current.courses,course]}));setAddingCourse(false);setToast('Class added');}
- function removeCourse(course:Course) {
+ async function removeCourse(course:Course) {
    const assignments=data.assignments.filter(item=>item.courseId===course.id).length;
    const materials=data.materials.filter(item=>item.courseId===course.id).length;
    const announcements=data.announcements.filter(item=>item.courseId===course.id).length;
    const related=[assignments&&`${assignments} assignment${assignments===1?'':'s'}`,materials&&`${materials} saved material${materials===1?'':'s'}`,announcements&&`${announcements} announcement${announcements===1?'':'s'}`].filter(Boolean);
    const details=related.length?` This also deletes ${related.join(', ')}${materials?' (including notes)':''}.`:' Any course materials or announcements will also be deleted.';
    if(!window.confirm(`Remove ${course.code} · ${course.name}?${details}`))return;
+   try { await Promise.all(data.materials.filter(item=>item.courseId===course.id).map(item=>materialFile(item.id,'delete'))); }
+   catch { setToast('Unable to remove attached files. Please try again.'); return; }
    setData(current=>({...current,courses:current.courses.filter(item=>item.id!==course.id),assignments:current.assignments.filter(item=>item.courseId!==course.id),materials:current.materials.filter(item=>item.courseId!==course.id),announcements:current.announcements.filter(item=>item.courseId!==course.id)}));
    setAdding(false);setEditing(null);setToast('Class and related coursework removed');
    if(path===`/courses/${course.id}`)router.replace('/courses');

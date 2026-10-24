@@ -115,3 +115,7 @@ Generate demo dates relative to the current date. Changing the sample fixture mu
 ## Empty sync state
 
 Remove all historical generated class IDs, including math210, psych101, eng102 and the later demo set, along with their linked sample coursework. Preserve real courses by identity, never by name. When Sync classes is clicked with no courses, show: “Sync unsuccessful. Please log in to your student portal to sync classes.” Do not fabricate classes, show a successful sync, or show an all-caught-up result. Actual portal synchronization remains a future integration.
+
+### Notes and material uploads (implemented)
+
+The shared uploader accepts PDF, Word (.doc/.docx), and PNG/JPG/WebP/GIF images only, with a 10 MB limit, extension and signature validation, file picker, and drag/drop. Text may still be entered manually. Save the original file in IndexedDB, keyed by the shared material ID; never encode binary files into localStorage. Show image previews and download links. Attached binaries are local to this browser and are not included in cloud saves or workspace JSON exports; explain that beside the uploader. Uploading does not extract text or run OCR/AI.

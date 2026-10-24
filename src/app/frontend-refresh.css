@@ -162,3 +162,12 @@ main { padding-bottom: 95px; }
   .focus-announcements .compact-feed { padding: 0 17px 18px; }
   .focus-bottom-links a { font-size: 11px; }
 }
+.material-dropzone { display:flex; flex-direction:column; align-items:center; gap:12px; padding:26px 18px; margin-top:20px; border:2px dashed var(--border); border-radius:12px; text-align:center; background:var(--hover); }
+.material-dropzone.dragging { border-color:var(--blue); background:var(--soft); }
+.material-dropzone>svg { color:var(--blue); }
+.material-dropzone p { color:var(--muted); font-size:12px; }
+.material-dropzone .upload-label { margin:0; background:var(--surface); border-style:solid; }
+.material-attachment { margin:16px 0; padding:14px; border:1px solid var(--border); border-radius:9px; overflow-wrap:anywhere; }
+.material-attachment img { display:block; max-width:100%; max-height:300px; object-fit:contain; margin-bottom:12px; border-radius:6px; }
+.material-attachment p { font-size:12px; color:var(--muted); margin-bottom:10px; }
+.material-attachment a { display:inline-flex; }
