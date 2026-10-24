@@ -1,3 +1,5 @@
+<!-- Historical source brief. The user-approved top-tab / top-right-logo / center-feed / right-chat layout in FRONTEND.md and AGENTS.md supersedes older layout directions below. -->
+
 Build ClassSync — AI-Powered Student Dashboard
 You are an experienced full-stack web developer and UI/UX designer. Build a modern, responsive, functional website called ClassSync.
 ClassSync is an AI-powered student productivity platform designed to combine assignments, announcements, lecture notes, and deadlines from multiple learning management systems (LMS), including D2L Brightspace and Canvas, into one centralized website.

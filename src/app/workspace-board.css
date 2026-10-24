@@ -1,0 +1,131 @@
+/* Approved sketch: top tabs, an announcement workspace, and a right-side chat. */
+.board-shell { --chat-width: 340px; }
+.workspace-header { height: 82px; padding: 0 30px; display: flex; align-items: center; justify-content: space-between; gap: 24px; border-bottom: 1px solid var(--border); background: var(--surface); position: sticky; top: 0; z-index: 55; }
+.workspace-tabs { display: flex; align-items: center; gap: 28px; height: 100%; min-width: 0; }
+.workspace-tabs>a { padding: 0; height: 100%; border-radius: 0; color: var(--muted); border-bottom: 3px solid transparent; font-size: 14px; font-weight: 500; white-space: nowrap; }
+.workspace-tabs>a[aria-current=page] { color: var(--blue); border-bottom-color: var(--blue); }
+.workspace-tabs>a:hover { background: transparent; color: var(--blue); }
+.workspace-brand-area { display: flex; align-items: center; gap: 18px; flex-shrink: 0; }
+.workspace-brand-area .brand { font-size: 24px; }
+.workspace-more { position: relative; font-size: 13px; color: var(--muted); }
+.workspace-more>summary { cursor: pointer; display: flex; align-items: center; gap: 5px; list-style: none; padding: 12px 0; }
+.workspace-more>summary::-webkit-details-marker { display: none; }
+.workspace-more>div { position: absolute; left: -15px; top: 43px; display: grid; gap: 4px; padding: 9px; width: 190px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); box-shadow: var(--shadow); }
+.workspace-more a { font-size: 13px; padding: 11px; border-radius: 6px; }
+.workspace-more a:hover { background: var(--hover); color: var(--blue); }
+.board-shell .main-shell { margin-left: 0; margin-right: calc(var(--chat-width) + 25px); }
+.board-shell main { max-width: 1000px; padding: 24px 38px 60px; margin: 0 auto; }
+.board-shell .page-heading { margin: 24px 0; }
+.board-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; font-size: 11px; color: var(--muted); }
+.board-toolbar>span { display: flex; align-items: center; gap: 7px; }
+.board-toolbar>span:before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #69a990; }
+.board-toolbar .demo-sync { font-size: 11px; padding: 8px 11px; }
+.board-heading { display: flex; justify-content: space-between; align-items: center; gap: 18px; margin-bottom: 28px; }
+.board-eyebrow { font-size: 10px; letter-spacing: 1.5px; font-weight: 600; color: var(--muted); }
+.board-heading h1 { font-size: 30px; letter-spacing: -.9px; margin-top: 9px; }
+.board-heading p { color: var(--muted); font-size: 13px; margin-top: 7px; }
+.board-unread { padding: 7px 10px; border-radius: 6px; color: var(--blue); background: var(--soft); font-size: 11px; }
+.board-filters { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+.filter-symbol { display: flex; gap: 7px; align-items: center; color: var(--muted); font-size: 12px; margin-right: 3px; }
+.board-filters label { display: grid; gap: 6px; margin: 0; color: var(--muted); font-size: 10px; flex: 1; min-width: 100px; }
+.board-filters label:first-of-type { flex: 1.4; }
+.board-filters select,.board-course-select select { width: 100%; padding: 8px 24px 8px 10px; font-size: 12px; border-radius: 6px; background-color: var(--surface); min-width: 0; }
+.board-reset { background: none; border: 0; color: var(--blue); font-size: 11px; padding: 10px 0; }
+.board-feed-label { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin: 22px 1px 12px; }
+.board-feed { display: grid; gap: 15px; }
+.board-post { border: 1px solid var(--border); border-radius: 12px; background: var(--surface); padding: 24px; }
+.board-post-meta { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 10px; color: var(--muted); }
+.board-post-meta>a { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; color: var(--text); font-weight: 550; }
+.board-post-meta>a:hover { color: var(--blue); }
+.board-post-meta time { margin-left: auto; }
+.board-post-title { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin: 18px 0 10px; }
+.board-post-title h2 { font-size: 17px; line-height: 1.5; }
+.priority-label { text-transform: capitalize; color: var(--muted); border: 1px solid var(--border); font-size: 9px; white-space: nowrap; padding: 4px 7px; border-radius: 5px; }
+.priority-label.high { color: #a34d35; background: #fff2ed; border-color: #f2d6ca; }
+[data-theme=dark] .priority-label.high { color: #f0b29c; background: #3c2b29; border-color: #634137; }
+.board-post>p { font-size: 13px; color: var(--muted); line-height: 1.8; }
+.board-read-toggle { display: inline-flex; align-items: center; gap: 7px; border: 0; background: none; padding: 0; color: var(--blue); font-size: 11px; margin-top: 20px; }
+.board-post.is-read .board-read-toggle { color: var(--muted); }
+.unread-dot { height: 6px; width: 6px; background: var(--blue); border-radius: 50%; }
+.board-empty { border: 1px dashed var(--border); padding: 40px 20px; border-radius: 12px; text-align: center; color: var(--muted); }
+.board-empty h2 { color: var(--text); margin-bottom: 8px; }
+.board-empty p { font-size: 13px; margin-bottom: 15px; }
+.board-deadlines { margin-top: 24px; border-top: 1px solid var(--border); padding-top: 22px; }
+.board-deadlines summary { display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 13px; list-style: none; }
+.board-deadlines summary small { display: block; color: var(--muted); margin-top: 6px; font-size: 10px; }
+.board-deadlines summary::-webkit-details-marker { display: none; }
+.board-deadlines[open] summary>svg { transform: rotate(180deg); }
+.board-deadlines ul { list-style: none; padding: 0; margin: 15px 0; }
+.board-deadlines li { display: flex; gap: 10px; align-items: center; padding: 13px 0; border-bottom: 1px solid var(--border); }
+.board-deadlines li>button:nth-child(2) { flex: 1; text-align: left; border: 0; background: none; font-size: 12px; }
+.board-deadlines li>span { font-size: 10px; color: var(--muted); }
+.board-deadlines .board-late { color: #b15f48; }
+.board-deadlines>a { display: inline-flex; gap: 7px; color: var(--blue); font-size: 12px; margin-top: 10px; }
+.docked-launcher { display: none; }
+.docked-chat { width: var(--chat-width); right: 20px; top: 102px; bottom: 20px; z-index: 40; border-radius: 13px; box-shadow: none; }
+.docked-chat .chat-heading { padding: 20px 17px; background: var(--surface); }
+.docked-chat .chat-heading h2 { font-size: 16px; }
+.docked-chat .chat-heading p { font-size: 10px; }
+.docked-chat .chat-brain { background: var(--ai-soft); }
+.docked-chat .chat-mode { padding: 12px 17px; }
+.docked-chat .chat-intro { padding: 26px 2px 18px; }
+.docked-chat .chat-intro h3 { font-size: 17px; }
+.docked-chat .chat-intro p { font-size: 12px; }
+.docked-chat .chat-suggestions button { font-size: 11px; }
+.docked-chat .chat-history { padding: 15px 17px; }
+.mobile-chat-collapse { display: none; }
+.notes-workspace>.board-course-select { max-width: 340px; display: grid; gap: 8px; color: var(--muted); font-size: 12px; margin-bottom: 24px; }
+.board-shell .tool-layout { grid-template-columns: 1fr; }
+.assignment-search { display: flex; align-items: center; gap: 10px; margin: 16px 20px; color: var(--muted); }
+.assignment-search input { padding: 9px; width: 100%; border: 1px solid var(--border); background: var(--surface); border-radius: 6px; }
+.board-shell summary:focus-visible { outline: 3px solid var(--blue); outline-offset: 4px; }
+.sync-todo>p { font-size: 13px; margin-bottom: 22px; }
+.sync-todo-count { font-size: 12px; color: var(--muted); margin: 20px 0 5px; }
+.sync-todo ul { padding: 0; margin: 0; list-style: none; max-height: 45vh; overflow: auto; }
+.sync-todo li { display: flex; align-items: center; gap: 13px; padding: 16px 0; border-bottom: 1px solid var(--border); }
+.sync-todo li>div { min-width: 0; }
+.sync-todo li strong { display: block; font-size: 13px; overflow-wrap: anywhere; }
+.sync-todo li span,.sync-todo li small { display: block; font-size: 11px; color: var(--muted); margin-top: 5px; }
+.sync-todo li small.board-late { color: #bb684b; }
+@media(max-width:1100px) and (min-width:901px) {
+  .board-shell { --chat-width: 310px; }
+  .board-shell main { padding-left: 24px; padding-right: 24px; }
+  .workspace-tabs { gap: 20px; }
+  .workspace-tabs>a { font-size: 13px; }
+  .workspace-brand-area { gap: 8px; }
+  .filter-symbol { width: 100%; }
+}
+@media(max-width:900px) {
+  .workspace-header { height: auto; min-height: 78px; padding: 14px 20px 0; flex-wrap: wrap; gap: 10px; }
+  .workspace-brand-area { order: -1; width: 100%; justify-content: flex-end; }
+  .workspace-brand-area .brand { font-size: 22px; }
+  .workspace-tabs { height: 47px; width: 100%; gap: 23px; }
+  .workspace-tabs>a { font-size: 12px; }
+  .workspace-more { font-size: 11px; margin-left: auto; }
+  .workspace-more>div { left: auto; right: 0; }
+  .board-shell .main-shell { margin: 0; }
+  .board-shell main { padding: 22px 22px 100px; max-width: 800px; }
+  .board-toolbar { margin-bottom: 24px; }
+  .board-heading h1 { font-size: 27px; }
+  .docked-launcher { display: flex; }
+  .docked-chat { display: none; top: 132px; bottom: 12px; right: 12px; width: min(420px, calc(100vw - 24px)); box-shadow: 0 18px 65px #20213c30; }
+  .docked-chat.mobile-chat-open { display: flex; }
+  .mobile-chat-collapse { display: inline-flex; }
+}
+@media(max-width:480px) {
+  .workspace-header { padding-left: 15px; padding-right: 15px; }
+  .workspace-tabs { gap: 16px; }
+  .workspace-tabs>a { font-size: 11px; }
+  .workspace-tabs>a:nth-child(3) { max-width: 130px; white-space: normal; line-height: 1.4; }
+  .board-shell main { padding-left: 17px; padding-right: 17px; }
+  .board-filters { gap: 12px; padding: 13px; }
+  .filter-symbol { width: 100%; }
+  .board-filters label,.board-filters label:first-of-type { flex: 1 1 40%; min-width: 0; }
+  .board-post { padding: 19px; }
+  .board-post-title { display: block; }
+  .priority-label { display: inline-block; margin-top: 8px; }
+  .board-post-title h2 { font-size: 16px; }
+  .board-post>p { font-size: 12px; }
+  .board-post-meta time { margin-left: 0; }
+}
+@media(max-height:550px) and (max-width:900px) { .docked-chat { top: 10px; bottom: 10px; z-index: 60; } }

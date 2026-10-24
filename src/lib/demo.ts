@@ -41,7 +41,7 @@ export function demoState(): AcademicState {
       id: `demo-announcement-${c.id}`, courseId: c.id, platform: i % 2 ? 'Canvas' : 'D2L',
       title: ['Lab resources are ready', 'A little help with priority queues', 'Your next quiz: what to review'][i],
       description: ['Review the socket examples in your notes before starting the lab. Bring questions to your next class.', 'Start with the heap operations and test edge cases. Your saved course notes include a quick refresher.', 'Revisit the roles of courts, law enforcement, and corrections. Focus on explaining the differences.'][i],
-      posted: offsetDate(-i), read: false,
+      priority: ['high', 'low', 'medium'][i], posted: offsetDate(-i), read: false,
     })),
   });
 }

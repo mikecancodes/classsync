@@ -1,10 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Check, CheckCircle2, ChevronDown } from 'lucide-react';
+import { ArrowRight, Check, ChevronDown, SlidersHorizontal } from 'lucide-react';
 import { AcademicState, Assignment, formatDate } from '@/lib/model';
-import { Announcements } from './announcements';
-import { DashboardSummary } from './dashboard-summary';
+import { filterAnnouncements, type FeedFilters } from '@/lib/feed';
 
 type Props = {
   data: AcademicState;
@@ -13,44 +13,41 @@ type Props = {
   onComplete: (assignment: Assignment) => void;
   onAnnouncementToggle: (id: string) => void;
 };
+const initialFilters: FeedFilters = { course: 'all', priority: 'all', read: 'all', sort: 'newest' };
 
 export function Dashboard({ data, today, onEdit, onComplete, onAnnouncementToggle }: Props) {
-  const pending = data.assignments.filter(item => item.status !== 'done')
-    .sort((a, b) => a.due.localeCompare(b.due) || a.title.localeCompare(b.title) || a.id.localeCompare(b.id));
-  const upcoming = pending.filter(item => item.due >= today);
-  const overdue = pending.filter(item => item.due < today);
+  const [filters, setFilters] = useState(initialFilters);
+  const rows = filterAnnouncements(data, filters);
+  const pending = data.assignments.filter(item => item.status !== 'done' && (filters.course === 'all' || item.courseId === filters.course))
+    .sort((a, b) => a.due.localeCompare(b.due) || a.id.localeCompare(b.id));
   const unread = data.announcements.filter(item => !item.read).length;
+  const filtered = Object.keys(initialFilters).some(key => filters[key as keyof FeedFilters] !== initialFilters[key as keyof FeedFilters]);
+  const set = (key: keyof FeedFilters, value: string) => setFilters(current => ({ ...current, [key]: value }));
 
-  function rows(assignments: Assignment[]) {
-    return assignments.map(item => {
-      const course = data.courses.find(course => course.id === item.courseId);
-      return <li className="focus-assignment" key={item.id}>
-        <button className="focus-check" aria-label={`Complete ${item.title}`} onClick={() => onComplete(item)}><Check size={14} aria-hidden="true" /></button>
-        <button className="focus-assignment-title" onClick={() => onEdit(item)}>
-          <strong>{item.title}</strong>
-          <span><i className={`dot ${course?.color}`} />{course?.name}{item.status === 'progress' && ' · In progress'}</span>
-        </button>
-        <time className={item.due < today ? 'focus-date overdue' : 'focus-date'} dateTime={item.due}>{item.due === today ? 'Today' : formatDate(item.due)}</time>
-      </li>;
-    });
-  }
-
-  return <div className="focus-dashboard">
-    <DashboardSummary data={data} today={today} />
-    <section className="focus-deadlines" aria-labelledby="next-up-title">
-      <div className="focus-section-heading"><div><h2 id="next-up-title">Next up</h2><p>Your nearest deadlines, in order.</p></div><Link href="/assignments">All assignments <ArrowRight size={15} /></Link></div>
-      {overdue.length > 0 && <details className="focus-overdue">
-        <summary><span><strong>{overdue.length} overdue</strong> · Review when you’re ready</span><ChevronDown size={16} /></summary>
-        <ul>{rows(overdue.slice(0, 5))}</ul>
-        {overdue.length > 5 && <Link className="focus-more" href="/assignments">View all assignments <ArrowRight size={14} /></Link>}
-      </details>}
-      {upcoming.length > 0 ? <ul className="focus-assignment-list">{rows(upcoming.slice(0, 5))}</ul> : <div className="focus-empty"><CheckCircle2 size={26} /><h3>No upcoming deadlines</h3><p>{overdue.length ? 'Your overdue work is listed above.' : 'You’re all caught up. Add an assignment whenever you need to.'}</p></div>}
-      {upcoming.length > 5 && <Link className="focus-more" href="/assignments">{upcoming.length - 5} more upcoming · View all <ArrowRight size={14} /></Link>}
+  return <div className="announcement-board">
+    <div className="board-heading"><div><span className="board-eyebrow">YOUR CLASS UPDATES</span><h1>Announcements</h1><p>All your classes. One place.</p></div><span className="board-unread">{unread} unread</span></div>
+    <section className="board-filters" aria-label="Announcement filters">
+      <span className="filter-symbol"><SlidersHorizontal size={17} /> Filter</span>
+      <label>Class<select aria-label="Filter announcements by class" value={filters.course} onChange={event => set('course', event.target.value)}><option value="all">All classes</option>{data.courses.map(course => <option key={course.id} value={course.id}>{course.name}</option>)}</select></label>
+      <label>Priority<select aria-label="Filter announcements by priority" value={filters.priority} onChange={event => set('priority', event.target.value)}><option value="all">All priorities</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></label>
+      <label>Status<select aria-label="Filter announcements by status" value={filters.read} onChange={event => set('read', event.target.value)}><option value="all">All updates</option><option value="unread">Unread</option><option value="read">Read</option></select></label>
+      <label>Sort by<select aria-label="Sort announcements" value={filters.sort} onChange={event => set('sort', event.target.value)}><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="priority">Priority first</option></select></label>
+      {filtered && <button className="board-reset" onClick={() => setFilters(initialFilters)}>Reset</button>}
     </section>
-    <details className="focus-announcements">
-      <summary><span>Announcements <small>{unread ? `${unread} unread` : 'All read'}</small></span><ChevronDown size={17} /></summary>
-      <Announcements data={data} onToggle={onAnnouncementToggle} compact />
-    </details>
-    <div className="focus-bottom-links"><Link href="/courses">My courses <ArrowRight size={14} /></Link><Link href="/calendar">Open calendar <ArrowRight size={14} /></Link></div>
+    <div className="board-feed-label"><span>{rows.length} update{rows.length === 1 ? '' : 's'}</span><span>Demo LMS data</span></div>
+    <section className="board-feed" aria-label="Course announcements" aria-live="polite">
+      {!rows.length && <div className="board-empty"><h2>No announcements here</h2><p>{data.announcements.length ? 'Try another class or clear your filters.' : 'Use Demo Sync to add sample class updates.'}</p>{filtered && <button className="secondary-button" onClick={() => setFilters(initialFilters)}>Clear filters</button>}</div>}
+      {rows.map(item => {
+        const course = data.courses.find(course => course.id === item.courseId);
+        const priority = item.priority ?? 'medium';
+        return <article className={`board-post ${item.read ? 'is-read' : ''}`} key={item.id}>
+          <div className="board-post-meta"><Link href={`/courses/${item.courseId}`}><i className={`dot ${course?.color}`} />{course?.name}</Link><span>{item.platform} · Demo</span><time dateTime={item.posted}>{formatDate(item.posted)}</time></div>
+          <div className="board-post-title"><h2>{item.title}</h2><span className={`priority-label ${priority}`}>{priority} priority</span></div>
+          <p>{item.description}</p>
+          <button className="board-read-toggle" aria-pressed={item.read} onClick={() => onAnnouncementToggle(item.id)}>{item.read ? <Check size={14} /> : <span className="unread-dot" />}{item.read ? 'Read · Mark unread' : 'Mark as read'}<span className="sr-only">: {item.title}</span></button>
+        </article>;
+      })}
+    </section>
+    <details className="board-deadlines"><summary><span>Assignment deadlines <small>{pending.length} to do{pending.some(item => item.due < today) ? ' · Includes overdue work' : ''}</small></span><ChevronDown size={16} /></summary><ul>{pending.slice(0, 5).map(item => <li key={item.id}><button className="focus-check" aria-label={`Complete ${item.title}`} onClick={() => onComplete(item)}><Check size={14} /></button><button onClick={() => onEdit(item)}>{item.title}</button><span className={item.due < today ? 'board-late' : ''}>{item.due < today ? 'Overdue · ' : ''}{formatDate(item.due)}</span></li>)}</ul>{!pending.length && <p className="muted">No incomplete assignments for this class.</p>}<Link href="/assignments">All assignments <ArrowRight size={14} /></Link></details>
   </div>;
 }

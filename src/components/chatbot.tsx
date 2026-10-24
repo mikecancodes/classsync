@@ -40,11 +40,7 @@ export function Chatbot({ data }: { data: AcademicState }) {
 
   function handleKeys(event: KeyboardEvent<HTMLElement>) {
     if (event.key === 'Escape') { event.stopPropagation(); collapse(); }
-    if (event.key !== 'Tab') return;
-    const controls = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), select:not(:disabled), a[href]'));
-    const first = controls[0], last = controls[controls.length - 1];
-    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
-    if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+
   }
 
   async function send(raw = question) {
@@ -84,21 +80,21 @@ export function Chatbot({ data }: { data: AcademicState }) {
   }
 
   return <>
-    <button ref={launcher} className={`chat-launcher ${open ? 'chat-launcher-hidden' : ''}`} aria-expanded={open} aria-controls="classsync-chat" onClick={() => setOpen(true)}>
+    <button ref={launcher} className={`chat-launcher docked-launcher ${open ? 'chat-launcher-hidden' : ''}`} aria-expanded={open} aria-controls="classsync-chat" onClick={() => setOpen(true)}>
       <Brain size={22} /> Ask ClassSync AI <Sparkles size={15} />
     </button>
-    {open && <section id="classsync-chat" className="chat-panel" role="dialog" aria-label="ClassSync AI" onKeyDown={handleKeys}>
+    <section id="classsync-chat" className={`chat-panel docked-chat ${open ? 'mobile-chat-open' : ''}`} role="complementary" aria-label="ClassSync AI" onKeyDown={handleKeys}>
       <header className="chat-heading">
         <span className="chat-brain"><Brain size={25} /></span>
         <div><h2>ClassSync AI</h2><p>{useAI ? 'Server-side AI selected' : 'Local assistant · Rule-based'}</p></div>
-        <button className="icon-button" aria-label="Collapse ClassSync AI" onClick={collapse}><ChevronDown size={22} /></button>
+        <button className="icon-button mobile-chat-collapse" aria-label="Collapse ClassSync AI" onClick={collapse}><ChevronDown size={22} /></button>
       </header>
       <div className="chat-mode">
         <label><input type="checkbox" checked={useAI} disabled={!aiAvailable || busy} onChange={e => setUseAI(e.target.checked)} /> Use connected AI</label>
         <small>{useAI ? 'Sending shares coursework with OpenAI. Each question uses current data.' : aiAvailable ? 'AI is configured. Sign-in may be required.' : 'No AI connection required. Answers stay on this device.'}</small>
       </div>
       <div ref={history} className="chat-history" role="log" aria-live="polite" aria-relevant="additions">
-        <div className="chat-intro"><span><Brain size={30} /></span><h3>A little clarity, whenever you need it.</h3><p>I can help you find your next deadline and decide where to start. Ask about your current courses and assignments.</p></div>
+        <div className="chat-intro"><span><Brain size={30} /></span><h3>Your study sidekick.</h3><p>Ask about your classes, deadlines, or what to work on next.</p></div>
         {!messages.length && <div className="chat-suggestions">{suggestions.map(text => <button key={text} onClick={() => send(text)}>{text}<Send size={13} /></button>)}</div>}
         {messages.map(message => <article key={message.id} className={`chat-message ${message.role}`}><small>{message.role === 'user' ? 'You' : message.mode}</small><p>{message.text}</p></article>)}
         {busy && <p className="chat-thinking"><LoaderCircle size={14} className="spin" /> Working through your question…</p>}
@@ -110,6 +106,6 @@ export function Chatbot({ data }: { data: AcademicState }) {
         <button aria-label="Send message" disabled={busy || !question.trim()}><Send size={18} /></button>
       </form>
       <div className="chat-footnote">Based on your current workspace. History stays in this session.</div>
-    </section>}
+    </section>
   </>;
 }

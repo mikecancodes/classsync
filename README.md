@@ -28,12 +28,12 @@ pnpm start
 
 ## Included MVP
 
-- A focused dashboard with compact counts, five nearest deadlines, expandable overdue work and announcements. Course cards and the full calendar have dedicated pages; the sidebar keeps only primary navigation.
+- Top tabs for Home, My Assignments, and Lecture Notes / Material, with the ClassSync logo at the top right. Home centers announcements with class, priority, read status, and sorting controls; deadlines are secondary.
 - Course pages with assignment CRUD, completion tracking, earned scores, editable syllabus, and text/Markdown materials.
 - Searchable assignment list with status and course filters. All dates are local calendar dates; deadlines are considered overdue on the following day.
 - Monthly calendar, responsive navigation, keyboard focus states, and persistent light/dark modes.
 - Deterministic weighted grade calculator and hypothetical ungraded-category scenarios. Syllabus extraction supports category/percentage lines and requires review before applying.
-- Global collapsible chatbot with current-workspace local answers and optional server-side AI. Conversation survives page navigation and resets on reload.
+- Persistent desktop chat in the right column, with a collapsible mobile panel, current-workspace local answers, and optional server-side AI. Conversation survives page navigation and resets on reload.
 - Study assistant: summaries, study guides, catch-up plans, content questions, and rubric-based draft evaluation.
 - Local browser persistence, JSON export/restore, optional Supabase email/password auth, explicit cloud save/load, and database RLS.
 - Authenticated, validated LMS import preview contract, plus a read-only D2L browser extension prototype in [`extension/`](extension/README.md) that produces its payloads. No import commit or assignment submission yet.
@@ -42,7 +42,7 @@ pnpm start
 
 The first visit generates realistic sample coursework with deadlines relative to that visit. Thereafter the version-2 workspace is stored under `classsync-workspace-v2` in localStorage. Legacy v1 data migrates through validation and its original key remains as a recovery copy. Invalid stored data is preserved and automatic writes are paused. Theme is saved separately. Completed status does not imply a score; record earned points explicitly.
 
-**Demo Sync** adds missing samples for the five required courses and refreshes sample announcements while preserving read state, existing assignments, notes, grades, and manual work. Repeating it creates no duplicates; deleted demo records can be restored by syncing. Existing assignment dates are preserved. Due Soon means incomplete work due today through seven local calendar days ahead, inclusive.
+**Sync classes** opens a To-do list with current incomplete coursework, a class filter, and completion controls. Actual class sync is not implemented. Existing data stays in the shared workspace. Due Soon means incomplete work due today through seven local calendar days ahead, inclusive.
 
 The global chatbot answers questions about today, tomorrow, the next seven days, overdue work, and courses using current workspace data. Schedule suggestions are deadline order only; capacity-aware Plan My Week remains future work.
 
@@ -81,8 +81,10 @@ src/components/class-sync.tsx Dashboard, navigation, coursework, calendar
 src/components/panels.tsx     Assistant, grades, materials, settings
 src/lib/model.ts             Domain types, validation, deterministic math
 src/lib/demo.ts              Realistic demo seed
-src/lib/workspace.ts         v1 migration and idempotent Demo Sync
+src/lib/workspace.ts         v1 migration and demo fixture merge helper
 src/lib/academic-assistant.ts Deterministic local chatbot and date windows
+src/lib/feed.ts               Pure announcement filtering and sorting
+src/components/notes-page.tsx Global course-linked materials workspace
 src/components/chatbot.tsx   Global collapsible chat panel
 src/lib/server.ts            Authentication, body limits, rate limiter
 src/app/api/ai/route.ts       Server-only generation and demo tools
@@ -91,6 +93,7 @@ src/app/api/imports/preview/route.ts Future LMS validation contract
 supabase/schema.sql          PostgreSQL table and row-level policies
 tests/grades.test.ts          Grade and validation regression tests
 tests/frontend.test.ts        Migration, sync, dates, and chatbot tests
+tests/feed.test.ts            Combined announcement filters and sorting
 ```
 
 `POST /api/imports/preview` requires a Supabase bearer token and accepts `{ "version": 1, "source": "canvas" | "d2l" | "manual", "data": { "courses": [], "assignments": [], "materials": [] } }`, using the full domain schemas in `src/lib/model.ts`. The outer import contract remains version 1; its nested workspace accepts legacy data or version 2 with announcements and normalizes to version 2. It validates uniqueness and references and returns a normalized preview plus counts and `requiresApproval: true`. It never writes data. A future extension must add an origin/permission policy, student preview/approval UI, deduplication, and a transactional import commit endpoint. The current workspace PUT is for explicit full-workspace saves, not automatic LMS ingestion.

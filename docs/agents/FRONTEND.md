@@ -18,11 +18,11 @@ Keep the existing grade calculator and course workflows functional throughout. B
 ## Brand and visual system
 
 - Product: **ClassSync**. Tagline: **All your classes. One place.**
-- Logo: a simple **brain** icon or SVG beside the product name at the upper left. Use Lucide React's Brain icon or a small accessible SVG. Do not use a cloud; replace the existing graduation cap when implementing this branding change.
+- Logo: a simple **brain** icon or SVG beside the product name at the upper right. Use Lucide React's Brain icon or a small accessible SVG. Do not use a cloud; replace the existing graduation cap when implementing this branding change.
 - Light mode: white and light-gray surfaces, charcoal text, blue primary accents, purple AI accents. Preserve dark-mode support with readable contrast.
 - Use rounded cards, subtle shadows, clean typography, consistent spacing, and restrained hover transitions.
 - Build dialogs, menus, tabs, toasts and similar controls from shadcn/ui (decision 5), themed by the CSS tokens in `src/app/globals.css`; avoid scattered hard-coded theme variants. Use existing Tailwind support where useful.
-- Desktop: fixed left navigation and a clear content hierarchy. Mobile: collapsible navigation, reachable primary actions, no unintended horizontal overflow.
+- Desktop: horizontal top navigation with Home, My Assignments, and Lecture Notes / Material; ClassSync brain logo at the top right; center workspace and persistent right-side chat. Secondary pages live under More. Mobile: wrapping top tabs and a collapsible chat drawer, without horizontal overflow.
 - Use semantic controls, visible focus, associated labels, keyboard-accessible dialogs, readable contrast, and reduced-motion support. Icons alone need accessible names. Color must not be the only status signal.
 
 ## Pages and routing
@@ -31,7 +31,7 @@ These route names are recommended mappings into the existing application, not a 
 
 | Page | Route | Required behavior |
 | --- | --- | --- |
-| Home | `/` | Search, student profile, Demo Sync, welcome message, assignment counts, announcements, upcoming deadlines |
+| Home | `/` | Centered announcement feed, filters and sort controls, Sync classes → To-do list, right-side chat |
 | My Assignments | `/assignments` | Unified coursework, search/filter/sort, completion, add/edit/delete |
 | Lecture Notes | `/notes` (new) | Course-linked notes, keyword search, editor, create/edit/delete, summary action |
 | To-Do List | `/tasks` (new) | Personal tasks, Today/Upcoming/Completed groups, progress, persistence |
@@ -44,14 +44,14 @@ These route names are recommended mappings into the existing application, not a 
 
 ### Home
 
-The home design uses a calm, single-column layout: compact summary counts, five nearest upcoming assignments, a visible expandable overdue count, and announcements collapsed with an unread count. Keep completion and editing inline. Course cards and the full calendar live on their own pages. Avoid welcome illustrations, repeated AI promotions, duplicate deadline widgets, and long course lists in the sidebar. The floating chatbot is the primary quick-help entry point.
+The approved sketch places announcements in the center and chat in a dedicated right column. Announcements are visible on arrival. Provide real Class, Priority, Read status, and Sort by controls; combine filters, offer Reset, and show a useful empty state. Sort by newest, oldest, or priority with stable tie-breaks. Use high/medium/low announcement priority; legacy records without priority use medium. Keep deadlines in a secondary expandable section. Do not restore the left sidebar, dashboard course-card grid, or a floating desktop chat overlay.
 
 
 - Suggested welcome: “Good morning! Here’s everything happening with your classes.” If time-specific, derive the greeting from the student's local time.
-- Summary cards: **Total Assignments**, **Due Soon**, **Completed Assignments**, derived from current state. Use one documented Due Soon range everywhere; a proposed MVP convention is today through the next seven calendar days, excluding completed work.
+- Home prioritizes the announcement feed over summary cards. Coursework counts remain derived from shared data where displayed. Due Soon means today through the next seven local calendar days, excluding completed work.
 - Announcements: course, LMS source (D2L or Canvas), title, short description, posted date, and read/unread status. Sort newest first and persist read state.
 - Upcoming Deadlines: incomplete work sorted by due date; make overdue work visible separately.
-- Sync must say **Demo Sync** or otherwise clearly identify simulated connections. It refreshes normalized sample imports, with a visible success/error result.
+- **Sync classes** opens a To-do list dialog immediately. It shows current incomplete assignments with a class filter and completion controls. The sync operation is a future integration hook; this button does not import data or claim a successful sync.
 
 ### My Assignments
 
@@ -80,9 +80,9 @@ Show course name, instructor when available, LMS platform, assignment count, and
 This is a high-priority target feature, distinct from the existing assistant page.
 
 - Mount once in the application shell so it is accessible on every page.
-- Collapsed: floating purple **Ask ClassSync AI** button at the bottom right.
-- Expanded: right panel with brain icon, **ClassSync AI** heading, conversation history, message bubbles, input, Send, and Collapse controls.
-- On mobile, use an appropriately sized drawer; do not obscure navigation or make the input inaccessible. Manage focus on open/close and support keyboard use.
+- Desktop: open by default in a reserved right column, with its own scrolling history and composer anchored at the bottom. It must not overlay the center feed or trap keyboard focus.
+- Right panel: brain icon, **ClassSync AI** heading, honest mode label, conversation history, message bubbles, input, and Send. Collapse controls are for mobile.
+- On mobile, show the floating purple **Ask ClassSync AI** launcher and an appropriately sized drawer; do not obscure navigation or make the input inaccessible. Manage focus on open/close and support keyboard use.
 - Read current shared course and assignment state, including changes made after the panel opened.
 - Without a real API, answer deadline/course questions from local data and label the mode **Local assistant / rule-based**. Unsupported questions should explain the limitation, not invent facts.
 - With an API, call the authenticated server endpoint; never put provider credentials in browser code. The decided design is Gemini with browser-run tool calling (decisions 3–4 in DECISIONS.md).

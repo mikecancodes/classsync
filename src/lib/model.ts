@@ -6,7 +6,7 @@ export const materialSchema = z.object({ id: z.string().min(1), courseId: z.stri
 export const announcementSchema = z.object({
   id: z.string().min(1).max(100), courseId: z.string().min(1).max(100),
   platform: z.enum(['D2L', 'Canvas']), title: z.string().min(1).max(160),
-  description: z.string().max(2000), posted: z.iso.date(), read: z.boolean(),
+  description: z.string().max(2000), priority: z.enum(['high', 'medium', 'low']).optional(), posted: z.iso.date(), read: z.boolean(),
 });
 export const stateSchema = z.object({ version: z.union([z.literal(1), z.literal(2)]).default(2).transform(() => 2 as const), announcements: z.array(announcementSchema).max(300).default([]), courses: z.array(courseSchema).min(1).max(50), assignments: z.array(assignmentSchema).max(1000), materials: z.array(materialSchema).max(200) }).strict().superRefine((s, ctx) => {
   if (new Set(s.courses.map(c=>c.id)).size !== s.courses.length || new Set(s.assignments.map(a=>a.id)).size !== s.assignments.length || new Set(s.materials.map(m=>m.id)).size !== s.materials.length) ctx.addIssue({code:'custom',message:'IDs must be unique.'});

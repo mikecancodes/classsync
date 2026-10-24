@@ -13,15 +13,19 @@ Use one shared workspace as the source of truth so that completing or editing wo
 - **Personal tasks:** stable ID, title, optional course, optional due date, priority, and completion state. Keep these distinct from graded assignments.
 - **Chat messages:** session state only unless conversation persistence is explicitly added later.
 
-The current workspace is stored under `classsync-workspace-v2` and contains courses, assignments, materials, and announcements (v1 data migrates automatically). Extend it through a validated, versioned migration before adding persisted fields or entities. Preserve existing notes, grades, coursework, and settings. Keep theme storage separate. Use local calendar dates for coursework; avoid parsing `YYYY-MM-DD` as UTC and shifting the displayed day.
+The current workspace is stored under `classsync-workspace-v2` and contains courses, assignments, materials, and announcements (v1 data migrates automatically; its original storage key remains as a recovery copy). Extend it through a validated, versioned migration before adding persisted fields or entities. Preserve existing notes, grades, coursework, and settings. Keep theme storage separate. Use local calendar dates for coursework; avoid parsing `YYYY-MM-DD` as UTC and shifting the displayed day.
 
 ## Demo data and sync
 
 Seed realistic Computer Networks, Data Structures, Criminal Justice, Computer Architecture, and Algorithm Analysis courses, with assignments such as Socket Programming Lab, Priority Queue Assignment, Chapter 5 Quiz, Cache Memory Discussion, and Algorithm Analysis Homework. Include multiple announcements and course-linked notes. Generate dates relative to the current date only on first seed or explicit demo refresh, not on each render.
 
-Load and normalize fixture JSON through a small service boundary into the shared workspace model. The interface must label every simulated connection and refresh result **Demo**. Repeated Demo Sync must be idempotent: merge by stable source identity, create no duplicates, preserve manual records and local completion/read choices, and avoid silently replacing the user's saved workspace. Report invalid data without partially applying it.
+Load and normalize fixture JSON through a small service boundary into the shared workspace model. The interface must label every simulated connection and refresh result **Demo**. The current Sync classes button only opens a To-do list. Future fixture-import refreshes must be idempotent: merge by stable source identity, create no duplicates, preserve manual records and local completion/read choices, and avoid silently replacing the user's saved workspace. Report invalid data without partially applying it.
 
 Live Brightspace (D2L) data comes from the read-only browser extension prototype in `extension/` (see `docs/d2l-sync/extension.md`), which uses the student's own signed-in session and sends data only through the authenticated import preview endpoint. Official OAuth access for Canvas and Brightspace remains future work requiring institution-approved app registration. Do not ask for LMS passwords, bypass authentication, submit work automatically, or put LMS/API secrets in frontend code. Keep platform adapters separate from UI and server routes.
+
+## Approved dashboard layout
+
+The latest user correction supersedes earlier dashboard layouts: place the ClassSync brain logo at the top right, top tabs for Home / My Assignments / Lecture Notes / Material, announcements in the center with class, priority, read-state filters and sorting, and a persistent chat column on the right. Mobile keeps top navigation and opens chat as a collapsible panel. Secondary tools live under More. Do not restore a desktop left sidebar or hide announcements behind a disclosure.
 
 ## Home dashboard
 
@@ -31,7 +35,7 @@ Derive all counts from current shared state:
 - **Due Soon:** incomplete assignments due from today through the next seven local calendar days.
 - **Completed Assignments:** assignments marked complete.
 
-Show announcements newest first with course, platform, title, short description, posted date, and read/unread state. Opening an announcement marks it read. Show upcoming incomplete assignments in deadline order and make overdue work visible separately. Search matches assignment and announcement titles plus course names. Demo Sync refreshes fixture data and reports success or failure.
+Show announcements newest first with course, platform, title, short description, posted date, and read/unread state. Opening an announcement marks it read. Show upcoming incomplete assignments in deadline order and make overdue work visible separately. Search matches assignment and announcement titles plus course names. Sync classes opens the To-do list dialog; real syncing is deferred.
 
 An assignment is overdue when its local due date is earlier than today and it is not complete. Use the same definition in the dashboard, filters, calendar, planner, and chatbot.
 
@@ -55,7 +59,7 @@ The classes page derives assignment totals and upcoming deadlines from shared st
 
 ## Global local assistant
 
-Mount one collapsible chat panel across pages. It reads the current shared workspace, including edits made after the panel was opened. In demo mode label it **Local assistant / rule-based** and do not send student data externally.
+Mount one persistent desktop right-side chat panel across pages; collapse it only on mobile. It reads the current shared workspace, including edits made after the panel was opened. In demo mode label it **Local assistant / rule-based** and do not send student data externally.
 
 Support deterministic local answers for:
 

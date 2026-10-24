@@ -12,6 +12,8 @@ Decided by the team on 2026-10-24 after reviewing every spec document for confli
 | 6 | Assignments without points | **`points` becomes optional**; grade math skips items without points | Not implemented (extension uses a placeholder of 100 for now) |
 | 7 | Due times | **Optional `dueTime`** next to the existing date-only `due` | Not implemented |
 | 8 | Platform values | Data uses lowercase **`d2l` · `canvas` · `manual`**; the UI shows "D2L", "Canvas", "Manual" | Not implemented (announcements use `'D2L' \| 'Canvas'`) |
+| 10 | Dashboard layout | **Top tabs, top-right ClassSync logo, center announcement feed with class/priority/status filters and sorting, persistent right-side desktop chat**; mobile chat collapses | Implemented |
+| 11 | Sync classes interaction | Opens a **To-do list** of current incomplete coursework with a class filter and completion controls. Actual class-sync logic is deferred | Implemented UI; sync backend deferred |
 | 9 | Live LMS data | The read-only browser extension in `extension/` is the live D2L path; official OAuth stays future work | Extension prototype exists |
 
 ## 1. Hybrid storage
@@ -71,3 +73,8 @@ The overdue rule stays date-based ("due date before today"). When `dueTime` is p
 ## Update checklist when implementing
 
 When a decision ships, flip its status above, update the "Baseline and target gaps" table in DEVELOPMENT.md, and update `src/lib/model.ts` together with the extension converter (`extension/src/to-classsync.js`). The extension tests check the converter against the real schema.
+
+
+## 10–11. Latest dashboard correction
+
+The user’s sketch and follow-up supersede older sidebar/deadline-first layouts and the old Demo Sync button. Home shows announcements by default, top tabs are Home / My Assignments / Lecture Notes / Material, branding is at the top right, and desktop chat reserves the right column. Sync classes opens the current-workspace To-do list immediately and must not claim an import occurred. The shadcn migration in decision 5 remains pending; the current delivered UI still uses the existing styled native controls.

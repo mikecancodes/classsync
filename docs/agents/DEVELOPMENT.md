@@ -15,16 +15,16 @@ Updated after the branding/dashboard/chatbot refresh. “Existing” means sourc
 
 | Feature | Baseline | Next target |
 | --- | --- | --- |
-| Dashboard | Compact counts, five next deadlines, expandable overdue work/announcements, idempotent Demo Sync | Broader search and filters |
+| Dashboard | Top tabs, logo top right, center announcement feed with class/priority/status/sort filters, secondary deadlines, Sync classes | Broader search and filters |
 | Brand | Brain logo and “All your classes. One place.” tagline | Preserve branding |
 | Assignments | CRUD, completion, search, status/course filters, due-date sorting | Platform, priority, duration, due/platform/priority filters |
-| AI | Global collapsible chatbot, session history across routes, structured local answers, optional server AI; study tools preserved | Gemini provider and browser-run tool calling (decisions 3–4) |
+| AI | Desktop right-side chatbot and mobile drawer, session history across routes, structured local answers, optional server AI; study tools preserved | Gemini provider and browser-run tool calling (decisions 3–4) |
 | Tasks | No separate task entity/page | Persistent To-Do List and completion progress |
-| Notes | Course-linked text materials with create/edit/delete | Global Lecture Notes page and keyword search |
+| Notes | Global Notes / Material tab with course selector and existing create/edit/delete | Keyword search |
 | Planner | Generic local catch-up checklist | Deterministic daily Plan My Week using deadline, priority, duration, workload |
 | Calendar | Monthly assignment dates and editing | Course colors, personal tasks, detailed event display; week view optional |
 | Classes | Required five-course sample set and detail tabs; existing saved courses preserved | LMS metadata |
-| Imports | Authenticated preview-only API, backup restore, idempotent Demo Sync, D2L extension prototype | Extension → app tab review and merge (decision 2) |
+| Imports | Authenticated preview-only API, backup restore, internal fixture merge helper, D2L extension prototype; Sync classes opens a to-do dialog | Extension → app tab review and merge (decision 2) |
 | Persistence | Version-2 localStorage with validated v1 migration and announcements; optional cloud save/load | v3 migration (optional points, dueTime, lowercase platform) and signed-in auto-save (decisions 1, 6–8) |
 | Grade tools | Weighted calculation, projection, syllabus parsing | Preserve behavior during frontend work |
 
@@ -84,13 +84,14 @@ Apply the relevant checks to the feature being delivered. This is a target check
 
 - [ ] Existing v1 saved data migrates without losing notes, assignments, or grades.
 - [ ] Reload, export/restore, and cloud validation preserve new entities and fields.
-- [ ] Two consecutive Demo Sync actions produce no duplicates and preserve manual data and completion/read state.
+- [ ] Sync classes opens the current To-do list; class filters and completion controls work without claiming a real sync.
+- [ ] Repeated internal demo fixture merges remain idempotent and preserve manual data and completion/read state.
 - [ ] Malformed imports leave the existing workspace intact; unsupported source/schema versions show useful errors.
 - [ ] No key or service-role secret is in browser bundles, fixtures, logs, or committed environment files.
 
 ### Presentation and handoff
 
-- [ ] Brain branding, tagline, blue/purple accents, and light/dark contrast match the frontend guide.
+- [ ] Top tabs, top-right brain branding, centered filterable announcements, reserved desktop chat column, and light/dark contrast match the approved sketch.
 - [ ] Check desktop and a narrow mobile viewport, navigation, panel/dialog focus, empty states, and reduced motion.
 - [ ] No unintended horizontal overflow, clipped forms, or obstructed mobile controls.
 - [ ] Report installation/start commands, checks run, demo features, limitations, and integration extension points.
