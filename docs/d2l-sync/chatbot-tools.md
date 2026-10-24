@@ -6,7 +6,7 @@ The chatbot doesn't get all of the user's data pasted into its prompt. It gets a
 
 This keeps answers accurate ("what's due Friday" comes from a real query, not the model's memory) and keeps prompts small, which matters for local models.
 
-> **Decided (DECISIONS.md 3–4):** Gemini, with tools run **in the browser** against the local workspace, not against Supabase tables. The tool list and loop below still apply. Swap each Supabase query for the matching pure function in `src/lib/academic-assistant.ts`.
+> **Implemented (DECISIONS.md 3–4)** in `src/lib/chat-tools.ts` and `/api/ai/chat`: Gemini, with tools run **in the browser** against the local workspace rather than Supabase tables. This page is the original design; the code is the source of truth for tool names.
 
 ## Which model
 

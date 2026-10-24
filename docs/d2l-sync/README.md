@@ -31,7 +31,7 @@ The app on `main` (see [AGENTS.md](../../AGENTS.md), [docs/agents/](../agents/) 
 |---|---|---|
 | Database | One `workspaces` row per user, JSONB document, manual cloud save (**decided:** auto-save when signed in) | Normalized tables (`courses`, `items`, …): a later option, not current work |
 | D2L data | Demo data; `POST /api/imports/preview` validates future imports | Browser extension + iCal feed |
-| AI | Server-side OpenAI in `/api/ai` (**decided:** Gemini) | Tool-calling chatbot (**decided**, tools run in the browser) |
+| AI | Gemini tool-calling chat in `/api/ai/chat` (implemented) | Same design; tools run in the browser |
 | Extension | Prototype in `extension/`, separate from the app | Sends to the existing `/api/imports/preview`; future: direct sync into the tables above |
 
 The proposed SQL creates new tables and does **not** touch `workspaces`, so both can exist in one Supabase project. Adopting it means migrating the app's state model first, per the migration rules in [ARCHITECTURE.md](../agents/ARCHITECTURE.md).

@@ -10,8 +10,8 @@ ClassSync is being built for an **MLH hackathon**. Several choices follow from t
 |---|---|---|---|
 | 1 | Where data lives | **Hybrid with optional login:** browser workspace is the working copy; auto-saves to Supabase when signed in | Login exists (optional); auto-save not implemented (cloud save is still manual) |
 | 2 | Getting D2L data into the app | **Extension → open ClassSync tab → review screen → merge** | Not implemented (extension currently calls the preview API) |
-| 3 | AI provider | **Google Gemini**, chosen for the free MLH hackathon credits, behind `/api/ai` | Not implemented (OpenAI today) |
-| 4 | Chatbot design | **Tool calling**, tools run in the browser against the workspace | Not implemented (sends whole workspace today) |
+| 3 | AI provider | **Google Gemini**, chosen for the free MLH hackathon credits, behind `/api/ai` | Implemented (needs `GEMINI_API_KEY`; not yet tested with a live key) |
+| 4 | Chatbot design | **Tool calling**, tools run in the browser against the workspace. AI on by default when configured and signed in; friendly tone, no emoji; no streaming | Implemented (`/api/ai/chat`, `src/lib/chat-tools.ts`) |
 | 5 | UI components | **shadcn/ui** on top of the existing Tailwind tokens | Not implemented (styled native controls today) |
 | 6 | Assignments without points | **`points` becomes optional**; grade math skips items without points | Not implemented (extension uses a placeholder of 100 for now) |
 | 7 | Due times | **Optional `dueTime`** next to the existing date-only `due` | Not implemented |

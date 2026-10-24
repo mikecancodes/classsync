@@ -1,6 +1,6 @@
 # ClassSync
 
-A responsive academic hub built with Next.js App Router, TypeScript, Tailwind CSS, Supabase, and a server-only OpenAI integration. Start in local demo mode without any credentials.
+A responsive academic hub built with Next.js App Router, TypeScript, Tailwind CSS, Supabase, and a server-only Google Gemini integration. Start in local demo mode without any credentials.
 
 ## Agent development guides
 
@@ -44,17 +44,17 @@ The first visit generates realistic sample coursework with deadlines relative to
 
 **Sync classes** reveals the left-side To-do list with current incomplete coursework, a class filter, and completion controls. Actual class sync is not implemented. Existing data stays in the shared workspace. Due Soon means incomplete work due today through seven local calendar days ahead, inclusive.
 
-The global chatbot answers questions about today, tomorrow, the next seven days, overdue work, and courses using current workspace data. Schedule suggestions are deadline order only; capacity-aware Plan My Week remains future work.
+The global chatbot answers questions about today, tomorrow, the next seven days, overdue work, and courses using current workspace data. With Gemini configured and a signed-in account, it switches to AI chat that looks up assignments, announcements, grades, and notes through read-only tools; otherwise it answers locally with rules. Schedule suggestions are deadline order only; capacity-aware Plan My Week remains future work.
 
-Without an OpenAI key, study tools return labeled excerpts, practice prompts, keyword matches, and a catch-up checklist. They are **not AI-generated answers**. The demo evaluator does not invent a score. Uploads support `.txt`, `.md`, and `.csv` up to 150 KB and 40,000 characters; paste extracted text for PDFs/Word. Raw files are not retained. Material text is stored with the workspace. Rubrics are limited to 20,000 characters.
+Without a Gemini key, study tools return labeled excerpts, practice prompts, keyword matches, and a catch-up checklist. They are **not AI-generated answers**. The demo evaluator does not invent a score. Uploads support `.txt`, `.md`, and `.csv` up to 150 KB and 40,000 characters; paste extracted text for PDFs/Word. Raw files are not retained. Material text is stored with the workspace. Rubrics are limited to 20,000 characters.
 
-## Configure OpenAI
+## Configure Gemini
 
-Copy `.env.example` to `.env.local`, set `OPENAI_API_KEY`, and optionally set `OPENAI_MODEL` to a model available in your account. Restart the server.
+ClassSync uses Google Gemini because MLH provides free credits to hackathon participants. Create a key in Google AI Studio, copy `.env.example` to `.env.local`, set `GEMINI_API_KEY`, and optionally `GEMINI_MODEL` (default `gemini-flash-latest`). Restart the server. Set a usage cap in Google AI Studio.
 
-The server uses the [OpenAI Responses API](https://developers.openai.com/api/reference/typescript/resources/responses/methods/create), disables response storage, validates payload size, and limits output. The key is never imported by client code. Course content is sent only when you press a generation button, or explicitly enable connected AI and send a chat question. Chat sends current courses and assignments, with each question handled independently. `GET /api/ai` exposes only configuration availability; it does not bypass authentication. AI output is advisory and all evaluator scores are estimates.
+**Chat** (`POST /api/ai/chat`) uses tool calling. Gemini asks for specific data, the browser runs the lookup (`src/lib/chat-tools.ts`) against the local workspace, and only those rows are sent back. Tools are read-only. The server is stateless, allows at most five lookups per question, and counts every round trip toward a limit of 120 per user per hour. **Study tools** (`POST /api/ai`) send the material you choose when you press a generation button. The key is never imported by client code. `GET /api/ai` exposes only configuration availability. AI output is advisory and all evaluator scores are estimates.
 
-Authenticated Supabase users can call paid AI. For local development without Supabase, set `ALLOW_LOCAL_AI=true`; this bypass only works in development on a loopback hostname. Production always requires an authenticated account. A per-process limit allows 20 AI requests per user per hour. **Before a public multi-instance deployment, replace this with a shared rate limiter and configure provider budgets.** The local bypass is for a trusted local machine, not a public proxy.
+Authenticated Supabase users can call paid AI. For local development without Supabase, set `ALLOW_LOCAL_AI=true`; this bypass only works in development on a loopback hostname. Production always requires an authenticated account. Per-process limits allow 20 study-tool requests and 120 chat round trips per user per hour. **Before a public multi-instance deployment, replace this with a shared rate limiter and configure provider budgets.** The local bypass is for a trusted local machine, not a public proxy.
 
 ## Configure Supabase
 
@@ -100,4 +100,4 @@ tests/feed.test.ts            Combined announcement filters and sorting
 
 ## MVP boundaries
 
-The app starts with an empty workspace; no sample data is seeded. Course creation, advanced calendar events, PDF/DOCX extraction, streaming AI output, production-wide quotas, conflict resolution, and LMS import commit are future work. Supabase and live OpenAI require your credentials and have not been exercised against an account by default. No secrets belong in Git; `.env*` is ignored except `.env.example`.
+The app starts with an empty workspace; no sample data is seeded. Course creation, advanced calendar events, PDF/DOCX extraction, streaming AI output, production-wide quotas, conflict resolution, and LMS import commit are future work. Supabase and live Gemini require your credentials and have not been exercised against an account by default. No secrets belong in Git; `.env*` is ignored except `.env.example`.
