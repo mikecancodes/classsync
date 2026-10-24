@@ -1,0 +1,13 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { grade, extractWeights, stateSchema, type Course, type Assignment } from '../src/lib/model';
+import { demoState } from '../src/lib/demo';
+const course:Course={id:'c',code:'C',name:'Course',professor:'',schedule:'',color:'blue',syllabus:'',categories:[{name:'Assignments',weight:40},{name:'Final',weight:60}]};
+const assignment=(id:string,earned:number|null,points=100,category='Assignments'):Assignment=>({id,courseId:'c',title:'Work',due:'2026-10-24',status:'done',category,points,earned,description:''});
+test('no scores means no current grade',()=>assert.equal(grade(course,[]).current,null));
+test('ungraded categories are excluded from current grade denominator',()=>{const g=grade(course,[assignment('a',90)]);assert.equal(g.current,90);assert.equal(g.gradedWeight,40);assert.equal(g.weighted,36);assert.equal(g.weighted+(100-g.gradedWeight)*.8,84);});
+test('zero counts, null is excluded, and points determine category average',()=>{const g=grade(course,[assignment('a',100),assignment('b',0,50),assignment('c',null,1000)]);assert.ok(Math.abs(g.current!-100/150*100)<0.00001);});
+test('category weights combine correctly',()=>assert.equal(grade(course,[assignment('a',90),assignment('b',80,100,'Final')]).current,84));
+test('syllabus extraction accepts common separators and decimals',()=>assert.deepEqual(extractWeights('Assignments: 30%\nQuizzes 15%\nMidterm - 25%\nFinal 30%'),[{name:'Assignments',weight:30},{name:'Quizzes',weight:15},{name:'Midterm',weight:25},{name:'Final',weight:30}]));
+test('demo data is valid',()=>assert.equal(stateSchema.safeParse(demoState()).success,true));
+test('reject invalid references, duplicate IDs, impossible scores and invalid dates',()=>{for(const mutate of [(s:ReturnType<typeof demoState>)=>{s.assignments[0].courseId='missing';},(s:ReturnType<typeof demoState>)=>{s.assignments[1].id=s.assignments[0].id;},(s:ReturnType<typeof demoState>)=>{s.assignments[0].earned=101;},(s:ReturnType<typeof demoState>)=>{s.assignments[0].due='2026-02-31';}]){const s=demoState();mutate(s);assert.equal(stateSchema.safeParse(s).success,false);}});
