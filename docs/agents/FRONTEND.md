@@ -43,7 +43,8 @@ These route names are recommended mappings into the existing application, not a 
 | My Classes | `/courses` | Add and remove course cards; removing a course confirms and deletes its linked assignments, materials, and announcements |
 | Course detail | `/courses/[id]` | Preserve assignments, notes/materials, syllabus, and grades |
 | Study assistant | `/assistant` | Preserve study tools alongside the global chatbot |
-| Grade calculator | `/grades` | Preserve deterministic grade calculations and scenarios |
+| Grades | `/grades` | Card per class: current grade, letter, graded count, weight-total check |
+| Class grade calculator | `/grades/[id]` (also the class page's Grades tab) | Category weights/averages/contributions, editable scores, points and categories, what-if mode with hypothetical items, target-grade solver, weights from syllabus text |
 | Settings | `/settings` | Preserve account, cloud save/load, and backup controls |
 
 ### Home

@@ -234,3 +234,29 @@
 .syllabus-proposals label { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; line-height: 1.5; }
 .syllabus-review { border-top: 1px solid var(--border); margin-top: 12px; padding-top: 12px; }
 .syllabus-scan h2 { display: flex; gap: 8px; align-items: center; }
+.grades-overview { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+.grade-card { display: grid; gap: 8px; color: inherit; text-decoration: none; transition: transform .15s ease, box-shadow .15s ease; }
+.grade-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,.08); }
+.grade-card-top { display: flex; justify-content: space-between; align-items: center; }
+.grade-card h3 { margin: 0; font-size: 16px; }
+.grade-card-score, .gradebook-score { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.grade-card-score strong { font-size: 28px; }
+.gradebook-score strong { font-size: 40px; }
+.grade-letter { font-weight: 700; color: var(--accent); font-size: 18px; }
+.gradebook { display: grid; gap: 16px; }
+.gradebook-summary { display: grid; gap: 12px; }
+.gradebook-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.gradebook-target label { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.gradebook-target input { width: 80px; }
+.gradebook-table { display: grid; gap: 6px; overflow-x: auto; }
+.gradebook-table > div { display: grid; grid-template-columns: minmax(140px, 2fr) 110px 80px 80px minmax(120px, 1.2fr) 36px; gap: 10px; align-items: center; min-width: 620px; }
+.gradebook-head { font-size: 12px; color: var(--muted); font-weight: 600; }
+.category-name input { width: 100%; }
+.category-name small { display: block; }
+.gradebook-items { display: grid; gap: 8px; }
+.gradebook-item { display: grid; grid-template-columns: minmax(160px, 1fr) auto 150px auto; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--border); }
+.gradebook-item > div { display: grid; gap: 2px; }
+.gradebook-item .error { grid-column: 1 / -1; }
+.score-input { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.score-input input { width: 76px; }
+@media (max-width: 640px) { .gradebook-item { grid-template-columns: 1fr; } }

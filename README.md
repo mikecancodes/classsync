@@ -32,7 +32,7 @@ pnpm start
 - Course pages with assignment CRUD, completion tracking, earned scores, editable syllabus, and text/Markdown materials.
 - Searchable assignment list with status and course filters. All dates are local calendar dates; deadlines are considered overdue on the following day.
 - Monthly calendar, responsive navigation, keyboard focus states, and persistent light/dark modes.
-- Deterministic weighted grade calculator and hypothetical ungraded-category scenarios. Syllabus extraction supports category/percentage lines and requires review before applying.
+- Grades page (`/grades`) with a card per class, and a per-class calculator (`/grades/<class>`, also the class's Grades tab): category weights and averages, scores, points and categories editable in place, what-if mode with hypothetical items, a target-grade solver ("average X% on the remaining work"), and weights from syllabus text. D2L syncs fill in scores and weights.
 - Persistent desktop chat in the right column, with a collapsible mobile panel, current-workspace local answers, and optional server-side AI. Conversation survives page navigation and resets on reload.
 - Study assistant: summaries, study guides, catch-up plans, content questions, and rubric-based draft evaluation.
 - Local browser persistence, JSON export/restore, optional Supabase email/password auth, explicit cloud save/load, and database RLS.
