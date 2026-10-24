@@ -3,6 +3,9 @@ import { syllabusRequestSchema } from '@/lib/syllabus';
 import { aiConfigured, extractSyllabus } from '@/lib/ai';
 import { pdfToText } from '@/lib/pdf-text';
 
+// Hard stop for the whole request (PDF parsing + AI call), enforced by the platform
+export const maxDuration = 30;
+
 // Reads dated deliverables out of a syllabus with the AI model. PDFs are converted to text
 // here first. Nothing is saved: the browser shows the results for the student to approve.
 export async function POST(request: Request) {

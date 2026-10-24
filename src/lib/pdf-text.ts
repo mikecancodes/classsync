@@ -9,19 +9,29 @@ const TIME_LIMIT_MS = 15000;
 
 class PdfLimitError extends Error {}
 
-export async function pdfToText(bytes: Uint8Array, timeLimitMs = TIME_LIMIT_MS) {
-  let pdf: Awaited<ReturnType<typeof getDocumentProxy>>;
-  try { pdf = await getDocumentProxy(bytes); }
-  catch { throw new Error('This PDF couldn’t be read.'); }
+// Gives up on a slow step once the deadline passes. The route's maxDuration is the hard
+// stop if the parser itself keeps running.
+function beforeDeadline<T>(work: Promise<T>, deadline: number): Promise<T> {
+  const remaining = deadline - Date.now();
+  if (remaining <= 0) return Promise.reject(new PdfLimitError());
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new PdfLimitError()), remaining); });
+  return Promise.race([work, timeout]).finally(() => clearTimeout(timer));
+}
 
-  // Checked before each page; doesn't depend on a timer getting a turn on the event loop
+export async function pdfToText(bytes: Uint8Array, timeLimitMs = TIME_LIMIT_MS) {
   const deadline = Date.now() + timeLimitMs;
+  let pdf: Awaited<ReturnType<typeof getDocumentProxy>>;
+  try { pdf = await beforeDeadline(getDocumentProxy(bytes), deadline); }
+  catch (err) { throw new Error(err instanceof PdfLimitError ? 'This PDF took too long to read. Paste the syllabus text instead.' : 'This PDF couldn’t be read.'); }
+
   try {
     const lines: string[] = [];
     let length = 0;
     for (let n = 1; n <= Math.min(pdf.numPages, MAX_PAGES) && length < MAX_CHARS; n++) {
       if (Date.now() >= deadline) throw new PdfLimitError();
-      const content = await (await pdf.getPage(n)).getTextContent();
+      const page = await beforeDeadline(pdf.getPage(n), deadline);
+      const content = await beforeDeadline(page.getTextContent(), deadline);
       // Group text runs by vertical position so table rows stay on one line
       const rows = new Map<number, string[]>();
       let pageChars = 0;

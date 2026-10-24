@@ -133,4 +133,5 @@ test('PDF syllabi are converted to text on the server, line by line', async () =
   assert.deepEqual(findSyllabusDates(text, '2026-10-24').map(i => i.date), ['2026-11-06', '2026-12-09']);
   await assert.rejects(pdfToText(new TextEncoder().encode('not a pdf')), /couldn’t be read/);
   await assert.rejects(pdfToText(tinyPdf(['Quiz 2 - Nov 6']), 0), /took too long/, 'overall time limit');
+  await assert.rejects(pdfToText(tinyPdf(['Quiz 2 - Nov 6']), -1), /took too long/, 'even opening the PDF is bounded');
 });
