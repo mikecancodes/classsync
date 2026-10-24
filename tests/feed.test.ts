@@ -1,13 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { demoState } from '../src/lib/demo';
+import { testState } from './fixtures';
 import { filterAnnouncements } from '../src/lib/feed';
 import { stateSchema } from '../src/lib/model';
 
 const all = { course: 'all', priority: 'all', read: 'all', sort: 'newest' };
 
 test('announcement filters combine class, priority, and read state without mutating data', () => {
-  const data = demoState();
+  const data = testState();
   data.announcements[0].read = true;
   const snapshot = JSON.stringify(data);
   const course = data.announcements[0].courseId;
@@ -18,7 +18,7 @@ test('announcement filters combine class, priority, and read state without mutat
 });
 
 test('feed sorts deterministically and supports legacy announcements without priority', () => {
-  const data = demoState();
+  const data = testState();
   assert.deepEqual(filterAnnouncements(data, { ...all, sort: 'priority' }).map(item => item.priority), ['high', 'medium', 'low']);
   const newest = filterAnnouncements(data, all);
   assert.deepEqual(filterAnnouncements(data, { ...all, sort: 'oldest' }).map(item => item.id), [...newest].reverse().map(item => item.id));

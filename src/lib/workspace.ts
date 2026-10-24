@@ -1,32 +1,28 @@
 import { AcademicState, stateSchema } from './model';
-import { demoState } from './demo';
 
 export const WORKSPACE_KEY = 'classsync-workspace-v2';
 export const LEGACY_KEY = 'classsync-workspace-v1';
 
-// Keep the legacy key as a recovery copy. Backup and cloud entry points use the
-// same schema defaults, so unversioned/v1 workspaces migrate without data loss.
-export function migrateWorkspace(value: unknown): AcademicState {
-  return stateSchema.parse(value);
+const seededCourseIds = new Set([
+  'demo-networks', 'cs201', 'demo-justice', 'demo-architecture', 'demo-algorithms',
+]);
+
+export function emptyWorkspace(): AcademicState {
+  return stateSchema.parse({ version: 2, courses: [], assignments: [], materials: [], announcements: [] });
 }
 
-export function syncDemo(current: AcademicState): AcademicState {
-  const seed = demoState();
-  const appendMissing = <T extends { id: string }>(existing: T[], incoming: T[]) => {
-    const ids = new Set(existing.map(item => item.id));
-    return [...existing, ...incoming.filter(item => !ids.has(item.id))];
-  };
+// Remove only the records created by the old built-in sample workspace. Keep
+// student-created records attached to real courses and preserve other fields.
+export function migrateWorkspace(value: unknown): AcademicState {
+  const state = stateSchema.parse(value);
+  const courses = state.courses.filter(course => !seededCourseIds.has(course.id));
+  const retainedCourseIds = new Set(courses.map(course => course.id));
+
   return stateSchema.parse({
-    ...current,
-    courses: appendMissing(current.courses, seed.courses),
-    assignments: appendMissing(current.assignments, seed.assignments).filter(a => {
-      const course = current.courses.find(c => c.id === a.courseId);
-      return !course || current.assignments.some(old => old.id === a.id) || course.categories.some(cat => cat.name === a.category);
-    }),
-    materials: appendMissing(current.materials, seed.materials),
-    announcements: appendMissing(current.announcements, seed.announcements).map(a => {
-      const updated = seed.announcements.find(item => item.id === a.id);
-      return updated ? { ...updated, read: a.read } : a;
-    }),
+    ...state,
+    courses,
+    assignments: state.assignments.filter(item => !item.id.startsWith('demo-') && retainedCourseIds.has(item.courseId)),
+    materials: state.materials.filter(item => !item.id.startsWith('demo-') && retainedCourseIds.has(item.courseId)),
+    announcements: state.announcements.filter(item => !item.id.startsWith('demo-') && retainedCourseIds.has(item.courseId)),
   });
 }

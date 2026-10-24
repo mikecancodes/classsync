@@ -2,7 +2,7 @@
 
 ## Start here
 
-ClassSync helps college students organize coursework and recover from missed classes. Deliver a polished, functional hackathon demo with honest labels for simulated data and rule-based assistance.
+ClassSync helps college students organize coursework and recover from missed classes. Keep the production workspace free of seeded or fabricated coursework; users start with an empty workspace and add or import their own data.
 
 Before changing code, read:
 
@@ -23,7 +23,8 @@ These guides describe the target product; they do not claim all features are imp
 - The approved dashboard uses top tabs (Home, My Assignments, Lecture Notes / Material), the brain/ClassSync logo at the top right, a center announcement feed with class/priority/status/sort filters, and a persistent right-side chatbot on desktop. This supersedes earlier left-sidebar or deadline-first designs. Mobile chat collapses to a drawer.
 - **Sync classes** currently opens the shared-workspace To-do list; real class sync is deliberately deferred. Do not claim it imports or refreshes class data.
 - Follow the user's current task scope. A request for documentation does not authorize implementing every roadmap item.
-- Keep demo mode functional without credentials. Never imply demo LMS data or rule-based responses come from live services.
+- Keep local workspace features functional without credentials. Do not seed sample courses, assignments, notes, or announcements in the application. Synthetic records may exist only in test fixtures under `tests/`.
+- **Required after every code change or commit:** pull the latest `main` before editing, then deploy the resulting project to Vercel Production after changes are ready, including changes made by an agent. Verify the deployment reaches `Ready` and report its URL. This repository is currently deployed through Vercel Drop and is not Git-connected, so a Git push does not trigger deployment. Use the Vercel project’s production deployment flow; if Vercel access is unavailable, report that clearly and do not claim the deployment happened.
 - The D2L browser extension lives in `extension/` (see [docs/d2l-sync/extension.md](docs/d2l-sync/extension.md)). Keep it separate from the Next.js app, read-only toward the LMS (GET requests with the student's own session), and sending data only through the authenticated import endpoint. Run `pnpm exec tsx --test extension/test/*.test.ts` after changing `src/lib/model.ts`.
 - Do not implement automatic assignment submission or authentication bypass.
 

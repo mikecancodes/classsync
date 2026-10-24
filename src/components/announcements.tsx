@@ -14,14 +14,14 @@ export function Announcements({ data, onToggle, compact = false }: {
     <section className={`announcement-feed ${compact ? 'compact-feed' : 'panel'}`} aria-label="Course announcements">
       <div className="section-heading">
         <h2><Bell size={17} /> Announcements <span>{unread} unread</span></h2>
-        <span className="demo-source">Demo LMS</span>
+        <span className="demo-source">Your classes</span>
       </div>
-      {!rows.length && <p className="muted">No announcements yet. Demo Sync adds sample course updates without changing your existing work.</p>}
+      {!rows.length && <p className="muted">Your class announcements will appear here when you add them to your workspace.</p>}
       {rows.map(item => (
         <article className={`announcement-item ${item.read ? 'read' : ''}`} key={item.id}>
           <div className="announcement-meta">
             <span>{data.courses.find(c => c.id === item.courseId)?.name}</span>
-            <span className={`source-badge ${item.platform.toLowerCase()}`}>{item.platform} · Demo</span>
+            <span className={`source-badge ${item.platform.toLowerCase()}`}>{item.platform}</span>
             <time dateTime={item.posted}>{formatDate(item.posted)}</time>
           </div>
           <h3>{item.title}</h3>

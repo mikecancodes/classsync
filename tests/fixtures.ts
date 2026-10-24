@@ -1,6 +1,6 @@
-import { AcademicState, offsetDate, stateSchema } from './model';
+import { AcademicState, offsetDate, stateSchema } from '../src/lib/model';
 
-export function demoState(): AcademicState {
+export function testState(): AcademicState {
   const categories = [
     { name: 'Assignments', weight: 30 }, { name: 'Quizzes', weight: 15 },
     { name: 'Midterm', weight: 25 }, { name: 'Final', weight: 30 },

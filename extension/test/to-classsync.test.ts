@@ -2,7 +2,6 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { z } from 'zod';
 import { stateSchema } from '../../src/lib/model';
-// @ts-expect-error plain JS module without types
 import { toImportPayload, localDateKey } from '../src/to-classsync.js';
 
 // Same shape as src/app/api/imports/preview/route.ts
