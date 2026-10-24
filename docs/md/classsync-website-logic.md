@@ -21,7 +21,7 @@ Seed realistic Computer Networks, Data Structures, Criminal Justice, Computer Ar
 
 Load and normalize fixture JSON through a small service boundary into the shared workspace model. The interface must label every simulated connection and refresh result **Demo**. Repeated Demo Sync must be idempotent: merge by stable source identity, create no duplicates, preserve manual records and local completion/read choices, and avoid silently replacing the user's saved workspace. Report invalid data without partially applying it.
 
-Real Canvas and Brightspace support is future work requiring institution-approved app registration and student authorization. Do not scrape private accounts, ask for LMS passwords, bypass authentication, or put LMS/API secrets in frontend code. Keep platform adapters separate from UI and server routes.
+Live Brightspace (D2L) data comes from the read-only browser extension prototype in `extension/` (see `docs/d2l-sync/extension.md`), which uses the student's own signed-in session and sends data only through the authenticated import preview endpoint. Official OAuth access for Canvas and Brightspace remains future work requiring institution-approved app registration. Do not ask for LMS passwords, bypass authentication, submit work automatically, or put LMS/API secrets in frontend code. Keep platform adapters separate from UI and server routes.
 
 ## Home dashboard
 
