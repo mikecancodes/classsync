@@ -57,7 +57,7 @@ export function Chatbot({ data }: { data: AcademicState }) {
   useEffect(() => {
     const controller = new AbortController();
     fetch('/api/ai', { signal: controller.signal }).then(r => r.json())
-      .then(result => { setAiConfigured(result.available === true); setSignInRequired(result.signInRequired !== false); }).catch(() => {});
+      .then(result => { setAiConfigured(result.chatAvailable === true || result.available === true); setSignInRequired(result.chatSignInRequired !== false); }).catch(() => {});
     return () => controller.abort();
   }, []);
   useEffect(() => {
@@ -138,7 +138,7 @@ export function Chatbot({ data }: { data: AcademicState }) {
   const modeNote = aiActive ? 'The AI only sees the items it looks up for each question.'
     : aiConfigured && !aiReady ? 'Sign in under Settings to chat with AI. Answers are local for now.'
     : aiReady ? 'AI is off. Answers come from your workspace on this device.'
-    : 'AI is not configured for this site yet. It needs a server-side key and sign-in; local answers use rules.';
+    : 'AI is not configured for this site yet. Local answers use rules.';
   const asked = new Set(messages.filter(m => m.role === 'user').map(m => m.text));
   const followUps = suggestions.filter(s => !asked.has(s)).slice(0, 2);
 

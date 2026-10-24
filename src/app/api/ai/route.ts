@@ -3,7 +3,7 @@ import { authenticate, allowRequest, localAIAllowed, readBody } from '@/lib/serv
 import { aiConfigured, generateText } from '@/lib/ai';
 const schema=z.object({task:z.enum(['summary','guide','catchup','question','evaluate']),content:z.string().trim().min(20).max(40000),question:z.string().max(2000).optional(),rubric:z.string().max(20000).optional()});
 export async function GET(request:Request) {
- return Response.json({ available: aiConfigured(), signInRequired: !localAIAllowed(request) }, { headers: { 'Cache-Control': 'no-store' } });
+ return Response.json({ available: aiConfigured(), chatAvailable: aiConfigured(), chatSignInRequired: false, signInRequired: !localAIAllowed(request) }, { headers: { 'Cache-Control': 'no-store' } });
 }
 export async function POST(request:Request) {
  try {

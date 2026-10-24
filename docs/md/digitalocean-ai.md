@@ -1,6 +1,6 @@
 # ClassSync AI on DigitalOcean (handoff)
 
-**Status: implemented in code; needs a DigitalOcean key in Vercel to go live.** This file is for whoever (person or agent) configures and verifies production AI. You do not need to change application code to turn it on.
+**Configuration:** Vercel Production has a server-only DigitalOcean model key and `DIGITALOCEAN_MODEL=openai-gpt-oss-20b`. The key is restricted to that model, with a $1 monthly pause guard and auto-reload disabled. Live verification must include a real response, not just the availability check.
 
 ClassSync's AI runs on **DigitalOcean serverless inference** with the open-weight model **`glm-5.3-flash`**. It replaced Google Gemini (decision 3 in [DECISIONS.md](../agents/DECISIONS.md)).
 
@@ -12,7 +12,7 @@ ClassSync's AI runs on **DigitalOcean serverless inference** with the open-weigh
 | Study tools (Study tools page) | `POST /api/ai` | The material the student pasted or chose |
 | Syllabus scanning | `POST /api/ai/syllabus` | Syllabus text. PDFs are converted to text **on the server** first (`unpdf`); Word files and pasted text arrive as text |
 
-`GET /api/ai` reports `{ available, signInRequired }`. All three routes require a signed-in Supabase user in production (a loopback-only `ALLOW_LOCAL_AI=true` bypass exists for local development).
+`GET /api/ai` reports `{ available, chatAvailable, chatSignInRequired, signInRequired }`. Chat is available to guests (`chatSignInRequired: false`); study tools and syllabus scans retain sign-in. Guest chat uses same-origin checks and a hashed Vercel proxy address quota (30 round trips/hour), with a 240/hour instance-wide chat ceiling. In-memory limits are per instance, not a hard global spend cap. The provider's spending guard can pause with a delay.
 
 ## Turn it on (production)
 
@@ -35,12 +35,12 @@ ClassSync's AI runs on **DigitalOcean serverless inference** with the open-weigh
 ```sh
 # 1. Configured? (expects "available": true)
 curl https://classsync-two.vercel.app/api/ai
-# 2. Signed out → refused (expects 401)
+# 2. Signed out → AI response (expects 200 when configured and under quota)
 curl -X POST https://classsync-two.vercel.app/api/ai/chat -H 'Content-Type: application/json' \
   -d '{"messages":[{"role":"user","content":"hi"}],"today":"2026-10-24","timeZone":"America/New_York"}'
 ```
 
-Then in a browser, signed in, with a few classes and assignments:
+Then in a browser, signed out, with your own classes and assignments:
 
 - [ ] ClassSync AI panel says **"AI · reads your ClassSync data"**; ask "What is due this week?" and see the status line ("Checking your assignments…") and an answer listing real items.
 - [ ] Ask "what about for <class name>?" (memory across turns).

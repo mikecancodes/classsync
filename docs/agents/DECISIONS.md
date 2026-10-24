@@ -1,5 +1,9 @@
 # Product and architecture decisions
 
+## Guest chatbot update — 2026-10-24
+
+At Ethan's request, chatbot AI is available without signing in. This supersedes the chat sign-in requirement below. Study tools, syllabus AI and cloud backup retain their existing authentication. Guest chat accepts same-origin browser requests, limits each hashed Vercel proxy address to 30 round trips per hour and all chat to 240 per instance per hour. These counters are not global; the DigitalOcean key's $1 monthly pause guard and disabled auto-reload remain the provider cost controls. Production uses the already scoped `openai-gpt-oss-20b` key/model; do not switch models without updating its scope intentionally.
+
 Decided by the team on 2026-10-24 after reviewing every spec document for conflicts. **These override older wording elsewhere** (including the original frontend brief) until the other guides are updated to match. Each decision is *decided*, not yet *implemented*, unless its status says otherwise.
 
 ## Context
