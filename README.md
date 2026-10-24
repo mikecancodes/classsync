@@ -40,7 +40,7 @@ pnpm start
 
 ## Local demo behavior
 
-The first visit generates realistic sample coursework with deadlines relative to that visit. Thereafter the version-2 workspace is stored under `classsync-workspace-v2` in localStorage. Legacy v1 data migrates through validation and its original key remains as a recovery copy. Invalid stored data is preserved and automatic writes are paused. Theme is saved separately. Completed status does not imply a score; record earned points explicitly.
+The first visit generates realistic sample coursework with deadlines relative to that visit. Thereafter the version-3 workspace is stored under `classsync-workspace-v3` in localStorage. Legacy v1 data migrates through validation and its original key remains as a recovery copy. Invalid stored data is preserved and automatic writes are paused. Theme is saved separately. Completed status does not imply a score; record earned points explicitly.
 
 **Sync classes** reveals the left-side To-do list with current incomplete coursework, a class filter, and completion controls. Actual class sync is not implemented. Existing data stays in the shared workspace. Due Soon means incomplete work due today through seven local calendar days ahead, inclusive.
 
@@ -59,6 +59,10 @@ ClassSync uses Google Gemini because MLH provides free credits to hackathon part
 **Chat** (`POST /api/ai/chat`) uses tool calling. Gemini asks for specific data, the browser runs the lookup (`src/lib/chat-tools.ts`) against the local workspace, and only those rows are sent back. Tools are read-only. The server is stateless, allows at most five lookups per question, and counts every round trip toward a limit of 120 per user per hour. **Study tools** (`POST /api/ai`) send the material you choose when you press a generation button. The key is never imported by client code. `GET /api/ai` exposes only configuration availability. AI output is advisory and all evaluator scores are estimates.
 
 Authenticated Supabase users can call paid AI. For local development without Supabase, set `ALLOW_LOCAL_AI=true`; this bypass only works in development on a loopback hostname. Production always requires an authenticated account. Per-process limits allow 20 study-tool requests and 120 chat round trips per user per hour. **Before a public multi-instance deployment, replace this with a shared rate limiter and configure provider budgets.** The local bypass is for a trusted local machine, not a public proxy.
+
+## School calendar subscription
+
+Paste a school `.ics` subscription link on the existing Calendar page and press **Sync**. The school-calendar link is only shown on the Calendar page. School events appear on the existing Calendar page alongside assignments. The link stays in this browser and is excluded from exports/cloud saves; cached events are saved with the workspace. Refresh is manual. See [calendar behavior and limits](docs/school-calendar.md).
 
 ## Configure Supabase
 

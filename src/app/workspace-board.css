@@ -220,3 +220,13 @@
   .home-board .priority-label { margin-top: 7px; display: inline-block; }
   .home-board .docked-chat .chat-heading { padding: 14px 10px; }
 }
+/* Subscription uses the existing Sync action; only a paste field is added. */
+.sync-sidebar .calendar-link-field { margin: 8px 0 12px; }
+.calendar-link-field input { margin: 0; min-width: 0; width: 100%; font-size: 11px; }
+.full-calendar .school-calendar-event { border-left-color: var(--ai, #7553cf); color: var(--ai, #7553cf); }
+.calendar-sync-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; margin-bottom: 22px; }
+.calendar-sync-controls .calendar-link-field { flex: 1; min-width: 180px; margin: 0; }
+.calendar-sync-controls .primary-button { min-height: 40px; }
+.sync-sidebar .calendar-sync-controls { display: grid; gap: 12px; margin: 8px 0 12px; }
+.sync-sidebar .calendar-sync-controls .calendar-link-field { min-width: 0; }
+.sync-sidebar .calendar-sync-controls .primary-button { width: 100%; justify-content: center; font-size: 12px; padding: 11px; }

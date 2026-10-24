@@ -22,10 +22,10 @@ Updated after the branding/dashboard/chatbot refresh. “Existing” means sourc
 | Tasks | No separate task entity/page | Persistent To-Do List and completion progress |
 | Notes | Global Notes / Material tab with course selector and existing create/edit/delete | Keyword search |
 | Planner | Generic local catch-up checklist | Deterministic daily Plan My Week using deadline, priority, duration, workload |
-| Calendar | Monthly assignment dates and editing | Course colors, personal tasks, detailed event display; week view optional |
+| Calendar | Existing month view with assignments and school .ics events; paste field uses existing Sync action | Course colors, personal tasks, detailed event display; week view optional |
 | Classes | Add and remove courses, linked coursework/material cleanup, course cards, and detail tabs | LMS metadata |
 | Imports | `/connect` flow, D2L extension download, bridge to the app, import review + idempotent merge (`src/lib/d2l-import.ts`), authenticated preview API, backup restore | Real-account test at more schools; points optional (decision 6) to drop the 100-point placeholder |
-| Persistence | Version-2 localStorage with validated v1 migration and announcements; revision-checked manual cloud save/load with explicit conflict resolution | v3 migration (optional points, dueTime, lowercase platform) and signed-in auto-save (decisions 1, 6–8) |
+| Persistence | Version-3 localStorage with validated v1/v2 migration and school-calendar cache; revision-checked manual cloud save/load with explicit conflict resolution | Future migration (optional points, dueTime, lowercase platform; v3 is the calendar cache) and signed-in auto-save (decisions 1, 6–8) |
 | Grade tools | Weighted calculation, projection, syllabus parsing | Preserve behavior during frontend work |
 
 Do not check off a target feature merely because a visual placeholder exists. Update this table after implementing and verifying a target.

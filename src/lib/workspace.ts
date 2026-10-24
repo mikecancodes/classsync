@@ -1,6 +1,7 @@
 import { AcademicState, stateSchema } from './model';
 
-export const WORKSPACE_KEY = 'classsync-workspace-v2';
+export const WORKSPACE_KEY = 'classsync-workspace-v3';
+export const PREVIOUS_KEY = 'classsync-workspace-v2';
 export const LEGACY_KEY = 'classsync-workspace-v1';
 
 const seededCourseIds = new Set([
@@ -9,7 +10,7 @@ const seededCourseIds = new Set([
 ]);
 
 export function emptyWorkspace(): AcademicState {
-  return stateSchema.parse({ version: 2, courses: [], assignments: [], materials: [], announcements: [] });
+  return stateSchema.parse({ version: 3, courses: [], assignments: [], materials: [], announcements: [] });
 }
 
 // Remove only the records created by the old built-in sample workspace. Keep

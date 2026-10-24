@@ -47,7 +47,7 @@ Use stable IDs, validated references, bounded strings and arrays, positive estim
 
 ## Persistence and migration
 
-- Current key: `classsync-workspace-v2`; state has version 2, courses, assignments, materials, and announcements. Unversioned/v1 data migrates through the same strict schema. The original v1 key stays as a recovery copy. Invalid storage disables autosave; unsupported versions and unknown top-level fields are rejected. Theme is separate.
+- Current key: `classsync-workspace-v3`; state has version 3, courses, assignments, materials, announcements, and nullable schoolCalendar. Unversioned/v1/v2 data migrates through the same strict schema; original v1/v2 browser keys are retained. The original v1 key stays as a recovery copy. Invalid storage disables autosave; unsupported versions and unknown top-level fields are rejected. Theme is separate.
 - Add a versioned migration before changing persisted schemas. Preserve existing coursework, notes, scores, and settings; validate the migrated result before replacing the stored copy.
 - Update backup export/restore, cloud payload validation, import validation, and seeds together with schema changes. A newer payload must not silently lose fields through an older parser.
 - Read and write browser storage only on the client. Handle unavailable/quota-exceeded storage and invalid backups visibly without deleting the user's original data.
@@ -90,3 +90,7 @@ The existing `/api/imports/preview` accepts authenticated version-1 course/assig
 - Distinguish server-configured availability from a successful generation. An API error is not a successful AI response; do not silently substitute canned output under an AI label.
 - Send only relevant content for an explicit action. Do not log keys or full private student material. Conversation persistence is optional and should not be introduced implicitly.
 - Keep the localhost development bypass development-only. The current rate limiter is per process; a multi-instance production release needs shared quotas.
+
+## School calendar
+
+The existing Calendar page accepts a pasted .ics subscription link and its Sync control refreshes read-only school events alongside assignments. Home retains its D2L/To-do Sync behavior. Cached events live in the shared v3 workspace; the private feed URL lives only in separate browser storage, never exports/cloud payloads. See [school calendar](../school-calendar.md) for refresh, fetch security and supported limits.

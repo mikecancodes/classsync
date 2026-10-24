@@ -66,7 +66,7 @@ D2L tab ── extension reads D2L ──▶ ClassSync tab (content script / ext
 - Theme them with the CSS tokens in `src/app/globals.css`. Keep dark mode.
 - This relaxes DEVELOPMENT.md's "avoid new dependencies" for shadcn/ui and the Radix primitives it brings. Other new dependencies still need a reason.
 
-## 6–7. Model changes (one migration, v3)
+## 6–7. Model changes (future migration after calendar v3)
 
 Bundle these into a single versioned migration, following ARCHITECTURE.md's migration rules:
 
@@ -103,3 +103,7 @@ Per AGENTS.md: pull `main` before editing, then deploy to Vercel Production afte
 - The zip is built by `scripts/pack-extension.mjs` during `pnpm dev` and `pnpm build`. CI and Vercel builds point the zip at the live site, **https://classsync-two.vercel.app** (override with `CLASSSYNC_SITE_URL`). Local builds are localhost-only.
 - No hourly background sync: syncing happens after connecting, when the student presses Sync, or from the extension popup, so review dialogs never pop up on their own.
 - Chrome, Edge and Brave only (Manifest V3 + Load unpacked).
+
+## School calendar addition
+
+Workspace v3 adds cached school-calendar events only. Optional points, dueTime and platform changes above remain pending and require a later version. The Calendar page has the .ics link field and calendar Sync control; Home retains its D2L/To-do Sync behavior. No preview flow is added. Feed links stay browser-local and out of cloud saves/exports.
