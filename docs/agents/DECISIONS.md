@@ -100,6 +100,6 @@ Per AGENTS.md: pull `main` before editing, then deploy to Vercel Production afte
 ## 14. Getting the extension and connecting a school
 
 - `/connect` walks through: 1) download and load the extension (the page detects it automatically), 2) choose a school (`src/lib/schools.ts`; add schools there) or paste any D2L link, 3) **Connect**: the extension opens its own Allow page (Chrome only shows permission prompts there), checks the address is a real D2L site, then opens the school's sign-in. After `/d2l/home` loads, it reads D2L and the review dialog opens in ClassSync.
-- The zip is built by `scripts/pack-extension.mjs` during `pnpm dev` and `pnpm build`. Set **`CLASSSYNC_SITE_URL`** (https) in Vercel so the downloaded extension also works on the live site; without it, only localhost works.
+- The zip is built by `scripts/pack-extension.mjs` during `pnpm dev` and `pnpm build`. CI and Vercel builds point the zip at the live site, **https://classsync-two.vercel.app** (override with `CLASSSYNC_SITE_URL`). Local builds are localhost-only.
 - No hourly background sync: syncing happens after connecting, when the student presses Sync, or from the extension popup, so review dialogs never pop up on their own.
 - Chrome, Edge and Brave only (Manifest V3 + Load unpacked).

@@ -51,7 +51,7 @@ App side: `src/components/connect-page.tsx`, `src/components/import-review.tsx`,
 
 ## Packaging
 
-`scripts/pack-extension.mjs` zips `extension/` (without `test/`) into `public/classsync-extension.zip` on every `pnpm dev` and `pnpm build`, or by hand with `pnpm pack:extension`. It points the zipped manifest at the live site from `CLASSSYNC_SITE_URL` (or Vercel's `VERCEL_PROJECT_PRODUCTION_URL`) and **removes the localhost entries**, so other apps on a student's computer can't reach the bridge. **Set `CLASSSYNC_SITE_URL` in Vercel**, otherwise the downloaded extension only talks to localhost. The zip is generated, so it's git-ignored.
+`scripts/pack-extension.mjs` zips `extension/` (without `test/`) into `public/classsync-extension.zip` on every `pnpm dev` and `pnpm build`, or by hand with `pnpm pack:extension`. It points the zipped manifest at the live site from `CLASSSYNC_SITE_URL` (or Vercel's `VERCEL_PROJECT_PRODUCTION_URL`) and **removes the localhost entries**, so other apps on a student's computer can't reach the bridge. Builds in CI or on Vercel default to the live site, **https://classsync-two.vercel.app**. Set `CLASSSYNC_SITE_URL` only if the address changes. Local builds stay localhost-only. The zip is generated, so it's git-ignored.
 
 Developers can also load `extension/` directly with Load unpacked. That works with `http://127.0.0.1:3000` and `http://localhost:3000`.
 

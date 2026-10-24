@@ -1,8 +1,9 @@
 // Zips extension/ into public/classsync-extension.zip for the "Connect your school" page.
 // Runs before every dev server start and build. The live site's address is added to the
 // zipped manifest so the extension can talk to it:
-//   CLASSSYNC_SITE_URL=https://classsync.example.com   (set in Vercel), or Vercel's
-//   VERCEL_PROJECT_PRODUCTION_URL. Without either, the zip only works with localhost.
+//   CLASSSYNC_SITE_URL=https://classsync.example.com, else Vercel's
+//   VERCEL_PROJECT_PRODUCTION_URL, else LIVE_SITE when building in CI or on Vercel.
+//   Local builds without either produce a localhost-only zip for development.
 import { mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -13,10 +14,13 @@ const source = join(root, 'extension');
 const output = join(root, 'public', 'classsync-extension.zip');
 const FOLDER = 'classsync-extension';
 const SKIP = new Set(['test']);
+export const LIVE_SITE = 'https://classsync-two.vercel.app';
 
 /** @param {Record<string, string | undefined>} env */
 export function siteOrigin(env = process.env) {
-  const raw = env.CLASSSYNC_SITE_URL?.trim() || (env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${env.VERCEL_PROJECT_PRODUCTION_URL}` : '');
+  const raw = env.CLASSSYNC_SITE_URL?.trim()
+    || (env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${env.VERCEL_PROJECT_PRODUCTION_URL}` : '')
+    || (env.CI || env.VERCEL ? LIVE_SITE : '');
   if (!raw) return null;
   const url = new URL(raw);
   if (url.protocol !== 'https:') throw new Error(`CLASSSYNC_SITE_URL must use https: ${raw}`);

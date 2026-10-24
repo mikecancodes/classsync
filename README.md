@@ -50,7 +50,7 @@ Without a Gemini key, study tools return labeled excerpts, practice prompts, key
 
 ## Connect your school (D2L)
 
-Students open **Sync classes → Connect your school** (`/connect`): download the ClassSync extension, load it in Chrome/Edge/Brave, pick their school (University of North Georgia is listed; any other school pastes a D2L link), and sign in to D2L as usual. Their classes, assignments and announcements appear in a review dialog and are merged only after they approve. Later syncs add only what changed and keep local completion, scores and read state. The extension zip is built by `scripts/pack-extension.mjs` during `pnpm dev`/`pnpm build`; set `CLASSSYNC_SITE_URL` in Vercel so the download works on the live site. Details: [docs/d2l-sync/extension.md](docs/d2l-sync/extension.md).
+Students open **Sync classes → Connect your school** (`/connect`): download the ClassSync extension, load it in Chrome/Edge/Brave, pick their school (University of North Georgia is listed; any other school pastes a D2L link), and sign in to D2L as usual. Their classes, assignments and announcements appear in a review dialog and are merged only after they approve. Later syncs add only what changed and keep local completion, scores and read state. The extension zip is built by `scripts/pack-extension.mjs` during `pnpm dev`/`pnpm build`; CI and Vercel builds point it at the live site, https://classsync-two.vercel.app (override with `CLASSSYNC_SITE_URL`). Details: [docs/d2l-sync/extension.md](docs/d2l-sync/extension.md).
 
 ## Configure Gemini
 
