@@ -1,5 +1,7 @@
 # Development workflow and acceptance checks
 
+Guest chatbot update (2026-10-24): chat no longer needs Supabase sign-in. Test signed-out general questions and workspace tool round trips; study/syllabus endpoints still require auth. See the guest update in DECISIONS.md for quotas and production model scope.
+
 ## Before implementation
 
 1. Read root AGENTS.md and the guides relevant to the task.
