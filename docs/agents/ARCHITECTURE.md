@@ -80,7 +80,7 @@ The existing `/api/imports/preview` accepts authenticated version-1 course/assig
 
 ## Assistant and planner service boundaries
 
-- Desktop chat is a reserved right-side complementary region; mobile uses a collapsible panel. Top navigation and chat remain mounted across pages.
+- Chat uses a collapsible right-side Sheet on desktop and mobile, initially closed. The launcher opens a modal drawer with focus containment and Escape/backdrop dismissal. Top navigation and Chatbot state remain mounted across pages; closing the drawer preserves messages and drafts.
 - Implemented local chatbot uses current shared state; history survives route navigation but is not persisted across reloads. Schedule answers are explicitly deadline-order suggestions, not the future capacity-aware planner.
 - Local chatbot intent handlers should query structured current workspace data rather than rely on canned answers. Return exact matching assignments and explain empty/unsupported results.
 - Use one shared planner for Plan My Week and schedule questions. Stable ordering should account for deadlines, priority, estimated duration, and workload; explain tie-breakers and capacity assumptions.

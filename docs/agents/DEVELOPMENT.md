@@ -17,7 +17,7 @@ Updated after the branding/dashboard/chatbot refresh. “Existing” means sourc
 
 | Feature | Baseline | Next target |
 | --- | --- | --- |
-| Dashboard | Top tabs, logo top left, center announcement feed with class/priority/status/sort filters, left Sync / To-do section, Sync classes | Broader search and filters |
+| Dashboard | Sync and announcement Home with a collapsible AI drawer; clearer feed and empty states; shared light/dark theme; keyboard-accessible More menu, skip link, visible focus and filter reset | Broader search and filters |
 | Brand | Brain logo and “All your classes. One place.” tagline | Preserve branding |
 | Assignments | CRUD, completion, search, status/course filters, due-date sorting | Platform, priority, duration, due/platform/priority filters |
 | AI | Workspace-aware tool-calling chat (DigitalOcean `glm-5.3-flash`) for personal coursework plus general study and ClassSync usage guidance; broad course context and note search; rule-based local fallback | Production needs `DIGITALOCEAN_MODEL_ACCESS_KEY` and user sign-in; live DigitalOcean flow still needs testing with an owner-provided key; shared rate limiter before public launch |
@@ -98,7 +98,7 @@ Apply the relevant checks to the feature being delivered. This is a target check
 
 ### Presentation and handoff
 
-- [ ] Top tabs, top-left brain branding, centered filterable announcements, reserved desktop chat column, and light/dark contrast match the approved sketch.
+- [ ] Top tabs, top-left brain branding, centered filterable announcements, collapsible chat drawer, and light/dark contrast match the current product decisions.
 - [ ] Check desktop and a narrow mobile viewport, navigation, panel/dialog focus, empty states, and reduced motion.
 - [ ] No unintended horizontal overflow, clipped forms, or obstructed mobile controls.
 - [ ] Report installation/start commands, checks run, demo features, limitations, and integration extension points.
@@ -112,3 +112,7 @@ Keep commits scoped and exclude `.env.local`, dependencies, build output, and pr
 ### DigitalOcean AI provider
 
 All AI (chat, study tools, syllabus scans) uses DigitalOcean serverless inference through `src/lib/ai.ts` with a server-only `DIGITALOCEAN_MODEL_ACCESS_KEY` and optional `DIGITALOCEAN_MODEL` (default `glm-5.3-flash`). `tests/digitalocean.test.ts` covers the endpoint, auth header, model selection, tool round trips, unknown-tool rejection, quota failures without fallback and JSON syllabus extraction. Live activation still requires a promotional-credit account, a scoped key and a signed-in end-to-end test (see docs/md/digitalocean-ai.md).
+
+### UI verification (2026-10-24)
+
+For the workspace polish, check both an empty workspace and test-fixture coursework. Exercise More with keyboard and pointer, Escape/focus return, the skip link, light/dark persistence, empty sync failure, composed announcement filters and reset, read/unread persistence, coursework dialogs, and chat drawer open/close on desktop and mobile, including focus containment, backdrop dismissal, and conversation/draft persistence. Home deliberately scrolls horizontally; other pages should fit a narrow viewport. Use reduced-motion emulation and check the production build as well as development CSS. Do not load fixtures into a real student's browser.

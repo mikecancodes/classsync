@@ -1,6 +1,6 @@
 # ClassSync
 
-A responsive academic hub built with Next.js App Router, TypeScript, Tailwind CSS, Supabase, and server-only AI on DigitalOcean serverless inference (open-weight `glm-5.3-flash`). Start in local demo mode without any credentials.
+A responsive academic hub built with Next.js App Router, TypeScript, Tailwind CSS, Supabase, and server-only AI on DigitalOcean serverless inference (open-weight `glm-5.3-flash`). Start with an empty local workspace without any credentials.
 
 ## Agent development guides
 
@@ -28,21 +28,21 @@ pnpm start
 
 ## Included MVP
 
-- Top tabs for Home, My Assignments, and Lecture Notes / Material, with the ClassSync logo at the top left. Home centers announcements with class, priority, read status, and sorting controls; deadlines are secondary.
+- Top tabs for Home, My Assignments, and Lecture Notes / Material, with brain branding and a keyboard-accessible More menu. Home keeps Sync / To-do and filterable Announcements side by side; narrow screens scroll horizontally. ClassSync AI opens in a collapsible right-side drawer on every page. Other pages fit mobile screens. Shared controls include visible focus, a skip link, readable light/dark themes, and helpful empty states.
 - Course pages with assignment CRUD, completion tracking, earned scores, editable syllabus, and text/Markdown materials.
 - Searchable assignment list with status and course filters. All dates are local calendar dates; deadlines are considered overdue on the following day.
 - Monthly calendar, responsive navigation, keyboard focus states, and persistent light/dark modes.
 - Grades page (`/grades`) with a card per class, and a per-class calculator (`/grades/<class>`, also the class's Grades tab): category weights and averages, scores, points and categories editable in place, what-if mode with hypothetical items, a target-grade solver ("average X% on the remaining work"), and grading weights pulled from the class syllabus (saved D2L syllabus file, upload or text) with assignments moved into matching categories. D2L syncs fill in scores and weights.
-- Persistent desktop chat in the right column, with a collapsible mobile panel, current-workspace local answers, and optional server-side AI. Conversation survives page navigation and resets on reload.
+- Collapsible ClassSync AI drawer on desktop and mobile, with current-workspace local answers and optional server-side AI. Close with Escape, the close button, or backdrop; conversation and draft text survive closing and page navigation, and reset on reload.
 - Study assistant: summaries, study guides, catch-up plans, content questions, and rubric-based draft evaluation.
 - Local browser persistence, JSON export/restore, optional Supabase email/password auth, explicit cloud save/load, and database RLS.
 - Authenticated, validated LMS import preview contract, plus a read-only D2L browser extension ([`extension/`](extension/README.md)) with a guided **Connect your school** page, import review and idempotent merge into the local workspace. No assignment submission.
 
-## Local demo behavior
+## Local workspace behavior
 
-The first visit generates realistic sample coursework with deadlines relative to that visit. Thereafter the version-3 workspace is stored under `classsync-workspace-v3` in localStorage. Legacy v1 data migrates through validation and its original key remains as a recovery copy. Invalid stored data is preserved and automatic writes are paused. Theme is saved separately. Completed status does not imply a score; record earned points explicitly.
+The first visit starts empty. Add your own classes or connect your school and approve an import. The version-3 workspace is stored under `classsync-workspace-v3` in localStorage. Legacy v1 data migrates through validation and its original key remains as a recovery copy. Invalid stored data is preserved and automatic writes are paused. Theme is saved separately. Completed status does not imply a score; record earned points explicitly.
 
-**Sync classes** reveals the left-side To-do list with current incomplete coursework, a class filter, and completion controls. Actual class sync is not implemented. Existing data stays in the shared workspace. Due Soon means incomplete work due today through seven local calendar days ahead, inclusive.
+**Sync classes** reveals the left-side To-do list with current incomplete coursework, a class filter, and completion controls. With a connected school, it also asks the read-only D2L extension to sync; imports apply only after review. Without a connection, it offers **Connect your school**. Existing data stays in the shared workspace. Due Soon means incomplete work due today through seven local calendar days ahead, inclusive.
 
 The global chatbot answers questions about today, tomorrow, the next seven days, overdue work, and courses using current workspace data. With the AI service configured and a signed-in account, it switches to AI chat that looks up assignments, announcements, grades, and notes through read-only tools; otherwise it answers locally with rules. Schedule suggestions are deadline order only; capacity-aware Plan My Week remains future work.
 

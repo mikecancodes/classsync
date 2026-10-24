@@ -1,5 +1,9 @@
 # Product and architecture decisions
 
+## Chat drawer update — 2026-10-24
+
+The updated UI replaces the permanent chat column with a collapsible right-side drawer on every page. Chat starts closed, opens from **Ask ClassSync AI**, and closes with the close button, Escape, or backdrop. Conversation and draft text survive closing and route navigation. This supersedes the persistent desktop chat / three-column Home wording below for this UI iteration. Home keeps Sync / To-do and Announcements side by side and gives the released space to the feed.
+
 ## Guest chatbot update — 2026-10-24
 
 At Ethan's request, chatbot AI is available without signing in. This supersedes the chat sign-in requirement below. Study tools, syllabus AI and cloud backup retain their existing authentication. Guest chat accepts same-origin browser requests, limits each hashed Vercel proxy address to 30 round trips per hour and all chat to 240 per instance per hour. These counters are not global; the DigitalOcean key's $1 monthly pause guard and disabled auto-reload remain the provider cost controls. Production uses the already scoped `openai-gpt-oss-20b` key/model; do not switch models without updating its scope intentionally.
@@ -16,15 +20,15 @@ ClassSync is being built for an **MLH hackathon**. Several choices follow from t
 | 2 | Getting D2L data into the app | **Extension → open ClassSync tab → review screen → merge** | Implemented (`/connect`, bridge content script, `src/lib/d2l-import.ts`, `ImportReview`) |
 | 3 | AI provider | **DigitalOcean serverless inference, open-weight `glm-5.3-flash`** (OpenAI-compatible, tool calling). Replaced Google Gemini on 2026-10-24 | Implemented (needs `DIGITALOCEAN_MODEL_ACCESS_KEY` in Vercel; see docs/md/digitalocean-ai.md) |
 | 4 | Chatbot design | **Tool calling**, tools run in the browser against the workspace. AI on by default when configured and signed in; friendly tone, no emoji; no streaming | Implemented (`/api/ai/chat`, `src/lib/chat-tools.ts`); now handles general study/ClassSync questions and broad course context. Production still needs `DIGITALOCEAN_MODEL_ACCESS_KEY` and user sign-in. |
-| 5 | UI components | **shadcn/ui** on top of the existing Tailwind tokens | Not implemented (styled native controls today) |
+| 5 | UI components | **shadcn/ui** on top of the existing Tailwind tokens | Started: shared Button, Radix DropdownMenu and Sheet in `src/components/ui/`, themed with existing CSS tokens; existing forms/dialogs remain native |
 | 6 | Assignments without points | **`points` becomes optional**; grade math skips items without points | Not implemented (extension uses a placeholder of 100 for now) |
 | 7 | Due times | **Optional `dueTime`** next to the existing date-only `due` | Not implemented |
 | 8 | Platform values | Data uses lowercase **`d2l` · `canvas` · `manual`**; the UI shows "D2L", "Canvas", "Manual" | Not implemented (announcements use `'D2L' \| 'Canvas'`) |
 | 9 | Live LMS data | The read-only browser extension in `extension/` is the live D2L path; official OAuth stays future work | Implemented (see decision 14) |
-| 10 | Dashboard layout | **Top tabs, top-left ClassSync logo, center announcement feed with class/priority/status filters and sorting, persistent right-side desktop chat**; mobile chat collapses | Implemented |
+| 10 | Dashboard layout | **Top tabs, top-left ClassSync logo, center announcement feed with class/priority/status filters and sorting, collapsible right-side chat drawer** on desktop and mobile | Implemented |
 | 11 | Sync classes interaction | Opens the **To-do list**. With a connected school it also asks the extension to sync; results appear in the import review dialog. Without one it shows the required failure message plus **Connect your school** | Implemented |
 | 12 | Sample data | **No seeded data in the app.** Users start with an empty workspace and add or import their own; fake records live only in `tests/` fixtures | Implemented |
-| 13 | Deployment | **Deploy to Vercel Production after every change** and confirm it reaches `Ready` (see AGENTS.md). Currently deployed via Vercel Drop, not Git-connected, so a push does not deploy | In effect |
+| 13 | Deployment | **Deploy to Vercel Production after every change** and confirm it reaches `Ready` (see AGENTS.md). Production deploys through `.github/workflows/deploy-vercel.yml` on pushes to `main` (also manually dispatchable) | In effect |
 | 14 | Getting the extension | **Download from the site** (`/classsync-extension.zip`) with a guided 3-step **Connect your school** page; no Chrome Web Store. School picker = searchable list (UNG first, `https://ung.view.usg.edu`) + paste any D2L link | Implemented |
 | 15 | Syllabus dates and grades | Syllabi (found in D2L Content during Sync, or uploaded/pasted on a class's Syllabus tab) are scanned by **the AI model, with a rule-based fallback**; found dates become **assignments after review**. D2L **grade categories/weights, quiz and discussion scores, and graded items without an assignment** are imported | Implemented (final grade not stored yet: needs a model field) |
 | 16 | Grades page | `/grades` overview card per class → `/grades/<class>` calculator with D2L assignments and weights already filled in; edits save directly, what-if mode never saves; replaces the old single-page calculator | Implemented |
@@ -94,7 +98,7 @@ When a decision ships, flip its status above, update the "Baseline and target ga
 
 ## 10–11. Latest dashboard correction
 
-The user’s sketch and follow-up supersede older sidebar/deadline-first layouts and the old Demo Sync button (removed in decision 12). Home shows announcements by default, top tabs are Home / My Assignments / Lecture Notes / Material, branding is at the top left, and desktop chat reserves the right column. Sync classes opens the current-workspace To-do list in the left section immediately and must not claim an import occurred. The shadcn migration in decision 5 remains pending; the current delivered UI still uses the existing styled native controls.
+The user’s sketch and follow-up supersede older sidebar/deadline-first layouts and the old Demo Sync button (removed in decision 12). Home shows announcements by default, top tabs are Home / My Assignments / Lecture Notes / Material, branding is at the top left, and chat opens in a collapsible right-side drawer (see the chat drawer update above). Sync classes opens the current-workspace To-do list in the left section immediately and must not claim an import occurred. The shadcn migration in decision 5 has started with the shared Button, accessible More dropdown and chat Sheet. Existing forms and dialogs remain native.
 
 ## 12. No sample data
 
@@ -102,7 +106,7 @@ The app ships an empty workspace (`emptyWorkspace()` in `src/lib/workspace.ts`).
 
 ## 13. Deployment
 
-Per AGENTS.md: pull `main` before editing, then deploy to Vercel Production after changes and verify the deployment is `Ready`. The project is uploaded with Vercel Drop today, so pushing to GitHub does not deploy. Connecting the GitHub repo to Vercel (`docs/d2l-sync/vercel-hosting.md`) would make every push to `main` deploy automatically. That's a possible follow-up, not a decision yet.
+Per AGENTS.md: pull `main` before editing, then deploy to Vercel Production after changes and verify the deployment is `Ready`. The project started with Vercel Drop; the existing `.github/workflows/deploy-vercel.yml` now builds and deploys Production on pushes to `main`, using repository secrets. It also supports manual dispatch. Verify the workflow and resulting deployment rather than treating a push alone as proof of deployment.
 
 ## 14. Getting the extension and connecting a school
 

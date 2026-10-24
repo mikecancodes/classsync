@@ -1,5 +1,7 @@
 # Frontend product guide
 
+Latest UI update: chat is now a collapsible drawer on desktop and mobile, superseding the permanent third column described below. See the chat drawer update in DECISIONS.md.
+
 ## Purpose and priorities
 
 Build ClassSync as a working academic dashboard for a one-day university hackathon. Students should see their next deadlines, act on coursework, and get useful help without setup. Prioritize in this order:
@@ -120,3 +122,11 @@ Remove all historical generated class IDs, including math210, psych101, eng102 a
 ### Notes and material uploads (implemented)
 
 The shared uploader accepts PDF, Word (.doc/.docx), and PNG/JPG/WebP/GIF images only, with a 10 MB limit, extension and signature validation, file picker, and drag/drop. Text may still be entered manually. Save the original file in IndexedDB, keyed by the shared material ID; never encode binary files into localStorage. Show image previews and download links. Attached binaries are local to this browser and are not included in cloud saves or workspace JSON exports; explain that beside the uploader. Uploading does not extract text or run OCR/AI.
+
+### Workspace polish (2026-10-24)
+
+The shared header places the brain branding and tagline on the left, the three primary tabs beside a keyboard-accessible More menu, and the theme control on the right. More includes Connect your school and marks secondary routes as active. It dismisses on selection, outside click, or Escape and restores focus through Radix. A skip link targets the main content.
+
+Home keeps Sync / To-do and Announcements side by side, with a minimum width of 720px and horizontal scrolling on narrower viewports. Chat starts collapsed on every page and opens from Ask ClassSync AI in a right-side Sheet. It traps focus while open and closes via its close button, Escape, or backdrop, returning focus to the launcher. Conversation and drafts remain in the mounted Chatbot state when the Sheet closes. Other pages wrap their navigation. The workspace uses consistent control sizes, readable light/dark text tokens, quieter surfaces, and explicit empty-state actions. Announcement filters compose and reset; read state remains reversible. School connection and import review are unchanged. The chat welcome and three starter prompts appear only before a conversation.
+
+Shared Button, DropdownMenu and Sheet components in `src/components/ui/` follow shadcn/ui composition and the existing theme; other controls are migrated as needed. Existing native dialogs retain their focus handling and now have accessible names.
