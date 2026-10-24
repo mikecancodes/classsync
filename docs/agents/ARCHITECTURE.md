@@ -53,6 +53,7 @@ Use stable IDs, validated references, bounded strings and arrays, positive estim
 - Read and write browser storage only on the client. Handle unavailable/quota-exceeded storage and invalid backups visibly without deleting the user's original data.
 - Derive counts, filters, calendar entries, and assistant context from shared state. Do not store redundant dashboard totals.
 - **Decided (hybrid storage, decision 1):** when signed in, auto-save the workspace to the existing JSONB row (debounced) and ask before replacing either copy on sign-in. Until implemented, cloud save/load stays manual. The cloud document is one JSONB workspace per authenticated user, with RLS.
+- Implemented cloud saves now use an atomic revision-checked RPC. Direct client writes are revoked. Unknown/stale baselines fail closed; replacement requires review and confirmation. Account changes invalidate the in-memory baseline. This protects manual saves today and provides the safety boundary for future auto-save. See [cloud saves](../cloud-saves.md).
 
 ## Dates and deterministic calculations
 

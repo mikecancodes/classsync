@@ -12,6 +12,7 @@ import { NotesPage } from './notes-page';
 import { SyncTodo } from './sync-todo';
 import { SyncSidebar } from './sync-sidebar';
 import { supabase } from '@/lib/supabase';
+import { CloudAction, CloudConflictError, CloudWorkspaceSession, readCloudWorkspace, writeCloudWorkspace } from '@/lib/cloud-workspace';
 import { Assistant, GradeCalculator, Materials, SettingsPanel } from './panels';
 
 const navigation=[{href:'/',name:'Home',icon:LayoutDashboard},{href:'/notes',name:'Lecture Notes / Material',icon:BookOpen},{href:'/courses',name:'My courses',icon:BookOpen},{href:'/assignments',name:'Assignments',icon:ListTodo},{href:'/calendar',name:'Calendar',icon:CalendarDays},{href:'/assistant',name:'AI assistant',icon:Sparkles},{href:'/grades',name:'Grade calculator',icon:Calculator}];
@@ -27,7 +28,25 @@ export default function ClassSync() {
  const [tab,setTab]=useState('Assignments');
  const searchRef=useRef<HTMLInputElement>(null);
  const storageWritable = useRef(true);
- useEffect(()=>{try {const raw=localStorage.getItem(STORE) ?? localStorage.getItem(LEGACY_KEY); const workspace=raw?migrateWorkspace(JSON.parse(raw)):emptyWorkspace(); setData(workspace); if(raw){localStorage.setItem(STORE,JSON.stringify(workspace));localStorage.removeItem(LEGACY_KEY);} setDark(localStorage.getItem('classsync-theme')==='dark');}catch {storageWritable.current=false;setToast('Saved data could not be read. Original storage was preserved.');} setLoaded(true); if(supabase){supabase.auth.getSession().then(({data})=>setUser(data.session?.user.email??null)); const {data:listener}=supabase.auth.onAuthStateChange((_e,s)=>setUser(s?.user.email??null)); return ()=>listener.subscription.unsubscribe();}},[]);
+ const cloudSession = useRef(new CloudWorkspaceSession());
+ const cloudInFlight = useRef(false);
+ const account = useRef<string | null>(null);
+ const accountEpoch = useRef(0);
+ const latestData = useRef(data);
+ latestData.current = data;
+ const [cloudMessage, setCloudMessage] = useState('');
+ const [cloudConflict, setCloudConflict] = useState(false);
+ function updateAccount(id: string | null, email: string | null) {
+   if (account.current !== id) {
+     account.current = id;
+     accountEpoch.current += 1;
+     cloudSession.current.reset();
+     setCloudMessage('');
+     setCloudConflict(false);
+   }
+   setUser(email);
+ }
+ useEffect(()=>{try {const raw=localStorage.getItem(STORE) ?? localStorage.getItem(LEGACY_KEY); const workspace=raw?migrateWorkspace(JSON.parse(raw)):emptyWorkspace(); setData(workspace); if(raw){localStorage.setItem(STORE,JSON.stringify(workspace));localStorage.removeItem(LEGACY_KEY);} setDark(localStorage.getItem('classsync-theme')==='dark');}catch {storageWritable.current=false;setToast('Saved data could not be read. Original storage was preserved.');} setLoaded(true); if(supabase){supabase.auth.getSession().then(({data})=>updateAccount(data.session?.user.id ?? null, data.session?.user.email ?? null)); const {data:listener}=supabase.auth.onAuthStateChange((_e,s)=>updateAccount(s?.user.id ?? null, s?.user.email ?? null)); return ()=>listener.subscription.unsubscribe();}},[]);
  useEffect(()=>{if(loaded && storageWritable.current) try {localStorage.setItem(STORE,JSON.stringify(data));}catch {setToast('Browser storage is full. Export a backup from Settings.');}},[data,loaded]);
  useEffect(()=>{document.documentElement.dataset.theme=dark?'dark':'light'; if(loaded) try {localStorage.setItem('classsync-theme',dark?'dark':'light');} catch {};},[dark,loaded]);
  useEffect(()=>{if(toast){const id=setTimeout(()=>setToast(''),5000);return ()=>clearTimeout(id);}},[toast]);
@@ -42,7 +61,54 @@ export default function ClassSync() {
  function updateAssignment(a:Assignment) {setData(d=>({...d,assignments:d.assignments.some(x=>x.id===a.id)?d.assignments.map(x=>x.id===a.id?a:x):[...d.assignments,a]}));setAdding(false);setEditing(null);setToast('Assignment saved');}
  function toggle(a:Assignment) {setData(d=>({...d,assignments:d.assignments.map(x=>x.id===a.id?{...x,status:x.status==='done'?'todo':'done'}:x)}));}
  function remove(a:Assignment) {if(window.confirm(`Delete “${a.title}”?`)){setData(d=>({...d,assignments:d.assignments.filter(x=>x.id!==a.id)}));setToast('Assignment deleted');}}
- async function cloud(action:'save'|'load') {setSyncing(true);try {const token=(await supabase?.auth.getSession())?.data.session?.access_token;if(!token)throw new Error('Sign in from Settings first.');if(action==='load'&&!window.confirm('Replace this browser’s workspace with your cloud copy?'))return; const response=await fetch('/api/workspace',{method:action==='save'?'PUT':'GET',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},...(action==='save'?{body:JSON.stringify(data)}:{})});const result=await response.json();if(!response.ok)throw new Error(result.error);if(action==='load'){if(!result.data)throw new Error('No cloud copy yet. Save your workspace first.');setData(migrateWorkspace(result.data));}setToast(action==='save'?'Workspace saved to your account':'Cloud workspace loaded');}catch(e){setToast(e instanceof Error?e.message:'Sync failed');}finally{setSyncing(false);}}
+ async function cloud(action: CloudAction) {
+   if (cloudInFlight.current) return;
+   cloudInFlight.current = true;
+   setSyncing(true);
+   setCloudMessage('');
+   const epoch = accountEpoch.current;
+   try {
+     const session = (await supabase?.auth.getSession())?.data.session;
+     if (!session || session.user.id !== account.current) throw new Error('Sign in from Settings first.');
+     const stillCurrent = () => epoch === accountEpoch.current && session.user.id === account.current;
+     if (!stillCurrent()) return;
+     if (action === 'load') {
+       const remote = await readCloudWorkspace(session.access_token);
+       if (!stillCurrent()) return;
+       if (!remote.data) throw new Error('No cloud copy yet. Save your workspace first.');
+       if (!window.confirm('Replace this browser’s current workspace with the cloud copy? Export a backup first if you want to keep your local work.')) return;
+       setData(migrateWorkspace(remote.data));
+       cloudSession.current.accept(session.user.id, remote.revision);
+     } else {
+       let expectedRevision = cloudSession.current.revisionFor(session.user.id);
+       if (action === 'replace') {
+         const remote = await readCloudWorkspace(session.access_token);
+         if (!stillCurrent()) return;
+         const description = remote.data
+           ? remote.data.courses.length + ' courses and ' + remote.data.assignments.length + ' assignments, saved ' + new Date(remote.updatedAt!).toLocaleString()
+           : 'no saved workspace';
+         if (!window.confirm('Replace the cloud copy (' + description + ') with this browser’s current work? This replaces the cloud coursework and notes.')) return;
+         expectedRevision = remote.revision;
+       }
+       const saved = await writeCloudWorkspace(session.access_token, latestData.current, expectedRevision);
+       if (!stillCurrent()) return;
+       cloudSession.current.accept(session.user.id, saved.revision);
+     }
+     setCloudConflict(false);
+     const message = action === 'load' ? 'Cloud workspace loaded.' : 'Workspace saved to your account.';
+     setCloudMessage(message);
+     setToast(message);
+   } catch (error) {
+     if (epoch !== accountEpoch.current) return;
+     const message = error instanceof Error ? error.message : 'Cloud storage is unavailable.';
+     if (error instanceof CloudConflictError) setCloudConflict(true);
+     setCloudMessage(message);
+     setToast(message);
+   } finally {
+     cloudInFlight.current = false;
+     setSyncing(false);
+   }
+ }
  function addCourse(input:{code:string;name:string;professor:string}) {const course:Course={id:crypto.randomUUID(),code:input.code.trim(),name:input.name.trim(),professor:input.professor.trim(),schedule:'',color:'blue',categories:[{name:'Assignments',weight:100}],syllabus:''};setData(current=>({...current,courses:[...current.courses,course]}));setAddingCourse(false);setToast('Class added');}
  function courseCard(c:Course) {const g=grade(c,data.assignments).current;const count=pending.filter(a=>a.courseId===c.id).length;return <Link className={`course-card ${c.color}`} href={`/courses/${c.id}`} key={c.id}><div className="course-card-top"><span className="course-symbol"><BookOpen size={21}/></span><span className="course-code">{c.code}</span><ArrowUpRight size={17}/></div><h3>{c.name}</h3><p>{c.professor}</p><div className="course-progress"><span style={{width:`${g??0}%`}}/></div><div className="course-card-bottom"><span>{count} pending assignment{count!==1?'s':''}</span><strong>{g===null?'—':`${g.toFixed(1)}%`} <small>{letter(g)}</small></strong></div></Link>;}
  function assignmentRows(rows:Assignment[],compact=false){return <div className={`assignment-list ${compact?'compact':''}`}>{rows.length===0?<div className="empty"><CheckCircle2/><h3>All clear here</h3><p>No assignments match this view.</p></div>:rows.map(a=>{const c=data.courses.find(c=>c.id===a.courseId)!;const late=a.due<today&&a.status!=='done';return <div className={`assignment-row ${a.status==='done'?'is-done':''}`} key={a.id}><button className="check-box" aria-label={`${a.status==='done'?'Reopen':'Complete'} ${a.title}`} aria-pressed={a.status==='done'} onClick={()=>toggle(a)}>{a.status==='done'&&<Check size={14}/>}</button><div className="assignment-info"><button className="text-button assignment-title" onClick={()=>setEditing(a)}>{a.title}</button><span><i className={`dot ${c.color}`}/>{c.code}<span className="dot-separator">·</span>{a.category}</span></div><span className={`due ${late?'late':''}`}><Clock3 size={13}/>{late?'Overdue · ':''}{formatDate(a.due)}</span><span className={`badge ${a.status}`}>{statusLabel[a.status]}</span>{!compact&&<div className="row-actions"><button className="icon-button" aria-label={`Edit ${a.title}`} onClick={()=>setEditing(a)}><Pencil size={15}/></button><button className="icon-button" aria-label={`Delete ${a.title}`} onClick={()=>remove(a)}><Trash2 size={15}/></button></div>}</div>;})}</div>;}
@@ -57,7 +123,7 @@ export default function ClassSync() {
  {path==='/calendar'&&<section className="panel full-calendar"><div className="section-heading"><h2>{month.toLocaleDateString('en-US',{month:'long',year:'numeric'})}</h2><div className="inline"><button className="secondary-button" onClick={()=>setMonth(new Date(new Date().getFullYear(),new Date().getMonth(),1))}>Today</button><button className="icon-button" aria-label="Previous month" onClick={()=>setMonth(new Date(month.getFullYear(),month.getMonth()-1,1))}><ChevronLeft/></button><button className="icon-button" aria-label="Next month" onClick={()=>setMonth(new Date(month.getFullYear(),month.getMonth()+1,1))}><ChevronRight/></button></div></div><Calendar month={month} assignments={data.assignments} onSelect={a=>{if(a)setEditing(a);}}/></section>}
  {path==='/assistant'&&<Assistant data={data}/>}
  {path==='/grades'&&<GradeCalculator data={data} setData={setData}/>}
- {path==='/settings'&&<SettingsPanel data={data} setData={setData} user={user} cloud={cloud} syncing={syncing} notify={setToast}/>}
+ {path==='/settings'&&<SettingsPanel data={data} setData={setData} user={user} cloud={cloud} syncing={syncing} cloudMessage={cloudMessage} cloudConflict={cloudConflict} notify={setToast}/>}
  {!navigation.some(n=>n.href===path)&&!currentCourse&&path!=='/settings'&&<div className="empty"><h2>That page isn’t here.</h2><Link href="/">Back to your dashboard</Link></div>}
  </main></div><Chatbot data={data}/>{syncTodo&&<SyncTodo data={data} onComplete={toggle} onClose={()=>setSyncTodo(false)}/>} {(adding||editing)&&data.courses.length>0&&<AssignmentModal assignment={editing} courses={data.courses} courseId={currentCourse?.id} onClose={()=>{setAdding(false);setEditing(null);}} onSave={updateAssignment}/>} {addingCourse&&<CourseDialog onClose={()=>setAddingCourse(false)} onSave={addCourse}/>} {toast&&<div className="toast" role="status"><CheckCircle2 size={18}/>{toast}<button aria-label="Dismiss notification" onClick={()=>setToast('')}><X size={16}/></button></div>}</div>;
 }

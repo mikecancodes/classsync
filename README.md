@@ -58,13 +58,13 @@ Authenticated Supabase users can call paid AI. For local development without Sup
 
 ## Configure Supabase
 
-1. Create a Supabase project and run `supabase/schema.sql` once in its SQL editor.
+1. Create a Supabase project and run the complete `supabase/schema.sql` in its SQL editor. Existing installations must also run the updated script before using this app version; see [cloud-save rollout](docs/cloud-saves.md).
 2. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` in `.env.local`. Use only the public/anon key, never the service-role key.
 3. Enable email/password authentication. Configure email confirmation and site URL/redirect allowlist for your local or deployed URL.
 4. Restart, open Settings, create an account, confirm email if required, then sign in.
 5. Use **Save to cloud** to save this browser’s workspace or **Load cloud copy** to replace the local copy after confirmation.
 
-Cloud storage uses one JSONB document per user in PostgreSQL for hackathon simplicity. RLS limits read/write to `auth.uid() = user_id`. API routes validate the bearer token with Supabase Auth. Cloud save is last-write-wins and manual; it is not realtime or automatic multi-device conflict resolution. Local data remains on sign-out and is separate from the signed-in account. Use a private browser session on a shared device.
+Cloud storage uses one JSONB document per user in PostgreSQL for hackathon simplicity. RLS limits read/write to `auth.uid() = user_id`. API routes validate the bearer token with Supabase Auth. Cloud save is manual and revision-checked: a stale save returns a conflict and preserves local work. Settings offers export, load, or an explicit review-and-replace action that is checked again at commit. A new browser session must load or review an existing cloud copy before replacing it. It is not realtime or an automatic merge. See [rollout and recovery](docs/cloud-saves.md). Local data remains on sign-out and is separate from the signed-in account. Use a private browser session on a shared device.
 
 ## Grade math
 
@@ -88,9 +88,10 @@ src/components/notes-page.tsx Global course-linked materials workspace
 src/components/chatbot.tsx   Global collapsible chat panel
 src/lib/server.ts            Authentication, body limits, rate limiter
 src/app/api/ai/route.ts       Server-only generation and demo tools
-src/app/api/workspace/route.ts Authenticated GET / PUT workspace
+src/app/api/workspace/route.ts Authenticated revision-checked GET / PUT workspace
 src/app/api/imports/preview/route.ts Future LMS validation contract
-supabase/schema.sql          PostgreSQL table and row-level policies
+supabase/schema.sql          Transactional SQL-editor setup/upgrade
+supabase/migrations/         Versioned baseline and revision-save migration
 tests/grades.test.ts          Grade and validation regression tests
 tests/frontend.test.ts        Migration, sync, dates, and chatbot tests
 tests/feed.test.ts            Combined announcement filters and sorting

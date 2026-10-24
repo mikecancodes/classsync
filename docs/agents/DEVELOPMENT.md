@@ -25,7 +25,7 @@ Updated after the branding/dashboard/chatbot refresh. “Existing” means sourc
 | Calendar | Monthly assignment dates and editing | Course colors, personal tasks, detailed event display; week view optional |
 | Classes | Required five-course sample set and detail tabs; existing saved courses preserved | LMS metadata |
 | Imports | Authenticated preview-only API, backup restore, internal fixture merge helper, D2L extension prototype; Sync classes opens a to-do dialog | Extension → app tab review and merge (decision 2) |
-| Persistence | Version-2 localStorage with validated v1 migration and announcements; optional cloud save/load | v3 migration (optional points, dueTime, lowercase platform) and signed-in auto-save (decisions 1, 6–8) |
+| Persistence | Version-2 localStorage with validated v1 migration and announcements; revision-checked manual cloud save/load with explicit conflict resolution | v3 migration (optional points, dueTime, lowercase platform) and signed-in auto-save (decisions 1, 6–8) |
 | Grade tools | Weighted calculation, projection, syllabus parsing | Preserve behavior during frontend work |
 
 Do not check off a target feature merely because a visual placeholder exists. Update this table after implementing and verifying a target.
@@ -81,6 +81,10 @@ Apply the relevant checks to the feature being delivered. This is a target check
 - [ ] Calendar events show correct local dates, course colors plus labels, and clickable details.
 
 ### Persistence and imports
+
+- [ ] Apply the cloud-save SQL upgrade in staging; verify two browsers saving the same revision produce a conflict, not an overwrite.
+- [ ] Verify cross-account isolation, signed-out writes, and old direct upserts fail; confirm replacement cancellation preserves both copies.
+- [ ] Embedded database tests pass; separately verify hosted Auth/PostgREST and independent-connection races in staging (see ../cloud-saves.md).
 
 - [ ] Existing v1 saved data migrates without losing notes, assignments, or grades.
 - [ ] Reload, export/restore, and cloud validation preserve new entities and fields.
