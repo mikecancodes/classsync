@@ -95,3 +95,5 @@ The repository currently starts with an empty workspace and supports an authenti
 - [Supabase: Redirect URLs](https://supabase.com/docs/guides/auth/redirect-urls)
 - [ClassSync README](../../README.md)
 - [D2L sync hosting notes](../d2l-sync/vercel-hosting.md)
+
+**Supabase Auth URLs (required for sign-up emails):** in the Supabase project, Authentication → URL Configuration: set **Site URL** to `https://classsync-two.vercel.app` and add **Redirect URLs** `https://classsync-two.vercel.app/**` and `http://127.0.0.1:3000/**`. Sign-up asks Supabase to return students to `<site>/settings`; if that address isn't allowed, Supabase falls back to the Site URL (a `localhost` Site URL sends confirmation links to a page that doesn't load).
