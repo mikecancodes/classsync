@@ -18,6 +18,11 @@ export const chatToolDeclarations: FunctionDeclaration[] = [
     parametersJsonSchema: { type: 'object', properties: {} },
   },
   {
+    name: 'get_course_context',
+    description: 'Get a useful overview of one course, including its instructor and schedule, syllabus excerpt, current grade, next incomplete assignments, recent announcements, and saved material titles. Use for broad or open-ended questions about what is happening in a particular class. For details inside notes or materials, also use search_notes.',
+    parametersJsonSchema: { type: 'object', properties: { course: { type: 'string', description: 'Course name or code' } }, required: ['course'] },
+  },
+  {
     name: 'get_assignments',
     description: 'Look up assignments. Use for anything about deadlines, what is due, missing or overdue work, or work for a course. Dates are YYYY-MM-DD in the student\'s local calendar.',
     parametersJsonSchema: {
@@ -62,6 +67,7 @@ export const chatToolDeclarations: FunctionDeclaration[] = [
 
 const statusLabels: Record<string, string> = {
   list_courses: 'Looking at your courses…',
+  get_course_context: 'Getting your course context…',
   get_assignments: 'Checking your assignments…',
   get_announcements: 'Reading announcements…',
   get_grades: 'Checking your grades…',
@@ -139,6 +145,51 @@ function listCourses(state: AcademicState) {
         letter: current === null ? null : letter(current),
       };
     }),
+  };
+}
+
+function getCourseContext(state: AcademicState, args: Args, today: string) {
+  const query = optionalString(args, 'course');
+  if (!query) throw new ToolInputError('course is required');
+  const { course, error } = resolveCourse(state, query);
+  if (error) return error;
+  if (!course) return { error: 'course_not_found', query, options: [] };
+
+  const incomplete = state.assignments
+    .filter(a => a.courseId === course.id && a.status !== 'done')
+    .sort(byDue);
+  const announcements = state.announcements
+    .filter(a => a.courseId === course.id)
+    .sort((a, b) => b.posted.localeCompare(a.posted));
+  const current = grade(course, state.assignments).current;
+
+  return {
+    today,
+    course: {
+      name: course.name,
+      code: course.code,
+      professor: course.professor || null,
+      schedule: course.schedule || null,
+      currentGrade: current === null ? null : Math.round(current * 10) / 10,
+      letter: current === null ? null : letter(current),
+      syllabusExcerpt: course.syllabus.trim() ? clip(course.syllabus.trim(), 1800) : null,
+    },
+    incompleteAssignmentCount: incomplete.length,
+    nextAssignments: incomplete.slice(0, 10).map(a => assignmentRow(state, a, today)),
+    assignmentsTruncated: incomplete.length > 10,
+    recentAnnouncements: announcements.slice(0, 5).map(a => ({
+      title: a.title,
+      posted: a.posted,
+      priority: a.priority ?? null,
+      read: a.read,
+      description: clip(a.description),
+    })),
+    announcementsTruncated: announcements.length > 5,
+    savedMaterials: state.materials.filter(m => m.courseId === course.id).slice(0, 20).map(m => ({
+      kind: m.kind,
+      title: m.title,
+    })),
+    materialsTruncated: state.materials.filter(m => m.courseId === course.id).length > 20,
   };
 }
 
@@ -264,6 +315,7 @@ export function runTool(name: string, args: unknown, state: AcademicState, today
   try {
     switch (name) {
       case 'list_courses': return listCourses(state);
+      case 'get_course_context': return getCourseContext(state, input, today);
       case 'get_assignments': return getAssignments(state, input, today);
       case 'get_announcements': return getAnnouncements(state, input);
       case 'get_grades': return getGrades(state, input);

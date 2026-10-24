@@ -11,7 +11,7 @@ ClassSync is being built for an **MLH hackathon**. Several choices follow from t
 | 1 | Where data lives | **Hybrid with optional login:** browser workspace is the working copy; auto-saves to Supabase when signed in | Login exists (optional); auto-save not implemented (cloud save is still manual) |
 | 2 | Getting D2L data into the app | **Extension → open ClassSync tab → review screen → merge** | Implemented (`/connect`, bridge content script, `src/lib/d2l-import.ts`, `ImportReview`) |
 | 3 | AI provider | **Google Gemini**, chosen for the free MLH hackathon credits, behind `/api/ai` | Implemented (needs `GEMINI_API_KEY`; not yet tested with a live key) |
-| 4 | Chatbot design | **Tool calling**, tools run in the browser against the workspace. AI on by default when configured and signed in; friendly tone, no emoji; no streaming | Implemented (`/api/ai/chat`, `src/lib/chat-tools.ts`) |
+| 4 | Chatbot design | **Tool calling**, tools run in the browser against the workspace. AI on by default when configured and signed in; friendly tone, no emoji; no streaming | Implemented (`/api/ai/chat`, `src/lib/chat-tools.ts`); now handles general study/ClassSync questions and broad course context. Production still needs `GEMINI_API_KEY` and user sign-in. |
 | 5 | UI components | **shadcn/ui** on top of the existing Tailwind tokens | Not implemented (styled native controls today) |
 | 6 | Assignments without points | **`points` becomes optional**; grade math skips items without points | Not implemented (extension uses a placeholder of 100 for now) |
 | 7 | Due times | **Optional `dueTime`** next to the existing date-only `due` | Not implemented |
@@ -55,7 +55,7 @@ D2L tab ── extension reads D2L ──▶ ClassSync tab (content script / ext
 ## 4. Tool-calling chatbot
 
 - The model gets a short list of tools (see `docs/d2l-sync/chatbot-tools.md`, adapted to the workspace): due items in a date range, overdue items, items by course, announcements, grades, and text search over notes and announcements.
-- The loop: the browser sends a question to `/api/ai` → Gemini replies with a tool call → `/api/ai` returns it to the browser → the browser runs it against the local workspace → the browser sends the rows back → repeat until a text answer arrives.
+- The loop: the browser sends a question to `/api/ai` → Gemini replies with a tool call → `/api/ai` returns it to the browser → the browser runs it against the local workspace → the browser sends the rows back → repeat until a text answer arrives. Personal coursework questions must use the workspace tools; general study and ClassSync usage questions can be answered from the model's knowledge, clearly separated from personal facts.
 - Tools are the **same pure functions** the rule-based assistant uses (`src/lib/academic-assistant.ts`), so both modes give consistent answers.
 - Tools are read-only. AI output never changes the workspace.
 - This replaces sending the whole workspace (and its 40,000-character limit).

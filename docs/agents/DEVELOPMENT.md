@@ -18,7 +18,7 @@ Updated after the branding/dashboard/chatbot refresh. “Existing” means sourc
 | Dashboard | Top tabs, logo top left, center announcement feed with class/priority/status/sort filters, left Sync / To-do section, Sync classes | Broader search and filters |
 | Brand | Brain logo and “All your classes. One place.” tagline | Preserve branding |
 | Assignments | CRUD, completion, search, status/course filters, due-date sorting | Platform, priority, duration, due/platform/priority filters |
-| AI | Desktop left-side chatbot and mobile drawer, session history across routes, structured local answers, Gemini tool-calling chat (on by default when configured and signed in) with rule-based fallback; study tools on Gemini | Live test with a real key; shared rate limiter before public launch |
+| AI | Workspace-aware Gemini tool chat for personal coursework plus general study and ClassSync usage guidance; broad course context and note search; rule-based local fallback | Production needs `GEMINI_API_KEY` and user sign-in; live Gemini flow still needs testing with an owner-provided key; shared rate limiter before public launch |
 | Tasks | No separate task entity/page | Persistent To-Do List and completion progress |
 | Notes | Global Notes / Material tab with course selector and existing create/edit/delete | Keyword search |
 | Planner | Generic local catch-up checklist | Deterministic daily Plan My Week using deadline, priority, duration, workload |

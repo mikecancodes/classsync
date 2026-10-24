@@ -138,7 +138,7 @@ export function Chatbot({ data }: { data: AcademicState }) {
   const modeNote = aiActive ? 'Gemini only sees the items it looks up for each question.'
     : aiConfigured && !aiReady ? 'Sign in under Settings to chat with AI. Answers are local for now.'
     : aiReady ? 'AI is off. Answers come from your workspace on this device.'
-    : 'Answers come from your workspace on this device.';
+    : 'Gemini is not configured for this site yet. AI needs a server-side key and sign-in; local answers use rules.';
   const asked = new Set(messages.filter(m => m.role === 'user').map(m => m.text));
   const followUps = suggestions.filter(s => !asked.has(s)).slice(0, 2);
 
