@@ -28,7 +28,7 @@ In this Codex Windows environment, pnpm is bundled at `C:/Users/mjstr/.cache/cod
 
 ## Included MVP
 
-- Brain branding, assignment totals, Due Soon and completed counts, course cards, overdue/upcoming work, and announcements with persistent read state.
+- A focused dashboard with compact counts, five nearest deadlines, expandable overdue work and announcements. Course cards and the full calendar have dedicated pages; the sidebar keeps only primary navigation.
 - Course pages with assignment CRUD, completion tracking, earned scores, editable syllabus, and text/Markdown materials.
 - Searchable assignment list with status and course filters. All dates are local calendar dates; deadlines are considered overdue on the following day.
 - Monthly calendar, responsive navigation, keyboard focus states, and persistent light/dark modes.

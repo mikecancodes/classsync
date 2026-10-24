@@ -44,6 +44,9 @@ These route names are recommended mappings into the existing application, not a 
 
 ### Home
 
+The home design uses a calm, single-column layout: compact summary counts, five nearest upcoming assignments, a visible expandable overdue count, and announcements collapsed with an unread count. Keep completion and editing inline. Course cards and the full calendar live on their own pages. Avoid welcome illustrations, repeated AI promotions, duplicate deadline widgets, and long course lists in the sidebar. The floating chatbot is the primary quick-help entry point.
+
+
 - Suggested welcome: “Good morning! Here’s everything happening with your classes.” If time-specific, derive the greeting from the student's local time.
 - Summary cards: **Total Assignments**, **Due Soon**, **Completed Assignments**, derived from current state. Use one documented Due Soon range everywhere; a proposed MVP convention is today through the next seven calendar days, excluding completed work.
 - Announcements: course, LMS source (D2L or Canvas), title, short description, posted date, and read/unread status. Sort newest first and persist read state.

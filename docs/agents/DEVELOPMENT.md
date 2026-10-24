@@ -15,7 +15,7 @@ Updated after the branding/dashboard/chatbot refresh. “Existing” means sourc
 
 | Feature | Baseline | Next target |
 | --- | --- | --- |
-| Dashboard | Shared assignment counts, deadlines, structured announcements with read state, idempotent Demo Sync | Broader search and filters |
+| Dashboard | Compact counts, five next deadlines, expandable overdue work/announcements, idempotent Demo Sync | Broader search and filters |
 | Brand | Brain logo and “All your classes. One place.” tagline | Preserve branding |
 | Assignments | CRUD, completion, search, status/course filters, due-date sorting | Platform, priority, duration, due/platform/priority filters |
 | AI | Global collapsible chatbot, session history across routes, structured local answers, optional server AI; study tools preserved | Credential-backed integration testing |

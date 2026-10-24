@@ -68,3 +68,84 @@ main { padding-bottom: 95px; }
   .stat-card>div>span { display: block; min-height: 27px; }
 }
 @media(max-height:550px) { .chat-panel { top: 10px; bottom: 10px; } .chat-intro { display: none; } .chat-mode { padding: 5px 15px; } }
+
+/* Home keeps one visual priority: the student's next piece of work. */
+.brand-tagline { color: var(--muted); font-size: 11px; padding: 13px 6px 34px; }
+.sidebar nav { gap: 7px; }
+.sidebar nav>a { font-size: 13px; height: 44px; }
+.dashboard-page { max-width: 1100px; margin: 0 auto; }
+.dashboard-page .eyebrow { display: none; }
+.dashboard-page .page-heading { margin-bottom: 28px; }
+.dashboard-page .page-heading h1 { font-size: 28px; letter-spacing: -.8px; }
+.dashboard-page .page-heading p { font-size: 14px; margin-top: 8px; }
+.focus-dashboard { width: 100%; }
+.focus-summary { display: grid; grid-template-columns: repeat(3, 1fr); margin: 0 0 28px; padding: 0; }
+.focus-summary>div { padding: 0 28px; border-left: 1px solid var(--border); }
+.focus-summary>div:first-child { border-left: 0; padding-left: 0; }
+.focus-summary dt { color: var(--muted); font-size: 13px; }
+.focus-summary dd { font-size: 28px; font-weight: 650; margin: 6px 0; letter-spacing: -1px; }
+.focus-summary>div>span { font-size: 11px; color: var(--muted); }
+.focus-deadlines { border: 1px solid var(--border); border-radius: 14px; background: var(--surface); overflow: hidden; }
+.focus-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 24px 26px 20px; }
+.focus-section-heading h2 { font-size: 18px; }
+.focus-section-heading p { font-size: 12px; color: var(--muted); margin-top: 5px; }
+.focus-section-heading>a,.focus-more,.focus-bottom-links a { display: inline-flex; align-items: center; gap: 8px; color: var(--blue); font-size: 12px; }
+.focus-overdue { margin: 0 26px 8px; border: 1px solid var(--border); border-radius: 8px; }
+.focus-overdue summary { color: var(--text); background: var(--hover); padding: 12px 14px; font-size: 12px; border-radius: 8px; }
+.focus-overdue strong,.focus-date.overdue { color: #a54e32; }
+[data-theme=dark] .focus-overdue strong,[data-theme=dark] .focus-date.overdue { color: #edb38f; }
+.focus-overdue summary,.focus-announcements>summary { display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer; list-style: none; }
+.focus-dashboard summary::-webkit-details-marker { display: none; }
+.focus-dashboard summary:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; border-radius: 7px; }
+.focus-dashboard details[open]>summary>svg { transform: rotate(180deg); }
+.focus-dashboard ul { margin: 0; padding: 0; list-style: none; }
+.focus-assignment { display: flex; align-items: center; gap: 14px; margin: 0 26px; padding: 20px 0; border-bottom: 1px solid var(--border); }
+.focus-assignment:last-child { border-bottom: 0; }
+.focus-check { display: grid; place-items: center; width: 21px; height: 21px; border: 1.5px solid var(--muted); background: var(--surface); border-radius: 6px; flex-shrink: 0; color: var(--blue); }
+.focus-check svg { opacity: 0; }
+.focus-check:hover { background: var(--soft); border-color: var(--blue); }
+.focus-check:hover svg,.focus-check:focus-visible svg { opacity: 1; }
+.focus-assignment-title { text-align: left; border: 0; background: none; padding: 0; min-width: 0; flex: 1; }
+.focus-assignment-title strong { display: block; font-weight: 550; font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+.focus-assignment-title:hover strong { color: var(--blue); }
+.focus-assignment-title>span { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); margin-top: 5px; }
+.focus-date { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.focus-more { padding: 15px 26px; border-top: 1px solid var(--border); width: 100%; }
+.focus-overdue .focus-assignment { margin: 0 14px; padding: 15px 0; }
+.focus-overdue .focus-more { padding: 12px 14px; }
+.focus-empty { text-align: center; padding: 35px 20px; color: var(--muted); }
+.focus-empty>svg { margin-bottom: 10px; color: var(--blue); }
+.focus-empty h3 { color: var(--text); margin-bottom: 7px; }
+.focus-empty p { font-size: 13px; }
+.focus-announcements { margin-top: 20px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+.focus-announcements>summary { padding: 20px 25px; font-size: 14px; font-weight: 550; }
+.focus-announcements>summary small { display: inline-block; margin-left: 10px; font-size: 11px; font-weight: 400; color: var(--muted); }
+.focus-announcements .compact-feed { padding: 0 25px 22px; }
+.focus-announcements .compact-feed>.section-heading { display: none; }
+.focus-bottom-links { display: flex; justify-content: space-between; padding: 23px 2px; }
+.focus-bottom-links a { color: var(--muted); }
+.focus-bottom-links a:hover { color: var(--blue); }
+@media(max-width:760px) {
+  .dashboard-page .page-heading { align-items: flex-start; gap: 15px; margin-bottom: 25px; }
+  .dashboard-page .page-heading h1 { font-size: 24px; }
+  .dashboard-page .page-heading p { font-size: 12px; }
+  .dashboard-page .page-heading>.primary-button { font-size: 11px; padding: 10px 12px; }
+  .focus-summary>div { padding: 0 14px; }
+  .focus-summary dt { font-size: 11px; }
+  .focus-summary dd { font-size: 25px; }
+  .focus-summary>div>span { font-size: 10px; line-height: 1.5; display: block; }
+  .focus-section-heading { padding: 20px 17px 16px; }
+  .focus-section-heading h2 { font-size: 17px; }
+  .focus-section-heading>a { font-size: 11px; }
+  .focus-section-heading p { font-size: 11px; }
+  .focus-overdue { margin: 0 17px 5px; }
+  .focus-overdue summary { font-size: 11px; padding: 11px; }
+  .focus-assignment { margin: 0 17px; gap: 11px; padding: 18px 0; }
+  .focus-assignment-title strong { font-size: 13px; }
+  .focus-assignment-title>span { font-size: 11px; }
+  .focus-date { font-size: 11px; }
+  .focus-more { padding: 15px 17px; font-size: 11px; }
+  .focus-announcements>summary { padding: 18px 17px; }
+  .focus-announcements .compact-feed { padding: 0 17px 18px; }
+  .focus-bottom-links a { font-size: 11px; }
+}
