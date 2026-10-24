@@ -124,3 +124,8 @@ Workspace v3 adds cached school-calendar events only. Optional points, dueTime a
 - The calculator uses `grade()` from `model.ts` for the current grade (graded work only, blanks excluded, zeros counted), so it matches the dashboard and course cards. `src/lib/grade-math.ts` adds per-category averages and contributions, a projection that assumes one score on all remaining work (empty categories included), and the target solver.
 - Score, points, category and weight edits save straight to the workspace. Renaming a category moves its assignments. Categories can be added, and removed only when empty. **What-if mode** works on a copy that's thrown away on exit, and can add hypothetical items.
 - Replaces the previous single calculator in `panels.tsx`. Its syllabus weight extraction moved into the new page, keeping still-used categories at 0% so nothing breaks.
+
+
+## 17. Optional DigitalOcean chat provider
+
+The user requested DigitalOcean Serverless Inference for the global chatbot. Select it explicitly with `AI_CHAT_PROVIDER=digitalocean`, an inference-scoped `DIGITALOCEAN_MODEL_ACCESS_KEY`, and `DIGITALOCEAN_MODEL`. Preserve hosted authentication, input/rate limits, and read-only browser tools. Use promotional credits without auto-reload; do not claim DigitalOcean is an unlimited free tier. Study/PDF syllabus generation stays on Gemini. Live activation requires a usable DigitalOcean key and an end-to-end signed-in test.

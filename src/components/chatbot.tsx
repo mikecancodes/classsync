@@ -15,7 +15,6 @@ type ChatReply =
 
 const suggestions = ['What should I work on today?', 'What is due tomorrow?', 'What assignments am I missing?', 'Any new announcements?', 'How are my grades looking?'];
 const HISTORY_MESSAGES = 10;
-const AI_MODE = 'ClassSync AI · Gemini';
 const LOCAL_MODE = 'Answered locally · Rule-based';
 
 // Recent conversation as Gemini contents (text only), merging consecutive same-role turns
@@ -38,6 +37,7 @@ export function Chatbot({ data }: { data: AcademicState }) {
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState('Thinking…');
   const [aiConfigured, setAiConfigured] = useState(false);
+  const [provider, setProvider] = useState('Gemini');
   const [signInRequired, setSignInRequired] = useState(true);
   const [signedIn, setSignedIn] = useState(false);
   const [useAI, setUseAI] = useState(true);
@@ -57,7 +57,7 @@ export function Chatbot({ data }: { data: AcademicState }) {
   useEffect(() => {
     const controller = new AbortController();
     fetch('/api/ai', { signal: controller.signal }).then(r => r.json())
-      .then(result => { setAiConfigured(result.available === true); setSignInRequired(result.signInRequired !== false); }).catch(() => {});
+      .then(result => { setAiConfigured((result.chatAvailable ?? result.available) === true); setProvider(result.chatProvider === 'digitalocean' ? 'DigitalOcean' : 'Gemini'); setSignInRequired(result.signInRequired !== false); }).catch(() => {});
     return () => controller.abort();
   }, []);
   useEffect(() => {
@@ -122,7 +122,7 @@ export function Chatbot({ data }: { data: AcademicState }) {
     try {
       if (aiActive) {
         const answer = await askGemini(text, earlier);
-        setMessages(old => [...old, { id: crypto.randomUUID(), role: 'assistant', text: answer, mode: AI_MODE }]);
+        setMessages(old => [...old, { id: crypto.randomUUID(), role: 'assistant', text: answer, mode: `ClassSync AI · ${provider}` }]);
       } else {
         answerLocally(text);
       }
@@ -135,10 +135,10 @@ export function Chatbot({ data }: { data: AcademicState }) {
     }
   }
 
-  const modeNote = aiActive ? 'Gemini only sees the items it looks up for each question.'
+  const modeNote = aiActive ? `${provider} only sees the items it looks up for each question.`
     : aiConfigured && !aiReady ? 'Sign in under Settings to chat with AI. Answers are local for now.'
     : aiReady ? 'AI is off. Answers come from your workspace on this device.'
-    : 'Gemini is not configured for this site yet. AI needs a server-side key and sign-in; local answers use rules.';
+    : 'AI chat is not configured for this site yet. AI needs a server-side key and sign-in; local answers use rules.';
   const asked = new Set(messages.filter(m => m.role === 'user').map(m => m.text));
   const followUps = suggestions.filter(s => !asked.has(s)).slice(0, 2);
 
@@ -149,7 +149,7 @@ export function Chatbot({ data }: { data: AcademicState }) {
     <section id="classsync-chat" className={`chat-panel docked-chat ${open ? 'mobile-chat-open' : ''}`} role="complementary" aria-label="ClassSync AI" onKeyDown={handleKeys}>
       <header className="chat-heading">
         <span className="chat-brain"><Brain size={25} /></span>
-        <div><h2>ClassSync AI</h2><p>{aiActive ? 'Gemini · reads your ClassSync data' : 'Local assistant · Rule-based'}</p></div>
+        <div><h2>ClassSync AI</h2><p>{aiActive ? `${provider} · reads your ClassSync data` : 'Local assistant · Rule-based'}</p></div>
         <button className="icon-button mobile-chat-collapse" aria-label="Collapse ClassSync AI" onClick={collapse}><ChevronDown size={22} /></button>
       </header>
       <div className="chat-mode">

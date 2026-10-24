@@ -1,9 +1,10 @@
 import { z } from 'zod';
 import { authenticate, allowRequest, localAIAllowed, readBody } from '@/lib/server';
 import { generateText, geminiConfigured } from '@/lib/gemini';
+import { chatConfigured, chatProvider } from '@/lib/chat-provider';
 const schema=z.object({task:z.enum(['summary','guide','catchup','question','evaluate']),content:z.string().trim().min(20).max(40000),question:z.string().max(2000).optional(),rubric:z.string().max(20000).optional()});
 export async function GET(request:Request) {
- return Response.json({ available: geminiConfigured(), signInRequired: !localAIAllowed(request) }, { headers: { 'Cache-Control': 'no-store' } });
+ return Response.json({ available: geminiConfigured(), chatAvailable: chatConfigured(), chatProvider: chatProvider(), signInRequired: !localAIAllowed(request) }, { headers: { 'Cache-Control': 'no-store' } });
 }
 export async function POST(request:Request) {
  try {
