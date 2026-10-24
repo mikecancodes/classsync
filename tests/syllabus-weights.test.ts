@@ -64,3 +64,13 @@ test('weight finder handles labels, parentheses and several weights per line', (
   assert.deepEqual(findSyllabusWeights('Total 100%\nYour final grade is 100%'), []);
   assert.deepEqual(findSyllabusWeights('Late work loses 10% per day'), [], 'penalty sentences are not categories');
 });
+
+test('the viewer only treats real PDF bytes as a PDF', async () => {
+  const { safeBlob } = await import('../src/components/syllabus-viewer');
+  const real = await safeBlob(new Blob(['%PDF-1.4 ...'], { type: 'application/pdf' }));
+  assert.deepEqual([real.pdf, real.blob.type], [true, 'application/pdf']);
+  const disguised = await safeBlob(new Blob(['<html><script>alert(1)</script></html>'], { type: 'application/pdf' }));
+  assert.deepEqual([disguised.pdf, disguised.blob.type], [false, 'application/octet-stream'], 'HTML labelled as PDF becomes a download');
+  const html = await safeBlob(new Blob(['<svg onload=alert(1)>'], { type: 'image/svg+xml' }));
+  assert.equal(html.blob.type, 'application/octet-stream');
+});

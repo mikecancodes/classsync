@@ -12,6 +12,14 @@ import { docxToText } from '@/lib/document-text';
 const isPdf = (file: File) => file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
 const isDocx = (file: File) => /\.docx$/i.test(file.name) || file.type.includes('wordprocessingml');
 
+// The stored type isn't trusted: only bytes that really start with %PDF- are shown as a PDF.
+// Everything else becomes a plain download, so nothing can render as a page on our origin.
+export async function safeBlob(file: Blob) {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const pdf = bytes.length > 5 && String.fromCharCode(...bytes.subarray(0, 5)) === '%PDF-';
+  return { blob: new Blob([bytes], { type: pdf ? 'application/pdf' : 'application/octet-stream' }), pdf, bytes };
+}
+
 export function findSyllabusMaterial(data: AcademicState, courseId: string) {
   const mine = data.materials.filter(m => m.courseId === courseId);
   return mine.find(m => m.id === `d2l-syllabus-${courseId}`) ?? mine.find(m => m.id === `syllabus-${courseId}`) ?? mine.find(m => /syllabus/i.test(m.title));
@@ -19,7 +27,7 @@ export function findSyllabusMaterial(data: AcademicState, courseId: string) {
 
 export function SyllabusViewer({ course, data, setData, notify }: { course: Course; data: AcademicState; setData: Dispatch<SetStateAction<AcademicState>>; notify: (message: string) => void }) {
   const material = findSyllabusMaterial(data, course.id);
-  const [file, setFile] = useState<{ file: File; url: string; text?: string } | null>(null);
+  const [file, setFile] = useState<{ file: File; url: string; pdf: boolean; text?: string } | null>(null);
   const [error, setError] = useState('');
   const [revision, setRevision] = useState(0);
 
@@ -30,12 +38,14 @@ export function SyllabusViewer({ course, data, setData, notify }: { course: Cour
     materialFile(material.id).then(async found => {
       if (!active) return;
       if (!found) { setError('This syllabus file isn’t saved in this browser. Sync again or upload it.'); return; }
-      url = URL.createObjectURL(found);
+      const safe = await safeBlob(found);
+      if (!active) return;
+      url = URL.createObjectURL(safe.blob);
       let text: string | undefined;
-      if (isDocx(found)) {
-        try { text = docxToText(new Uint8Array(await found.arrayBuffer())); } catch (err) { text = err instanceof Error ? err.message : 'This Word file couldn’t be read.'; }
+      if (!safe.pdf && isDocx(found)) {
+        try { text = docxToText(safe.bytes); } catch (err) { text = err instanceof Error ? err.message : 'This Word file couldn’t be read.'; }
       }
-      if (active) setFile({ file: found, url, text });
+      setFile({ file: found, url, pdf: safe.pdf, text });
     }).catch(() => { if (active) setError('Couldn’t open the saved syllabus.'); });
     return () => { active = false; if (url) URL.revokeObjectURL(url); };
   }, [material?.id, revision]);
@@ -70,11 +80,11 @@ export function SyllabusViewer({ course, data, setData, notify }: { course: Cour
     {file && <>
       <p className="muted">{file.file.name} · {(file.file.size / 1024).toFixed(0)} KB</p>
       <div className="inline">
-        <a className="secondary-button" href={file.url} target="_blank" rel="noopener noreferrer"><ExternalLink size={15} />Open in new tab</a>
+        {file.pdf && <a className="secondary-button" href={file.url} target="_blank" rel="noopener noreferrer"><ExternalLink size={15} />Open in new tab</a>}
         <a className="secondary-button" href={file.url} download={file.file.name}><Download size={15} />Download</a>
         <button type="button" className="icon-button" aria-label="Remove syllabus file" onClick={() => void remove()}><Trash2 size={15} /></button>
       </div>
-      {isPdf(file.file) && <iframe className="syllabus-frame" title={`${course.code} syllabus preview`} src={file.url} />}
+      {file.pdf && <iframe className="syllabus-frame" title={`${course.code} syllabus preview`} src={file.url} />}
       {file.text !== undefined && <pre className="syllabus-text" aria-label="Syllabus text">{file.text.slice(0, 60000)}</pre>}
     </>}
     {error && <p role="alert" className="error">{error}</p>}
