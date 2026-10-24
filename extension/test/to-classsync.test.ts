@@ -129,3 +129,13 @@ test('points-based gradebooks turn category max points into weights', async () =
   assert.equal(mapped.byGradeObject.get('9'), 'Homework');
   assert.equal(mapCategories([]), null);
 });
+
+test('text syllabi and the search report pass the app schema', () => {
+  const withText = structuredClone(raw) as any;
+  withText.courses[0].syllabus = { title: 'Syllabus', fileName: 'syllabus.txt', mimeType: 'text/plain', base64: btoa('Exams 60%') };
+  withText.courses[1].syllabusSearch = { checked: 12, chosen: null, candidates: [{ title: 'Course Outline', where: 'Start Here', kind: 'pdf', score: 4 }] };
+  const { payload } = toImportPayload(withText);
+  const parsed = importPayloadSchema.parse(payload);
+  assert.equal(parsed.syllabi[0].mimeType, 'text/plain');
+  assert.deepEqual(parsed.syllabusSearch, [{ courseId: 'd2l-202', checked: 12, chosen: null, candidates: [{ title: 'Course Outline', where: 'Start Here', kind: 'pdf', score: 4 }] }]);
+});

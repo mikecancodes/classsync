@@ -12,12 +12,22 @@ export const syllabusFileSchema = z.object({
   courseId: z.string().min(1).max(100),
   title: z.string().min(1).max(200),
   fileName: z.string().min(1).max(200),
-  mimeType: z.enum(['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']),
+  // text/plain: a D2L Content page or the Course Overview, converted to text by the extension
+  mimeType: z.enum(['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain']),
   base64: z.string().min(1).max(12_000_000),
 });
 export type SyllabusFile = z.infer<typeof syllabusFileSchema>;
 
-export const importPayloadSchema = z.object({ version: z.literal(1), source: z.literal('d2l'), data: stateSchema, syllabi: z.array(syllabusFileSchema).max(50).default([]) });
+// What the extension checked while looking for each class's syllabus (shown when none is found)
+export const syllabusSearchSchema = z.object({
+  courseId: z.string().min(1).max(100),
+  checked: z.number().int().min(0).max(100000),
+  chosen: z.string().max(200).nullable(),
+  candidates: z.array(z.object({ title: z.string().max(200), where: z.string().max(300), kind: z.string().max(20), score: z.number() })).max(8),
+});
+export type SyllabusSearch = z.infer<typeof syllabusSearchSchema>;
+
+export const importPayloadSchema = z.object({ version: z.literal(1), source: z.literal('d2l'), data: stateSchema, syllabi: z.array(syllabusFileSchema).max(50).default([]), syllabusSearch: z.array(syllabusSearchSchema).max(50).default([]) });
 
 // A course still has the single default bucket an earlier import created, so D2L's weights
 // can replace it; categories the student set up themselves are never overwritten

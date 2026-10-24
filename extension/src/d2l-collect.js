@@ -65,8 +65,9 @@ export async function collectD2L(origin) {
     ]);
   }
 
-  const SYLLABUS_TYPES = { pdf: 'application/pdf', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' };
+  const SYLLABUS_TYPES = { pdf: 'application/pdf', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', text: 'text/plain' };
   const MAX_SYLLABUS_BYTES = 8 * 1024 * 1024;
+  const MIN_SYLLABUS_TEXT = 300;
 
   function toBase64(buffer) {
     const bytes = new Uint8Array(buffer);
@@ -74,23 +75,92 @@ export async function collectD2L(origin) {
     for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
     return btoa(binary);
   }
+  const textToBase64 = text => toBase64(new TextEncoder().encode(text));
 
-  // The course's syllabus file (PDF or Word) from Content, if one is titled "syllabus"
-  async function findSyllabus(le, ou, toc) {
-    const extensionOf = topic => (String(topic.Url ?? '').split('?')[0].match(/\.(pdf|docx)$/i)?.[1] ?? '').toLowerCase();
-    const candidates = topicsOf(toc?.Modules)
-      .filter(t => t.TopicId != null && extensionOf(t) && [t.Title, ...t.moduleTitles].some(title => /syllabus/i.test(title ?? '')))
-      .sort((a, b) => Number(/syllabus/i.test(b.Title ?? '')) - Number(/syllabus/i.test(a.Title ?? '')) || (extensionOf(a) === 'pdf' ? -1 : 1));
-    for (const topic of candidates.slice(0, 3)) {
-      const res = await fetch(`${origin}/d2l/api/le/${le}/${ou}/content/topics/${topic.TopicId}/file`, { credentials: 'include' });
-      if (!res.ok) continue;
-      const buffer = await res.arrayBuffer();
-      if (!buffer.byteLength || buffer.byteLength > MAX_SYLLABUS_BYTES) continue;
-      const ext = extensionOf(topic);
-      const fileName = decodeURIComponent(String(topic.Url).split('?')[0].split('/').pop() || `syllabus.${ext}`).slice(0, 200);
-      return { topicId: topic.TopicId, title: String(topic.Title || 'Syllabus').slice(0, 200), fileName, mimeType: SYLLABUS_TYPES[ext], base64: toBase64(buffer) };
+  // D2L Content pages and the Course Overview are HTML; keep line structure, drop markup
+  function htmlToText(html) {
+    return String(html)
+      .replace(/<(script|style|noscript)[\s\S]*?<\/\1>/gi, ' ')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/(p|div|li|tr|h[1-6]|table|ul|ol|section|article)>/gi, '\n')
+      .replace(/<(td|th)[^>]*>/gi, ' ')
+      .replace(/<[^>]+>/g, '')
+      .replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&amp;/g, '&')
+      .replace(/[ \t]+/g, ' ').replace(/ *\n[ \n]*/g, '\n').trim();
+  }
+
+  const fileNameOf = url => { try { return decodeURIComponent(String(url ?? '').split('?')[0].split('/').pop() ?? ''); } catch { return ''; } };
+  const kindOf = url => {
+    const ext = (fileNameOf(url).match(/\.([a-z0-9]+)$/i)?.[1] ?? '').toLowerCase();
+    return ext === 'pdf' ? 'pdf' : ext === 'docx' ? 'docx' : ['html', 'htm'].includes(ext) ? 'html' : ext === 'txt' ? 'txt' : null;
+  };
+
+  // Higher is more likely to be the syllabus; 0 means not a candidate
+  function scoreTopic(topic) {
+    const title = topic.Title ?? '', file = fileNameOf(topic.Url), modules = topic.moduleTitles.join(' / ');
+    let score = 0;
+    if (/syllab/i.test(title)) score += 10;
+    if (/syllab/i.test(file)) score += 9;
+    if (/syllab/i.test(modules)) score += 6;
+    if (/course (outline|information|info|overview|guide|policies)|getting started|start here|welcome/i.test(title)) score += 4;
+    else if (/course (outline|information|info|overview|guide)|getting started|start here/i.test(modules)) score += 2;
+    if (/schedule|calendar|course plan|due dates/i.test(title + ' ' + file)) score += 3;
+    if (score && /quiz|exam key|answer|solution|lecture|slides|chapter|worksheet|rubric/i.test(title)) score -= 4;
+    return score;
+  }
+
+  // Looks for the syllabus everywhere a student can reach: Content files and pages (scored by
+  // title, file name and folder), the Course Overview attachment, and the Overview text.
+  // Returns the best readable match plus a short report of what was checked.
+  async function findSyllabus(le, ou, toc, overview) {
+    const topics = topicsOf(toc?.Modules).filter(t => t.TopicId != null);
+    const candidates = topics
+      .map(t => ({ topic: t, kind: kindOf(t.Url), score: scoreTopic(t) }))
+      .filter(c => c.kind && c.score > 0)
+      .map(c => ({ ...c, score: c.score + (c.kind === 'pdf' ? 1 : c.kind === 'docx' ? 0.5 : 0) }));
+    if (overview?.HasAttachment) candidates.push({ overviewAttachment: true, kind: null, score: 8, title: 'Course Overview attachment' });
+    const overviewText = htmlToText(overview?.Description?.Html || overview?.Description?.Text || '');
+    if (overviewText.length >= MIN_SYLLABUS_TEXT && /syllab|grading|grade breakdown|office hours|exam|course schedule/i.test(overviewText)) {
+      candidates.push({ overviewText, kind: 'html', score: /syllab/i.test(overviewText) ? 7 : 5, title: 'Course Overview' });
     }
-    return null;
+    candidates.sort((a, b) => b.score - a.score);
+    const report = {
+      checked: topics.length + (overview ? 1 : 0),
+      candidates: candidates.slice(0, 8).map(c => ({ title: String(c.topic?.Title ?? c.title).slice(0, 120), where: c.topic ? (c.topic.moduleTitles.filter(Boolean).join(' / ') || 'Content') : 'Course Overview', kind: c.kind ?? 'file', score: c.score })),
+      chosen: null,
+    };
+
+    for (const candidate of candidates.slice(0, 4)) {
+      try {
+        if (candidate.overviewText) {
+          report.chosen = 'Course Overview';
+          return { syllabus: { topicId: 'overview', title: 'Course Overview', fileName: 'course-overview.txt', mimeType: SYLLABUS_TYPES.text, base64: textToBase64(candidate.overviewText.slice(0, 200000)) }, report };
+        }
+        const url = candidate.overviewAttachment ? `${origin}/d2l/api/le/${le}/${ou}/overview/attachment` : `${origin}/d2l/api/le/${le}/${ou}/content/topics/${candidate.topic.TopicId}/file`;
+        const res = await fetch(url, { credentials: 'include' });
+        if (!res.ok) continue;
+        const buffer = await res.arrayBuffer();
+        if (!buffer.byteLength || buffer.byteLength > MAX_SYLLABUS_BYTES) continue;
+        const bytes = new Uint8Array(buffer.slice(0, 8));
+        const isPdf = bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46;
+        const isZip = bytes[0] === 0x50 && bytes[1] === 0x4b;
+        const disposition = res.headers.get('content-disposition') ?? '';
+        const name = (fileNameOf(candidate.topic?.Url) || disposition.match(/filename\*?=(?:UTF-8'')?"?([^";]+)/i)?.[1] || 'syllabus').slice(0, 200);
+        const title = String(candidate.topic?.Title ?? candidate.title).slice(0, 200);
+        let syllabus = null;
+        if (isPdf) syllabus = { mimeType: SYLLABUS_TYPES.pdf, base64: toBase64(buffer), fileName: /\.pdf$/i.test(name) ? name : `${name}.pdf` };
+        else if (isZip && (candidate.kind === 'docx' || /\.docx$/i.test(name))) syllabus = { mimeType: SYLLABUS_TYPES.docx, base64: toBase64(buffer), fileName: name };
+        else if (candidate.kind === 'html' || candidate.kind === 'txt' || /text\/(html|plain)/i.test(res.headers.get('content-type') ?? '')) {
+          const raw = new TextDecoder().decode(buffer);
+          const text = candidate.kind === 'txt' ? raw.trim() : htmlToText(raw);
+          if (text.length >= MIN_SYLLABUS_TEXT) syllabus = { mimeType: SYLLABUS_TYPES.text, base64: textToBase64(text.slice(0, 200000)), fileName: `${name.replace(/\.(html?|txt)$/i, '') || 'syllabus'}.txt` };
+        }
+        if (!syllabus) continue;
+        report.chosen = title;
+        return { syllabus: { topicId: candidate.topic?.TopicId ?? 'overview-attachment', title, ...syllabus }, report };
+      } catch { /* try the next candidate */ }
+    }
+    return { syllabus: null, report };
   }
 
   try {
@@ -106,20 +176,21 @@ export async function collectD2L(origin) {
     const courses = [];
     for (const enrollment of enrollments) {
       const ou = enrollment.OrgUnit.Id;
-      const [news, folders, grades, categories, toc] = await Promise.all([
+      const [news, folders, grades, categories, toc, overview] = await Promise.all([
         get(`/d2l/api/le/${le}/${ou}/news/`, { optional: true }),
         get(`/d2l/api/le/${le}/${ou}/dropbox/folders/`, { optional: true }),
         get(`/d2l/api/le/${le}/${ou}/grades/values/myGradeValues/`, { optional: true }),
         get(`/d2l/api/le/${le}/${ou}/grades/categories/`, { optional: true }),
         get(`/d2l/api/le/${le}/${ou}/content/toc`, { optional: true }),
+        get(`/d2l/api/le/${le}/${ou}/overview`, { optional: true }),
       ]);
-      const syllabus = toc ? await findSyllabus(le, ou, toc).catch(() => null) : null;
+      const { syllabus, report: syllabusSearch } = await findSyllabus(le, ou, toc, overview).catch(() => ({ syllabus: null, report: { checked: 0, candidates: [], chosen: null } }));
       // one request per assignment; four at a time stays well under D2L's rate limit
       const foldersWithSubmissions = await mapLimit(folders ?? [], 4, async folder => {
         const submissions = await get(`/d2l/api/le/${le}/${ou}/dropbox/folders/${folder.Id}/submissions/mysubmissions/`, { optional: true });
         return { ...folder, MySubmissions: submissions ?? [] };
       });
-      courses.push({ enrollment, news: news ?? [], folders: foldersWithSubmissions, grades: grades ?? [], categories: categories ?? [], syllabus });
+      courses.push({ enrollment, news: news ?? [], folders: foldersWithSubmissions, grades: grades ?? [], categories: categories ?? [], syllabus, syllabusSearch });
     }
 
     const ids = courses.map(c => c.enrollment.OrgUnit.Id).join(',');

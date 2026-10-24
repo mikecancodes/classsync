@@ -44,6 +44,9 @@ export function SyllabusViewer({ course, data, setData, notify }: { course: Cour
       let text: string | undefined;
       if (!safe.pdf && isDocx(found)) {
         try { text = docxToText(safe.bytes); } catch (err) { text = err instanceof Error ? err.message : 'This Word file couldn’t be read.'; }
+      } else if (!safe.pdf && (found.type === 'text/plain' || /\.txt$/i.test(found.name))) {
+        // A D2L page or Course Overview the extension saved as text
+        text = new TextDecoder().decode(safe.bytes);
       }
       setFile({ file: found, url, pdf: safe.pdf, text });
     }).catch(() => { if (active) setError('Couldn’t open the saved syllabus.'); });

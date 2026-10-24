@@ -44,7 +44,7 @@ export function ImportReview({ data, payload, school, onApply, onCancel }: { dat
   const [useWeights, setUseWeights] = useState<Set<string>>(new Set());
   useEffect(() => { dialog.current?.showModal(); return () => dialog.current?.close(); }, []);
   const result = useMemo(() => {
-    try { return { ok: true as const, ...mergeImport(data, payload), syllabi: importPayloadSchema.parse(payload).syllabi }; }
+    try { const parsed = importPayloadSchema.parse(payload); return { ok: true as const, ...mergeImport(data, payload), syllabi: parsed.syllabi, syllabusSearch: parsed.syllabusSearch }; }
     catch { return { ok: false as const }; }
   }, [data, payload]);
 
@@ -58,7 +58,7 @@ export function ImportReview({ data, payload, school, onApply, onCancel }: { dat
     result.syllabi.forEach((file, index) => {
       const course = merged.courses.find(c => c.id === file.courseId);
       if (!course) return;
-      scanSyllabus({ kind: file.mimeType === PDF_MIME ? 'pdf' : 'docx', base64: file.base64 }, course)
+      scanSyllabus(file.mimeType === PDF_MIME ? { kind: 'pdf', base64: file.base64 } : file.mimeType === 'text/plain' ? { kind: 'text', text: new TextDecoder().decode(base64ToBytes(file.base64)) } : { kind: 'docx', base64: file.base64 }, course)
         .then(scan => {
           if (!active) return;
           const proposals = proposeAssignments(scan.items, course, merged);
@@ -112,6 +112,13 @@ export function ImportReview({ data, payload, school, onApply, onCancel }: { dat
         <Details label="Updated assignments" items={result.summary.updatedAssignments} />
         <Details label="New announcements" items={result.summary.newAnnouncements} />
       </div>
+      {result.syllabusSearch.some(s => !s.chosen) && <div className="syllabus-review">
+        <h3>No syllabus found</h3>
+        {result.syllabusSearch.filter(s => !s.chosen).map(search => <p key={search.courseId} className="muted">
+          <strong>{result.state.courses.find(c => c.id === search.courseId)?.name ?? 'Class'}</strong>: checked {search.checked} item{search.checked === 1 ? '' : 's'} in Content and the Course Overview.
+          {search.candidates.length ? ` Closest: ${search.candidates.slice(0, 3).map(c => `“${c.title}” (${c.kind}, in ${c.where})`).join('; ')}.` : ' Nothing looked like a syllabus.'} You can upload it on the class’s Syllabus tab.
+        </p>)}
+      </div>}
       {scans.length > 0 && <div className="syllabus-review">
         <h3>From syllabi</h3>
         {scans.map(scan => <div key={scan.file.courseId}>

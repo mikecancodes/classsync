@@ -68,7 +68,7 @@ Developers can also load `extension/` directly with Load unpacked. That works wi
 | Assignment folders (dropbox) | `assignments` | Due date, instructions, points, score from feedback or gradebook, category from the gradebook |
 | Quizzes, discussions, other dated items | `assignments` | Score/points from the gradebook item with the same name; exempt items skipped |
 | Graded items with no assignment (exams, participation) | `assignments` | Added as completed with the score; text/calculated/final items skipped |
-| Syllabus file in Content (PDF/Word, ≤ 8 MB) | review dialog → `assignments` + class materials | Scanned for dates (decision 15); the student picks what to add |
+| Syllabus (searched everywhere a student can reach) | review dialog → `assignments`, weights + class materials | Content files **and** D2L pages (PDF, Word, HTML, .txt) scored by title, file name and folder ("syllabus" strongest; course outline/information/start here and schedule weaker; slides/quizzes/answer keys pushed down), the **Course Overview attachment**, and the **Course Overview text**. The best readable match wins, falling back down the list. If none is found, the review shows how many items were checked and the closest matches |
 | Announcements | `announcements` | Platform `D2L`, newest 300, hidden ones skipped |
 
 **When importing again** (`mergeImport`), D2L updates titles, due dates and descriptions. The student's completion, scores, read state, class color, instructor and grade categories are kept. Nothing is deleted. If a course's categories were renamed, a missing category is added at weight 0 so grade weights don't change. The whole import is validated before anything is applied.

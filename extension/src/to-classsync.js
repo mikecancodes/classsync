@@ -55,6 +55,7 @@ export function toImportPayload(raw) {
   const assignments = new Map();
   const announcements = [];
   const syllabi = [];
+  const syllabusSearch = [];
   const gradesByCourse = new Map();
 
   for (const [index, entry] of raw.courses.slice(0, LIMITS.courses).entries()) {
@@ -74,6 +75,7 @@ export function toImportPayload(raw) {
       syllabus: '',
     });
     if (entry.syllabus?.base64) syllabi.push({ courseId, title: entry.syllabus.title, fileName: entry.syllabus.fileName, mimeType: entry.syllabus.mimeType, base64: entry.syllabus.base64 });
+    if (entry.syllabusSearch) syllabusSearch.push({ courseId, checked: entry.syllabusSearch.checked ?? 0, chosen: entry.syllabusSearch.chosen ?? null, candidates: (entry.syllabusSearch.candidates ?? []).slice(0, 8) });
 
     const scored = entry.grades.filter(g => SCORED_GRADE_TYPES.has(Number(g.GradeObjectType)) && g.PointsDenominator > 0);
     const gradeById = new Map(scored.map(g => [String(g.GradeObjectIdentifier), g]));
@@ -211,7 +213,7 @@ export function toImportPayload(raw) {
   if (courses.length === 0) warnings.push('No active courses found in D2L.');
 
   return {
-    payload: { version: 1, source: 'd2l', data: { version: 2, courses, assignments: assignmentList, materials: [], announcements: announcementList }, syllabi },
+    payload: { version: 1, source: 'd2l', data: { version: 2, courses, assignments: assignmentList, materials: [], announcements: announcementList }, syllabi, syllabusSearch },
     warnings,
   };
 }

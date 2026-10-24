@@ -57,6 +57,7 @@ export function SyllabusWeightsPanel({ course, data, setData, notify }: { course
     if (!savedSyllabus) return;
     try {
       const file = await materialFile(savedSyllabus.id);
+      if (file && (file.type === 'text/plain' || /\.txt$/i.test(file.name))) return await scan({ kind: 'text', text: await file.text() });
       if (file) return await scanFile(file);
       if (savedSyllabus.text.trim()) return await scan({ kind: 'text', text: savedSyllabus.text });
       setError('The saved syllabus file isn’t in this browser. Upload it again or paste the grading section.');
