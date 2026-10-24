@@ -11,7 +11,7 @@ Vercel ── builds with pnpm ──▶ https://classsync-xxxx.vercel.app
    │ env vars                     ├── pages (dashboard, courses…)
    │                              └── /api/ai, /api/workspace, /api/imports/preview
    ▼                                      │
-GEMINI_API_KEY, Supabase keys             ▼
+DO model key, Supabase keys            ▼
                                    Supabase (database + logins)
 ```
 
@@ -34,7 +34,7 @@ On the free Hobby plan, private-repo deploys can be limited to commits from the 
 |---|---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://xxxx.supabase.co` | All | Public |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase publishable/anon key | All | Public; safe because of RLS |
-| `GEMINI_API_KEY` | Google AI Studio Free Tier key | Production, Preview | **Secret.** Server only. Keep billing disabled; the app pins `gemini-3.5-flash-lite` and hosted AI requires sign-in. |
+| `DIGITALOCEAN_MODEL_ACCESS_KEY` | DigitalOcean Model Access Key | Production, Preview | **Secret.** Server only. See docs/md/digitalocean-ai.md |
 | `ALLOW_LOCAL_AI` | **don't set it** | — | Local-development bypass only. The app already refuses it outside loopback; keep it out of Vercel anyway |
 
 - `NEXT_PUBLIC_*` values are baked in at **build time**. After changing one, **redeploy** for it to take effect.
@@ -68,8 +68,8 @@ Previews use the "Preview" env vars. To keep test data out of your real database
 
 ## 5. Things that change once it's hosted
 
-- **Rate limiting.** `src/lib/server.ts` counts AI requests in memory, per server instance. Vercel runs several instances, so each one has its own count. The README already flags this. Before sharing the site widely, move the counter to shared storage (e.g. a Supabase table or Redis from the Vercel Marketplace) and set a usage cap in Google AI Studio.
-- **Local models don't work hosted.** A Vercel function can't reach Ollama on your laptop. Hosted chat uses Gemini (already wired up), and a local model is only for running the app on your own machine.
+- **Rate limiting.** `src/lib/server.ts` counts AI requests in memory, per server instance. Vercel runs several instances, so each one has its own count. The README already flags this. Before sharing the site widely, move the counter to shared storage (e.g. a Supabase table or Redis from the Vercel Marketplace) and set a billing alert in DigitalOcean.
+- **Local models don't work hosted.** A Vercel function can't reach Ollama on your laptop. Hosted chat uses the DigitalOcean model (already wired up), and a local model is only for running the app on your own machine.
 - **The browser extension** (future) must list the Vercel domain in its `host_permissions` to send data to the app.
 - **Function time limits.** Vercel Functions default to a 300-second limit, which is plenty for AI calls. Stream long responses rather than waiting for the whole answer.
 
@@ -98,5 +98,5 @@ export const config: VercelConfig = {
 - [ ] Sign up → confirmation email → link opens the Vercel site, not localhost
 - [ ] **Save to cloud / Load cloud copy** works while signed in
 - [ ] AI tools work while signed in, and are refused while signed out
-- [ ] `GEMINI_API_KEY` doesn't appear in any browser code (search the page source)
-- [ ] Gemini usage cap set in Google AI Studio
+- [ ] `DIGITALOCEAN_MODEL_ACCESS_KEY` doesn't appear in any browser code (search the page source)
+- [ ] DigitalOcean billing alert set

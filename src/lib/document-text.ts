@@ -32,7 +32,7 @@ function documentXml(bytes: Uint8Array) {
 }
 
 // Plain text from a Word .docx (a zip with word/document.xml), for scanning without AI and
-// for sending to Gemini as text. Paragraphs and table cells become separate lines.
+// for sending to the AI model as text. Paragraphs and table cells become separate lines.
 export function docxToText(bytes: Uint8Array): string {
   return documentXml(bytes)
     .replace(/<w:tab\/>/g, '\t')

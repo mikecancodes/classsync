@@ -5,7 +5,8 @@ import { findSyllabusDates } from '../src/lib/syllabus-rules';
 import { addProposals, proposeAssignments } from '../src/lib/syllabus-items';
 import { docxToText, base64ToBytes } from '../src/lib/document-text';
 import { parseSyllabusItems, syllabusRequestSchema } from '../src/lib/syllabus';
-import { syllabusInstructions } from '../src/lib/gemini';
+import { parseJsonReply, syllabusInstructions } from '../src/lib/ai';
+import { pdfToText } from '../src/lib/pdf-text';
 import { emptyWorkspace } from '../src/lib/workspace';
 import { AcademicState, stateSchema } from '../src/lib/model';
 
@@ -100,4 +101,36 @@ test('syllabus requests need exactly one of a PDF or text', () => {
   assert.ok(!syllabusRequestSchema.safeParse({ ...base, text: 'x', file: { mimeType: 'application/pdf', data: 'JVBERi0=' } }).success);
   assert.ok(!syllabusRequestSchema.safeParse({ ...base, file: { mimeType: 'image/png', data: 'x' } }).success);
   assert.match(syllabusInstructions(base.course, base.today), /untrusted/i);
+});
+
+test('model replies wrapped in prose or code fences still parse', () => {
+  assert.deepEqual(parseJsonReply('{"items":[]}'), { items: [] });
+  assert.deepEqual(parseJsonReply('Here you go:\n```json\n{"items":[{"title":"Exam","date":"2026-11-03","type":"exam"}]}\n```'), { items: [{ title: 'Exam', date: '2026-11-03', type: 'exam' }] });
+  assert.equal(parseJsonReply('no json here'), null);
+});
+
+// A minimal one-page PDF with two lines of text, built by hand
+function tinyPdf(lines: string[]) {
+  const stream = `BT /F1 12 Tf 72 720 Td ${lines.map((l, i) => `${i ? '0 -16 Td ' : ''}(${l}) Tj`).join(' ')} ET`;
+  const objects = [
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>',
+    `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`,
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+  ];
+  let pdf = '%PDF-1.4\n';
+  const offsets: number[] = [];
+  objects.forEach((body, i) => { offsets.push(pdf.length); pdf += `${i + 1} 0 obj\n${body}\nendobj\n`; });
+  const xref = pdf.length;
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n${offsets.map(o => `${String(o).padStart(10, '0')} 00000 n \n`).join('')}trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
+  return new TextEncoder().encode(pdf);
+}
+
+test('PDF syllabi are converted to text on the server, line by line', async () => {
+  const text = await pdfToText(tinyPdf(['Quiz 2 - Nov 6', 'Final Exam: Dec 9']));
+  assert.match(text, /Quiz 2 - Nov 6\s*\n\s*Final Exam: Dec 9/);
+  assert.deepEqual(findSyllabusDates(text, '2026-10-24').map(i => i.date), ['2026-11-06', '2026-12-09']);
+  await assert.rejects(pdfToText(new TextEncoder().encode('not a pdf')), /couldn’t be read/);
+  await assert.rejects(pdfToText(tinyPdf(['Quiz 2 - Nov 6']), 0), /took too long/, 'overall time limit');
 });

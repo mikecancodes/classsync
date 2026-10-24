@@ -4,7 +4,7 @@ import { PDF_MIME, parseSyllabusItems, type SyllabusItem } from './syllabus';
 import { findSyllabusDates } from './syllabus-rules';
 import { base64ToBytes, docxToText } from './document-text';
 
-// Scans a syllabus in the browser: Gemini when it's configured and allowed, otherwise the
+// Scans a syllabus in the browser: the AI model when it's configured and allowed, otherwise the
 // rule-based date finder (which needs text, so PDFs require AI).
 
 export type ScanSource = { kind: 'pdf'; base64: string } | { kind: 'docx'; base64: string } | { kind: 'text'; text: string };

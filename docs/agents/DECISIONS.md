@@ -4,14 +4,14 @@ Decided by the team on 2026-10-24 after reviewing every spec document for confli
 
 ## Context
 
-ClassSync is being built for an **MLH hackathon**. Several choices follow from that: AI runs on **Google Gemini because MLH gives participants free Gemini credits**; hosting and the database use free tiers (Vercel Hobby, Supabase Free), so the project costs nothing to run during the competition. Claim MLH perks (Gemini credits, a free .tech domain) through MyMLH / the MLH Software Lab.
+ClassSync is being built for an **MLH hackathon**. Several choices follow from that: AI first ran on Google Gemini for MLH's free credits and **now runs on DigitalOcean serverless inference with an open-weight model** (decision 3). Originally: Gemini because MLH gives participants free Gemini credits**; hosting and the database use free tiers (Vercel Hobby, Supabase Free), so the project costs nothing to run during the competition. Claim MLH perks (Gemini credits, a free .tech domain) through MyMLH / the MLH Software Lab.
 
 | # | Topic | Decision | Status |
 |---|---|---|---|
 | 1 | Where data lives | **Hybrid with optional login:** browser workspace is the working copy; auto-saves to Supabase when signed in | Login exists (optional); auto-save not implemented (cloud save is still manual) |
 | 2 | Getting D2L data into the app | **Extension → open ClassSync tab → review screen → merge** | Implemented (`/connect`, bridge content script, `src/lib/d2l-import.ts`, `ImportReview`) |
-| 3 | AI provider | **Google Gemini**, chosen for the free MLH hackathon credits, behind `/api/ai` | Implemented (needs `GEMINI_API_KEY`; not yet tested with a live key) |
-| 4 | Chatbot design | **Tool calling**, tools run in the browser against the workspace. AI on by default when configured and signed in; friendly tone, no emoji; no streaming | Implemented (`/api/ai/chat`, `src/lib/chat-tools.ts`); now handles general study/ClassSync questions and broad course context. Production still needs `GEMINI_API_KEY` and user sign-in. |
+| 3 | AI provider | **DigitalOcean serverless inference, open-weight `glm-5.3-flash`** (OpenAI-compatible, tool calling). Replaced Google Gemini on 2026-10-24 | Implemented (needs `DIGITALOCEAN_MODEL_ACCESS_KEY` in Vercel; see docs/md/digitalocean-ai.md) |
+| 4 | Chatbot design | **Tool calling**, tools run in the browser against the workspace. AI on by default when configured and signed in; friendly tone, no emoji; no streaming | Implemented (`/api/ai/chat`, `src/lib/chat-tools.ts`); now handles general study/ClassSync questions and broad course context. Production still needs `DIGITALOCEAN_MODEL_ACCESS_KEY` and user sign-in. |
 | 5 | UI components | **shadcn/ui** on top of the existing Tailwind tokens | Not implemented (styled native controls today) |
 | 6 | Assignments without points | **`points` becomes optional**; grade math skips items without points | Not implemented (extension uses a placeholder of 100 for now) |
 | 7 | Due times | **Optional `dueTime`** next to the existing date-only `due` | Not implemented |
@@ -22,7 +22,7 @@ ClassSync is being built for an **MLH hackathon**. Several choices follow from t
 | 12 | Sample data | **No seeded data in the app.** Users start with an empty workspace and add or import their own; fake records live only in `tests/` fixtures | Implemented |
 | 13 | Deployment | **Deploy to Vercel Production after every change** and confirm it reaches `Ready` (see AGENTS.md). Currently deployed via Vercel Drop, not Git-connected, so a push does not deploy | In effect |
 | 14 | Getting the extension | **Download from the site** (`/classsync-extension.zip`) with a guided 3-step **Connect your school** page; no Chrome Web Store. School picker = searchable list (UNG first, `https://ung.view.usg.edu`) + paste any D2L link | Implemented |
-| 15 | Syllabus dates and grades | Syllabi (found in D2L Content during Sync, or uploaded/pasted on a class's Syllabus tab) are scanned by **Gemini, with a rule-based fallback**; found dates become **assignments after review**. D2L **grade categories/weights, quiz and discussion scores, and graded items without an assignment** are imported | Implemented (final grade not stored yet: needs a model field) |
+| 15 | Syllabus dates and grades | Syllabi (found in D2L Content during Sync, or uploaded/pasted on a class's Syllabus tab) are scanned by **the AI model, with a rule-based fallback**; found dates become **assignments after review**. D2L **grade categories/weights, quiz and discussion scores, and graded items without an assignment** are imported | Implemented (final grade not stored yet: needs a model field) |
 | 16 | Grades page | `/grades` overview card per class → `/grades/<class>` calculator with D2L assignments and weights already filled in; edits save directly, what-if mode never saves; replaces the old single-page calculator | Implemented |
 
 ## 1. Hybrid storage
@@ -47,17 +47,18 @@ D2L tab ── extension reads D2L ──▶ ClassSync tab (content script / ext
 - The review step is required: imports never apply silently.
 - `/api/imports/preview` stays as a server-side validator. Being signed in is optional for importing.
 
-## 3. Gemini
+## 3. AI provider: DigitalOcean (replaced Gemini)
 
-- Swap the provider inside `/api/ai` only. Browser code never sees a key. Use `GEMINI_API_KEY` server-side and keep the Google project on its Free Tier with billing disabled. The app pins `gemini-3.5-flash-lite` so quota exhaustion cannot move requests to a paid model.
-- **Why Gemini:** we're in an MLH hackathon and MLH gives participants free Gemini credits (about $10/month plus a student plan, per MLH's partner page). Claim them through MyMLH / MLH Software Lab.
-- Keep the Google project on Free Tier and do not enable billing; when free quota is exhausted, requests should stop rather than incur charges.
-- Keep the existing guarantees: authentication for hosted AI use, rate limit, input limits, untrusted-content instructions, honest error labels.
+- **Now:** DigitalOcean serverless inference (`https://inference.do-ai.run/v1`, OpenAI-compatible) with the open-weight model **`glm-5.3-flash`**, chosen because DO lists tool calling and structured outputs for it. Llama models on DO don't list tool calling, which the chat needs.
+- Server-only `DIGITALOCEAN_MODEL_ACCESS_KEY`; optional `DIGITALOCEAN_MODEL` / `AI_BASE_URL`. Code in `src/lib/ai.ts`. Setup and verification for whoever configures Vercel: [docs/md/digitalocean-ai.md](../md/digitalocean-ai.md).
+- The model reads text only, so PDFs are converted to text on the server (`src/lib/pdf-text.ts`) before syllabus scanning.
+- Keep the existing guarantees: authentication for hosted AI use, rate limits, input limits, untrusted-content instructions, honest error labels. DO bills per token; set a billing alert.
+- **History:** Gemini (Google AI Studio, MLH free credits, `gemini-3.5-flash-lite`) was used until 2026-10-24.
 
 ## 4. Tool-calling chatbot
 
 - The model gets a short list of tools (see `docs/d2l-sync/chatbot-tools.md`, adapted to the workspace): due items in a date range, overdue items, items by course, announcements, grades, and text search over notes and announcements.
-- The loop: the browser sends a question to `/api/ai` → Gemini replies with a tool call → `/api/ai` returns it to the browser → the browser runs it against the local workspace → the browser sends the rows back → repeat until a text answer arrives. Personal coursework questions must use the workspace tools; general study and ClassSync usage questions can be answered from the model's knowledge, clearly separated from personal facts.
+- The loop: the browser sends OpenAI-style messages to `/api/ai/chat` → the model replies with a tool call → `/api/ai` returns it to the browser → the browser runs it against the local workspace → the browser sends the rows back → repeat until a text answer arrives. Personal coursework questions must use the workspace tools; general study and ClassSync usage questions can be answered from the model's knowledge, clearly separated from personal facts.
 - Tools are the **same pure functions** the rule-based assistant uses (`src/lib/academic-assistant.ts`), so both modes give consistent answers.
 - Tools are read-only. AI output never changes the workspace.
 - This replaces sending the whole workspace (and its 40,000-character limit).
@@ -113,7 +114,7 @@ Workspace v3 adds cached school-calendar events only. Optional points, dueTime a
 ## 15. Syllabus dates and grades
 
 - **Syllabus sources:** during Sync the extension downloads the first PDF/Word file in Content whose title or module mentions "syllabus" (≤ 8 MB). On any class's Syllabus tab, students can also scan an uploaded PDF/Word file or the pasted syllabus text.
-- **Scanning:** `/api/ai/syllabus` sends PDFs to Gemini as a file and Word/text as text, with structured JSON output (`src/lib/syllabus.ts`), using the same free-tier model as chat. Without AI (no key or not signed in), `src/lib/syllabus-rules.ts` finds lines pairing a date with a deliverable word. PDFs then need AI or pasted text.
+- **Scanning:** `/api/ai/syllabus` converts PDFs to text on the server, then asks the model for structured JSON (`src/lib/syllabus.ts`), using the same model as chat. Without AI (no key or not signed in), `src/lib/syllabus-rules.ts` finds lines pairing a date with a deliverable word. PDFs then need AI or pasted text.
 - **Review:** results appear with checkboxes in the import review (or on the Syllabus tab). Items matching an existing assignment (same class, within 2 days, mostly the same words) start unchecked. Added items use a matching grade category or a weight-0 "From syllabus" category, with points from the syllabus or the 100 placeholder (decision 6). The D2L syllabus file is also saved to the class's materials (this browser).
 - **Grades:** grade categories become ClassSync categories with D2L's weights (points gradebooks use each category's share of max points), replacing only the untouched default bucket. Quiz/discussion scores match gradebook items by name. Graded items with no assignment are added as completed. Text, calculated and final-grade items are skipped. Until the student enters a score, D2L's points and category stay current on later syncs.
 - **Not yet:** D2L's released final grade has no field in the workspace model.
@@ -126,6 +127,6 @@ Workspace v3 adds cached school-calendar events only. Optional points, dueTime a
 - Replaces the previous single calculator in `panels.tsx`. Its syllabus weight extraction moved into the new page, keeping still-used categories at 0% so nothing breaks.
 
 
-## 17. Optional DigitalOcean chat provider
+## 17. DigitalOcean chat provider (merged into decision 3)
 
-The user requested DigitalOcean Serverless Inference for the global chatbot. Select it explicitly with `AI_CHAT_PROVIDER=digitalocean`, an inference-scoped `DIGITALOCEAN_MODEL_ACCESS_KEY`, and `DIGITALOCEAN_MODEL`. Preserve hosted authentication, input/rate limits, and read-only browser tools. Use promotional credits without auto-reload; do not claim DigitalOcean is an unlimited free tier. Study/PDF syllabus generation stays on Gemini. Live activation requires a usable DigitalOcean key and an end-to-end signed-in test.
+Ethan added DigitalOcean as an optional chat provider (`AI_CHAT_PROVIDER=digitalocean`, Gemini kept for study tools and PDFs) at the same time the user decided to **replace Gemini entirely**. The two were merged: DigitalOcean is the only provider (`src/lib/ai.ts`), `AI_CHAT_PROVIDER` is gone, and Ethan's variable name `DIGITALOCEAN_MODEL` is kept (now optional, default `glm-5.3-flash`). His safeguards carry over: unknown tools and malformed arguments are rejected, truncated answers fail, provider responses are schema-checked and never logged, and errors never fall back to another paid provider. His cost rules stand: promotional credits only, auto-reload off, a key spend limit, and never claim it's a free tier. Live activation still needs a key in Vercel and a signed-in end-to-end test ([digitalocean-ai.md](../md/digitalocean-ai.md)).
