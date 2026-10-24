@@ -90,7 +90,7 @@ This is a high-priority target feature, distinct from the existing assistant pag
 - On mobile, show the floating purple **Ask ClassSync AI** launcher and an appropriately sized drawer; do not obscure navigation or make the input inaccessible. Manage focus on open/close and support keyboard use.
 - Read current shared course and assignment state, including changes made after the panel opened.
 - Without a real API, answer deadline/course questions from local data and label the mode **Local assistant / rule-based**. Unsupported questions should explain the limitation, not invent facts.
-- With an API, call the authenticated server endpoint; never put provider credentials in browser code. The decided design is Gemini with browser-run tool calling (decisions 3–4 in DECISIONS.md).
+- With an API, call the authenticated server endpoint; never put provider credentials in browser code. The design is the DigitalOcean model with browser-run tool calling (decisions 3–4 in DECISIONS.md).
 
 Required example questions:
 

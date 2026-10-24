@@ -1,8 +1,5 @@
 allowBuilds:
   esbuild: true
-  # Optional postinstall scripts that ClassSync doesn't need
-  '@google/genai': false
-  protobufjs: false
 nodeLinker: hoisted
 enableGlobalVirtualStore: false
 storeDir: .pnpm-store

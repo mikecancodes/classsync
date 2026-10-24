@@ -18,7 +18,7 @@ Updated after the branding/dashboard/chatbot refresh. “Existing” means sourc
 | Dashboard | Top tabs, logo top left, center announcement feed with class/priority/status/sort filters, left Sync / To-do section, Sync classes | Broader search and filters |
 | Brand | Brain logo and “All your classes. One place.” tagline | Preserve branding |
 | Assignments | CRUD, completion, search, status/course filters, due-date sorting | Platform, priority, duration, due/platform/priority filters |
-| AI | Workspace-aware Gemini tool chat for personal coursework plus general study and ClassSync usage guidance; broad course context and note search; rule-based local fallback | Production needs `GEMINI_API_KEY` and user sign-in; live Gemini flow still needs testing with an owner-provided key; shared rate limiter before public launch |
+| AI | Workspace-aware tool-calling chat (DigitalOcean `glm-5.3-flash`) for personal coursework plus general study and ClassSync usage guidance; broad course context and note search; rule-based local fallback | Production needs `DIGITALOCEAN_MODEL_ACCESS_KEY` and user sign-in; live DigitalOcean flow still needs testing with an owner-provided key; shared rate limiter before public launch |
 | Tasks | No separate task entity/page | Persistent To-Do List and completion progress |
 | Notes | Global Notes / Material tab with course selector and existing create/edit/delete | Keyword search |
 | Planner | Generic local catch-up checklist | Deterministic daily Plan My Week using deadline, priority, duration, workload |
@@ -107,6 +107,6 @@ Apply the relevant checks to the feature being delivered. This is a target check
 Keep commits scoped and exclude `.env.local`, dependencies, build output, and private student fixtures. Respect the user's requested repository visibility and push scope. When pushing is requested, verify the target remote and confirm the pushed commit exists remotely before reporting success. Do not change visibility or claim a push succeeded based only on a local commit.
 
 
-### DigitalOcean chat provider
+### DigitalOcean AI provider
 
-`AI_CHAT_PROVIDER=digitalocean` uses a server-only inference model access key and explicit model ID, while retaining Supabase authentication and browser-run read-only workspace tools. `tests/digitalocean.test.ts` covers call/result IDs, reasoning exclusion, unknown tool rejection, missing keys, and quota failures without fallback. Live activation still requires a funded promotional-credit account, a scoped key, and a signed-in end-to-end test. Study tools and PDF syllabus scans remain on Gemini.
+All AI (chat, study tools, syllabus scans) uses DigitalOcean serverless inference through `src/lib/ai.ts` with a server-only `DIGITALOCEAN_MODEL_ACCESS_KEY` and optional `DIGITALOCEAN_MODEL` (default `glm-5.3-flash`). `tests/digitalocean.test.ts` covers the endpoint, auth header, model selection, tool round trips, unknown-tool rejection, quota failures without fallback and JSON syllabus extraction. Live activation still requires a promotional-credit account, a scoped key and a signed-in end-to-end test (see docs/md/digitalocean-ai.md).

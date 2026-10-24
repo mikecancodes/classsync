@@ -1,6 +1,6 @@
 # ClassSync
 
-A responsive academic hub built with Next.js App Router, TypeScript, Tailwind CSS, Supabase, and a server-only Google Gemini integration. Start in local demo mode without any credentials.
+A responsive academic hub built with Next.js App Router, TypeScript, Tailwind CSS, Supabase, and server-only AI on DigitalOcean serverless inference (open-weight `glm-5.3-flash`). Start in local demo mode without any credentials.
 
 ## Agent development guides
 
@@ -44,19 +44,19 @@ The first visit generates realistic sample coursework with deadlines relative to
 
 **Sync classes** reveals the left-side To-do list with current incomplete coursework, a class filter, and completion controls. Actual class sync is not implemented. Existing data stays in the shared workspace. Due Soon means incomplete work due today through seven local calendar days ahead, inclusive.
 
-The global chatbot answers questions about today, tomorrow, the next seven days, overdue work, and courses using current workspace data. With Gemini configured and a signed-in account, it switches to AI chat that looks up assignments, announcements, grades, and notes through read-only tools; otherwise it answers locally with rules. Schedule suggestions are deadline order only; capacity-aware Plan My Week remains future work.
+The global chatbot answers questions about today, tomorrow, the next seven days, overdue work, and courses using current workspace data. With the AI service configured and a signed-in account, it switches to AI chat that looks up assignments, announcements, grades, and notes through read-only tools; otherwise it answers locally with rules. Schedule suggestions are deadline order only; capacity-aware Plan My Week remains future work.
 
-Without a Gemini key, study tools return labeled excerpts, practice prompts, keyword matches, and a catch-up checklist. They are **not AI-generated answers**. The demo evaluator does not invent a score. Study assistant text uploads support `.txt`, `.md`, and `.csv` up to 150 KB and 40,000 characters; paste extracted text for PDFs/Word. Raw files are not retained. Material text is stored with the workspace. Rubrics are limited to 20,000 characters.
+Without the AI key, study tools return labeled excerpts, practice prompts, keyword matches, and a catch-up checklist. They are **not AI-generated answers**. The demo evaluator does not invent a score. Study assistant text uploads support `.txt`, `.md`, and `.csv` up to 150 KB and 40,000 characters; paste extracted text for PDFs/Word. Raw files are not retained. Material text is stored with the workspace. Rubrics are limited to 20,000 characters.
 
 ## Connect your school (D2L)
 
-Students open **Sync classes → Connect your school** (`/connect`): download the ClassSync extension, load it in Chrome/Edge/Brave, pick their school (University of North Georgia is listed; any other school pastes a D2L link), and sign in to D2L as usual. Their classes, assignments, announcements, grades (with D2L's category weights) and dates found in each class syllabus appear in a review dialog and are merged only after they approve. Any class's Syllabus tab can also scan an uploaded or pasted syllabus for due dates (Gemini when configured, otherwise a basic date finder). Later syncs add only what changed and keep local completion, scores and read state. The extension zip is built by `scripts/pack-extension.mjs` during `pnpm dev`/`pnpm build`; CI and Vercel builds point it at the live site, https://classsync-two.vercel.app (override with `CLASSSYNC_SITE_URL`). Details: [docs/d2l-sync/extension.md](docs/d2l-sync/extension.md).
+Students open **Sync classes → Connect your school** (`/connect`): download the ClassSync extension, load it in Chrome/Edge/Brave, pick their school (University of North Georgia is listed; any other school pastes a D2L link), and sign in to D2L as usual. Their classes, assignments, announcements, grades (with D2L's category weights) and dates found in each class syllabus appear in a review dialog and are merged only after they approve. Any class's Syllabus tab can also scan an uploaded or pasted syllabus for due dates (the AI model when configured, otherwise a basic date finder). Later syncs add only what changed and keep local completion, scores and read state. The extension zip is built by `scripts/pack-extension.mjs` during `pnpm dev`/`pnpm build`; CI and Vercel builds point it at the live site, https://classsync-two.vercel.app (override with `CLASSSYNC_SITE_URL`). Details: [docs/d2l-sync/extension.md](docs/d2l-sync/extension.md).
 
-## Configure Gemini
+## Configure AI (DigitalOcean)
 
-ClassSync uses Google Gemini because MLH provides free credits to hackathon participants. Create a Free Tier key in Google AI Studio, copy `.env.example` to `.env.local`, set `GEMINI_API_KEY`, and restart the server. The app pins `gemini-3.5-flash-lite`, which Google lists with free-tier token pricing. Keep billing disabled on the Google Cloud project; requests stop at the free quota instead of switching to paid usage.
+ClassSync's AI runs on DigitalOcean serverless inference with the open-weight model `glm-5.3-flash` (tool calling + structured output). Create a Model Access Key in DigitalOcean, copy `.env.example` to `.env.local`, set `DIGITALOCEAN_MODEL_ACCESS_KEY`, and restart the server. `DIGITALOCEAN_MODEL` (default `glm-5.3-flash`) and `AI_BASE_URL` are optional overrides. DigitalOcean inference is usage-based, not an unlimited free tier: use promotional credits, leave auto-reload off, and set a spend limit on the key. Provider errors never fall back to another paid provider; students can choose local answers. Full setup and verification: [docs/md/digitalocean-ai.md](docs/md/digitalocean-ai.md).
 
-**Chat** (`POST /api/ai/chat`) uses tool calling. Gemini asks for specific data, the browser runs the lookup (`src/lib/chat-tools.ts`) against the local workspace, and only those rows are sent back. Tools are read-only. The server is stateless, allows at most five lookups per question, and counts every round trip toward a limit of 120 per user per hour. **Study tools** (`POST /api/ai`) send the material you choose when you press a generation button. The key is never imported by client code. `GET /api/ai` exposes only configuration availability. AI output is advisory and all evaluator scores are estimates.
+**Chat** (`POST /api/ai/chat`) uses tool calling: the model asks for specific data, the browser runs the lookup (`src/lib/chat-tools.ts`) against the local workspace, and only those rows are sent back as `tool` messages. Tools are read-only. The server is stateless, allows at most five lookups per question, and counts every round trip toward a limit of 120 per user per hour. **Study tools** (`POST /api/ai`) send the material you choose. **Syllabus scanning** (`POST /api/ai/syllabus`) converts PDFs to text on the server first. The key is never imported by client code. `GET /api/ai` exposes only configuration availability. AI output is advisory and all evaluator scores are estimates.
 
 Authenticated Supabase users can call paid AI. For local development without Supabase, set `ALLOW_LOCAL_AI=true`; this bypass only works in development on a loopback hostname. Production always requires an authenticated account. Per-process limits allow 20 study-tool requests and 120 chat round trips per user per hour. **Before a public multi-instance deployment, replace this with a shared rate limiter and configure provider budgets.** The local bypass is for a trusted local machine, not a public proxy.
 
@@ -109,22 +109,15 @@ tests/feed.test.ts            Combined announcement filters and sorting
 
 ## MVP boundaries
 
-The app starts with an empty workspace; no sample data is seeded. Course creation, advanced calendar events, PDF/DOCX extraction, streaming AI output, production-wide quotas, conflict resolution, and Canvas import are future work. Supabase and live Gemini require your credentials and have not been exercised against an account by default. No secrets belong in Git; `.env*` is ignored except `.env.example`.
+The app starts with an empty workspace; no sample data is seeded. Course creation, advanced calendar events, PDF/DOCX extraction, streaming AI output, production-wide quotas, conflict resolution, and Canvas import are future work. Supabase and live AI (DigitalOcean) require your credentials and have not been exercised against an account by default. No secrets belong in Git; `.env*` is ignored except `.env.example`.
 
 Notes and material attachments: upload PDF, Word (.doc/.docx), or PNG/JPG/WebP/GIF images up to 10 MB through the Notes / Material page or a course's materials tab. Files persist in IndexedDB in the current browser, with image previews and downloads. Cloud saves and workspace JSON backups contain text notes only; attached files must be downloaded separately. Uploads do not extract document text or perform OCR.
 
 
 ## Production AI setup on free tiers
 
-Set `GEMINI_API_KEY` as a server-only Production secret in Vercel. Keep the Google project on Free tier with billing disabled. Hosted AI also requires `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` from a Supabase Free project, with email/password sign-in configured; never use a service-role key in frontend configuration. Add `https://classsync-two.vercel.app` as the Supabase Auth site URL.
+Set `DIGITALOCEAN_MODEL_ACCESS_KEY` as a server-only Production secret in Vercel (and remove the old `GEMINI_API_KEY`). Set a billing alert in DigitalOcean; inference is billed per token. Hosted AI also requires `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` from a Supabase Free project, with email/password sign-in configured; never use a service-role key in frontend configuration. Add `https://classsync-two.vercel.app` as the Supabase Auth site URL.
 
 After changing environment variables, deploy current `main` using `.github/workflows/deploy-vercel.yml` (Actions > Deploy to Vercel Production > Run workflow). Vercel Hobby requires the deployment commit author to have project access; a blocked deployment does not activate new environment settings. Preserve teammates’ changes when preparing an authorized deployment commit.
 
 Verify Vercel reports Ready and `/api/ai` reports `available: true`. This endpoint only confirms configuration, not a successful model response. Sign in to ClassSync and test an AI question before calling the chatbot operational. Free quota exhaustion must show an error without enabling billing or changing to paid usage.
-
-
-## DigitalOcean chatbot
-
-To use DigitalOcean Serverless Inference for chat, set `AI_CHAT_PROVIDER=digitalocean`, `DIGITALOCEAN_MODEL_ACCESS_KEY` (server-only secret), and `DIGITALOCEAN_MODEL` (an exact model ID supporting function tools). Redeploy after configuring these values. The chatbot keeps its authenticated, read-only workspace tool loop and displays the selected provider. Study generation and PDF syllabus scans continue to use Gemini.
-
-DigitalOcean inference is usage-based, not an unlimited free tier. Use promotional credits only, leave auto-reload disabled, and configure a key spend limit within the remaining credit. Never add funds or enable automatic top-ups to keep the demo running. Provider errors do not fall back to another paid provider. If credits or the key are unavailable, AI chat remains unavailable and the user may explicitly choose local answers. `/api/ai` reports `chatAvailable` and `chatProvider` separately from Gemini study-tool availability.

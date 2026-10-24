@@ -2,7 +2,7 @@
 
 ## Current implementation
 
-The repository uses Next.js App Router, React, TypeScript, Tailwind CSS, Lucide React, Zod, optional Supabase/PostgreSQL, and server-side Google Gemini. Local mode requires no credentials. Team decisions in [DECISIONS.md](DECISIONS.md) override this guide where they differ.
+The repository uses Next.js App Router, React, TypeScript, Tailwind CSS, Lucide React, Zod, optional Supabase/PostgreSQL, and server-side AI on DigitalOcean serverless inference. Local mode requires no credentials. Team decisions in [DECISIONS.md](DECISIONS.md) override this guide where they differ.
 
 | Area | Current location |
 | --- | --- |
@@ -84,7 +84,7 @@ The existing `/api/imports/preview` accepts authenticated version-1 course/assig
 - Implemented local chatbot uses current shared state; history survives route navigation but is not persisted across reloads. Schedule answers are explicitly deadline-order suggestions, not the future capacity-aware planner.
 - Local chatbot intent handlers should query structured current workspace data rather than rely on canned answers. Return exact matching assignments and explain empty/unsupported results.
 - Use one shared planner for Plan My Week and schedule questions. Stable ordering should account for deadlines, priority, estimated duration, and workload; explain tie-breakers and capacity assumptions.
-- **Implemented (decisions 3–4):** `/api/ai/chat` runs Gemini with tool calling. Declarations and read-only tool functions live in `src/lib/chat-tools.ts` and run in the browser against the workspace. Request validation is in `src/lib/chat-request.ts`, and the server-only client in `src/lib/gemini.ts`. The browser returns the model's turns verbatim so Gemini thought signatures survive.
+- **Implemented (decisions 3–4):** `/api/ai/chat` runs the DigitalOcean model (OpenAI-compatible `messages` + `tools`) with tool calling. Declarations and read-only tool functions live in `src/lib/chat-tools.ts` and run in the browser against the workspace. Request validation is in `src/lib/chat-request.ts`, and the server-only client in `src/lib/ai.ts`. The browser sends back the model's assistant turns (with `tool_calls`) and `tool` results.
 - Preserve `/api/ai` as the provider boundary. Validate inputs, enforce limits, verify authentication for paid production usage, and keep credentials server-only.
 - Treat supplied course text as untrusted source content. Do not follow embedded instructions or allow AI output to trigger submissions or state mutations automatically.
 - Distinguish server-configured availability from a successful generation. An API error is not a successful AI response; do not silently substitute canned output under an AI label.

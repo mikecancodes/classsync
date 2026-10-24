@@ -5,29 +5,30 @@ import { Brain, ChevronDown, LoaderCircle, Send, Sparkles } from 'lucide-react';
 import { AcademicState, dateKey } from '@/lib/model';
 import { answerAcademicQuestion } from '@/lib/academic-assistant';
 import { runTool, toolStatusLabel } from '@/lib/chat-tools';
-import { MAX_TOOL_ROUNDS, type ChatContent } from '@/lib/chat-request';
+import { MAX_TOOL_ROUNDS, type ChatMessage } from '@/lib/chat-request';
 import { supabase } from '@/lib/supabase';
 
 type Message = { id: string; role: 'user' | 'assistant'; text: string; mode?: string };
+type AssistantTurn = Extract<ChatMessage, { role: 'assistant' }>;
 type ChatReply =
-  | { type: 'tools'; content: ChatContent; calls: { id?: string; name: string; args: Record<string, unknown> }[] }
-  | { type: 'text'; content: ChatContent; text: string };
+  | { type: 'tools'; message: AssistantTurn; calls: { id: string; name: string; args: Record<string, unknown> }[] }
+  | { type: 'text'; message: AssistantTurn; text: string };
 
 const suggestions = ['What should I work on today?', 'What is due tomorrow?', 'What assignments am I missing?', 'Any new announcements?', 'How are my grades looking?'];
 const HISTORY_MESSAGES = 10;
+const AI_MODE = 'ClassSync AI';
 const LOCAL_MODE = 'Answered locally · Rule-based';
 
-// Recent conversation as Gemini contents (text only), merging consecutive same-role turns
-function historyContents(messages: Message[]): ChatContent[] {
-  const contents: ChatContent[] = [];
+// Recent conversation as chat messages (text only), merging consecutive same-role turns
+function historyMessages(messages: Message[]): ChatMessage[] {
+  const history: { role: 'user' | 'assistant'; content: string }[] = [];
   for (const message of messages.slice(-HISTORY_MESSAGES)) {
-    const role = message.role === 'user' ? 'user' : 'model';
-    const last = contents[contents.length - 1];
-    if (last?.role === role) last.parts.push({ text: message.text });
-    else contents.push({ role, parts: [{ text: message.text }] });
+    const last = history[history.length - 1];
+    if (last?.role === message.role) last.content += `\n\n${message.text}`;
+    else history.push({ role: message.role, content: message.text });
   }
-  while (contents[0]?.role === 'model') contents.shift();
-  return contents;
+  while (history[0]?.role === 'assistant') history.shift();
+  return history;
 }
 
 export function Chatbot({ data }: { data: AcademicState }) {
@@ -37,7 +38,6 @@ export function Chatbot({ data }: { data: AcademicState }) {
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState('Thinking…');
   const [aiConfigured, setAiConfigured] = useState(false);
-  const [provider, setProvider] = useState('Gemini');
   const [signInRequired, setSignInRequired] = useState(true);
   const [signedIn, setSignedIn] = useState(false);
   const [useAI, setUseAI] = useState(true);
@@ -57,7 +57,7 @@ export function Chatbot({ data }: { data: AcademicState }) {
   useEffect(() => {
     const controller = new AbortController();
     fetch('/api/ai', { signal: controller.signal }).then(r => r.json())
-      .then(result => { setAiConfigured((result.chatAvailable ?? result.available) === true); setProvider(result.chatProvider === 'digitalocean' ? 'DigitalOcean' : 'Gemini'); setSignInRequired(result.signInRequired !== false); }).catch(() => {});
+      .then(result => { setAiConfigured(result.available === true); setSignInRequired(result.signInRequired !== false); }).catch(() => {});
     return () => controller.abort();
   }, []);
   useEffect(() => {
@@ -81,11 +81,11 @@ export function Chatbot({ data }: { data: AcademicState }) {
 
   }
 
-  async function postChat(contents: ChatContent[], token: string | undefined): Promise<ChatReply> {
+  async function postChat(messages: ChatMessage[], token: string | undefined): Promise<ChatReply> {
     const response = await fetch('/api/ai/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-      body: JSON.stringify({ contents, today: dateKey(), timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }),
+      body: JSON.stringify({ messages, today: dateKey(), timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }),
       signal: AbortSignal.timeout(60000),
     });
     const result = await response.json();
@@ -93,17 +93,17 @@ export function Chatbot({ data }: { data: AcademicState }) {
     return result;
   }
 
-  // Ask Gemini; when it requests data, run the lookup here and send back only those rows
-  async function askGemini(text: string, earlier: Message[]) {
+  // Ask the AI; when it requests data, run the lookup here and send back only those rows
+  async function askAI(text: string, earlier: Message[]) {
     const token = (await supabase?.auth.getSession())?.data.session?.access_token;
-    const contents: ChatContent[] = [...historyContents(earlier), { role: 'user', parts: [{ text }] }];
+    const conversation: ChatMessage[] = [...historyMessages(earlier), { role: 'user', content: text }];
     for (let rounds = 0; ; rounds++) {
-      const reply = await postChat(contents, token);
+      const reply = await postChat(conversation, token);
       if (reply.type === 'text') return reply.text;
       if (rounds === MAX_TOOL_ROUNDS) throw new Error('That question needed too many lookups. Try asking something more specific.');
       setStatus(toolStatusLabel(reply.calls[0]?.name ?? ''));
-      contents.push(reply.content);
-      contents.push({ role: 'user', parts: reply.calls.map(call => ({ functionResponse: { id: call.id, name: call.name, response: runTool(call.name, call.args, dataRef.current) } })) });
+      conversation.push(reply.message);
+      for (const call of reply.calls) conversation.push({ role: 'tool', tool_call_id: call.id, content: JSON.stringify(runTool(call.name, call.args, dataRef.current)) });
     }
   }
 
@@ -121,8 +121,8 @@ export function Chatbot({ data }: { data: AcademicState }) {
     setMessages(old => [...old, { id: crypto.randomUUID(), role: 'user' as const, text }].slice(-60));
     try {
       if (aiActive) {
-        const answer = await askGemini(text, earlier);
-        setMessages(old => [...old, { id: crypto.randomUUID(), role: 'assistant', text: answer, mode: `ClassSync AI · ${provider}` }]);
+        const answer = await askAI(text, earlier);
+        setMessages(old => [...old, { id: crypto.randomUUID(), role: 'assistant', text: answer, mode: AI_MODE }]);
       } else {
         answerLocally(text);
       }
@@ -135,10 +135,10 @@ export function Chatbot({ data }: { data: AcademicState }) {
     }
   }
 
-  const modeNote = aiActive ? `${provider} only sees the items it looks up for each question.`
+  const modeNote = aiActive ? 'The AI only sees the items it looks up for each question.'
     : aiConfigured && !aiReady ? 'Sign in under Settings to chat with AI. Answers are local for now.'
     : aiReady ? 'AI is off. Answers come from your workspace on this device.'
-    : 'AI chat is not configured for this site yet. AI needs a server-side key and sign-in; local answers use rules.';
+    : 'AI is not configured for this site yet. It needs a server-side key and sign-in; local answers use rules.';
   const asked = new Set(messages.filter(m => m.role === 'user').map(m => m.text));
   const followUps = suggestions.filter(s => !asked.has(s)).slice(0, 2);
 
@@ -149,7 +149,7 @@ export function Chatbot({ data }: { data: AcademicState }) {
     <section id="classsync-chat" className={`chat-panel docked-chat ${open ? 'mobile-chat-open' : ''}`} role="complementary" aria-label="ClassSync AI" onKeyDown={handleKeys}>
       <header className="chat-heading">
         <span className="chat-brain"><Brain size={25} /></span>
-        <div><h2>ClassSync AI</h2><p>{aiActive ? `${provider} · reads your ClassSync data` : 'Local assistant · Rule-based'}</p></div>
+        <div><h2>ClassSync AI</h2><p>{aiActive ? 'AI · reads your ClassSync data' : 'Local assistant · Rule-based'}</p></div>
         <button className="icon-button mobile-chat-collapse" aria-label="Collapse ClassSync AI" onClick={collapse}><ChevronDown size={22} /></button>
       </header>
       <div className="chat-mode">

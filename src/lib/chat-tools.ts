@@ -1,8 +1,7 @@
-import type { FunctionDeclaration } from '@google/genai';
 import { AcademicState, Assignment, Course, dateKey, grade, letter } from './model';
 import { shiftDate } from './academic-assistant';
 
-// Read-only lookups the Gemini chat can request. They run in the browser against the
+// Read-only lookups the AI chat can request. They run in the browser against the
 // student's current workspace, so the model only ever sees the rows it asked for.
 
 export const MAX_ROWS = 25;
@@ -11,7 +10,9 @@ const DESCRIPTION_LIMIT = 300;
 type Args = Record<string, unknown>;
 export type ToolResult = Record<string, unknown>;
 
-export const chatToolDeclarations: FunctionDeclaration[] = [
+type ToolDeclaration = { name: string; description: string; parametersJsonSchema: Record<string, unknown> };
+
+export const chatToolDeclarations: ToolDeclaration[] = [
   {
     name: 'list_courses',
     description: "List the student's courses with instructor, number of incomplete assignments, and current grade.",
@@ -64,6 +65,9 @@ export const chatToolDeclarations: FunctionDeclaration[] = [
     parametersJsonSchema: { type: 'object', properties: { days: { type: 'integer', description: 'How many days ahead to include, 1-14. Defaults to 7' } } },
   },
 ];
+
+// The same tools in the OpenAI-compatible format the inference API expects
+export const chatTools = chatToolDeclarations.map(tool => ({ type: 'function' as const, function: { name: tool.name, description: tool.description, parameters: tool.parametersJsonSchema } }));
 
 const statusLabels: Record<string, string> = {
   list_courses: 'Looking at your courses…',
