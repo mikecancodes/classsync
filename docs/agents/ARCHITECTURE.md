@@ -2,7 +2,7 @@
 
 ## Current implementation
 
-The repository uses Next.js App Router, React, TypeScript, Tailwind CSS, Lucide React, Zod, optional Supabase/PostgreSQL, and server-side OpenAI. Local mode requires no credentials.
+The repository uses Next.js App Router, React, TypeScript, Tailwind CSS, Lucide React, Zod, optional Supabase/PostgreSQL, and server-side AI (OpenAI today; Gemini decided). Local mode requires no credentials. Team decisions in [DECISIONS.md](DECISIONS.md) override this guide where they differ.
 
 | Area | Current location |
 | --- | --- |
@@ -36,8 +36,8 @@ The following are proposed fields/entities, not existing schema guarantees:
 | Entity | Target additions |
 | --- | --- |
 | Course | `platform: 'd2l' | 'canvas' | 'manual'`; stable source course identity |
-| Assignment | Platform/source identity, priority, estimated minutes; retain existing title/course/due/status/category/points/earned/description |
-| Announcement (implemented) | ID, course ID, D2L/Canvas platform, title, description, posted local date, read status |
+| Assignment | `platform` (`d2l` · `canvas` · `manual`) and source identity, priority, estimated minutes, optional `dueTime`; `points` becomes optional (decisions 6–8); retain existing title/course/due/status/category/earned/description |
+| Announcement (implemented) | ID, course ID, platform (currently `'D2L' \| 'Canvas'`; to become lowercase per decision 8), title, description, posted local date, read status |
 | Personal task | ID, title, optional course ID, due date, priority, completion |
 | Note | Reuse material ID, course ID, title, text, and kind; extend only if necessary |
 
@@ -50,7 +50,7 @@ Use stable IDs, validated references, bounded strings and arrays, positive estim
 - Update backup export/restore, cloud payload validation, import validation, and seeds together with schema changes. A newer payload must not silently lose fields through an older parser.
 - Read and write browser storage only on the client. Handle unavailable/quota-exceeded storage and invalid backups visibly without deleting the user's original data.
 - Derive counts, filters, calendar entries, and assistant context from shared state. Do not store redundant dashboard totals.
-- Keep cloud save/load explicit unless the user requests a sync redesign. The existing cloud document is one JSONB workspace per authenticated user, with RLS and last-write-wins saves.
+- **Decided (hybrid storage, decision 1):** when signed in, auto-save the workspace to the existing JSONB row (debounced) and ask before replacing either copy on sign-in. Until implemented, cloud save/load stays manual. The cloud document is one JSONB workspace per authenticated user, with RLS.
 
 ## Dates and deterministic calculations
 
@@ -73,13 +73,14 @@ Recommended sequence:
 
 Repeated Demo Sync must be idempotent: no duplicate assignments or announcements. Do not silently delete manual work, reset completion, or overwrite notes. Keep original sample IDs stable across date refreshes.
 
-The existing `/api/imports/preview` accepts authenticated version-1 course/assignment/material payloads and **does not write data**. Its nested workspace schema now accepts legacy data or version 2 with announcements; summary counts currently cover courses, assignments, and materials. Extend its versioned contract deliberately if needed. A local demo import must not weaken server authentication or RLS. Future real adapters need permitted data access, student preview/approval, deduplication, and a transactional commit design. A read-only D2L browser extension prototype in `extension/` produces this payload from the student's own session (see `docs/d2l-sync/extension.md`). Automatic submission is out of scope.
+The existing `/api/imports/preview` accepts authenticated version-1 course/assignment/material payloads and **does not write data**. Its nested workspace schema now accepts legacy data or version 2 with announcements; summary counts currently cover courses, assignments, and materials. Extend its versioned contract deliberately if needed. A local demo import must not weaken server authentication or RLS. Future real adapters need permitted data access, student preview/approval, deduplication, and a transactional commit design. A read-only D2L browser extension prototype in `extension/` produces this payload from the student's own session (see `docs/d2l-sync/extension.md`). Decided import path (decision 2): extension → open ClassSync tab → review screen → merge using Demo Sync's rules. Automatic submission is out of scope.
 
 ## Assistant and planner service boundaries
 
 - Implemented local chatbot uses current shared state; history survives route navigation but is not persisted across reloads. Schedule answers are explicitly deadline-order suggestions, not the future capacity-aware planner.
 - Local chatbot intent handlers should query structured current workspace data rather than rely on canned answers. Return exact matching assignments and explain empty/unsupported results.
 - Use one shared planner for Plan My Week and schedule questions. Stable ordering should account for deadlines, priority, estimated duration, and workload; explain tie-breakers and capacity assumptions.
+- **Decided (decisions 3–4):** the chatbot uses Gemini with tool calling. Tools are read-only pure functions run in the browser against the workspace, shared with the rule-based assistant.
 - Preserve `/api/ai` as the provider boundary. Validate inputs, enforce limits, verify authentication for paid production usage, and keep credentials server-only.
 - Treat supplied course text as untrusted source content. Do not follow embedded instructions or allow AI output to trigger submissions or state mutations automatically.
 - Distinguish server-configured availability from a successful generation. An API error is not a successful AI response; do not silently substitute canned output under an AI label.

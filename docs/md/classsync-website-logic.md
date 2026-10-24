@@ -1,19 +1,19 @@
 # ClassSync Website Logic
 
-This file captures the product behavior for the ClassSync hackathon demo. It complements the repository's agent guides; it does not replace the existing Next.js, TypeScript, shared-workspace, or server-route architecture. Keep the demo functional without credentials, and label simulated LMS data and rule-based assistance honestly.
+This file captures the product behavior for the ClassSync hackathon demo. It complements the repository's agent guides and [team decisions](../agents/DECISIONS.md); it does not replace the existing Next.js, TypeScript, shared-workspace, or server-route architecture. Keep the demo functional without credentials, and label simulated LMS data and rule-based assistance honestly.
 
 ## Shared workspace and data
 
 Use one shared workspace as the source of truth so that completing or editing work updates the Home dashboard, assignment list, classes, calendar, and chatbot together.
 
-- **Courses:** stable ID, name, optional instructor, platform (`D2L`, `Canvas`, or `Manual`), and display color.
-- **Assignments:** stable ID, title, course ID, source/platform, local due date, priority, estimated minutes, description, completion state, and existing grade fields. Completion must not create a grade.
+- **Courses:** stable ID, name, optional instructor, platform (stored as `d2l`, `canvas` or `manual`; shown as D2L, Canvas, Manual), and display color.
+- **Assignments:** stable ID, title, course ID, source/platform, local due date, optional due time, priority, estimated minutes, description, completion state, and existing grade fields (points optional). Completion must not create a grade.
 - **Announcements:** stable ID, course ID, source/platform, title, summary, posted date, and read state.
 - **Materials/notes:** reuse the existing course-linked material records for lecture notes. Support title, text, course association, and update time; do not create a duplicate notes store.
 - **Personal tasks:** stable ID, title, optional course, optional due date, priority, and completion state. Keep these distinct from graded assignments.
 - **Chat messages:** session state only unless conversation persistence is explicitly added later.
 
-The current workspace is stored under `classsync-workspace-v1` and already contains courses, assignments, and materials. Extend it through a validated, versioned migration before adding persisted fields or entities. Preserve existing notes, grades, coursework, and settings. Keep theme storage separate. Use local calendar dates for coursework; avoid parsing `YYYY-MM-DD` as UTC and shifting the displayed day.
+The current workspace is stored under `classsync-workspace-v2` and contains courses, assignments, materials, and announcements (v1 data migrates automatically). Extend it through a validated, versioned migration before adding persisted fields or entities. Preserve existing notes, grades, coursework, and settings. Keep theme storage separate. Use local calendar dates for coursework; avoid parsing `YYYY-MM-DD` as UTC and shifting the displayed day.
 
 ## Demo data and sync
 

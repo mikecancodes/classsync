@@ -21,7 +21,7 @@ Keep the existing grade calculator and course workflows functional throughout. B
 - Logo: a simple **brain** icon or SVG beside the product name at the upper left. Use Lucide React's Brain icon or a small accessible SVG. Do not use a cloud; replace the existing graduation cap when implementing this branding change.
 - Light mode: white and light-gray surfaces, charcoal text, blue primary accents, purple AI accents. Preserve dark-mode support with readable contrast.
 - Use rounded cards, subtle shadows, clean typography, consistent spacing, and restrained hover transitions.
-- Maintain the CSS tokens in `src/app/globals.css`; avoid scattered hard-coded theme variants. Use existing Tailwind support where useful.
+- Build dialogs, menus, tabs, toasts and similar controls from shadcn/ui (decision 5), themed by the CSS tokens in `src/app/globals.css`; avoid scattered hard-coded theme variants. Use existing Tailwind support where useful.
 - Desktop: fixed left navigation and a clear content hierarchy. Mobile: collapsible navigation, reachable primary actions, no unintended horizontal overflow.
 - Use semantic controls, visible focus, associated labels, keyboard-accessible dialogs, readable contrast, and reduced-motion support. Icons alone need accessible names. Color must not be the only status signal.
 
@@ -82,7 +82,7 @@ This is a high-priority target feature, distinct from the existing assistant pag
 - On mobile, use an appropriately sized drawer; do not obscure navigation or make the input inaccessible. Manage focus on open/close and support keyboard use.
 - Read current shared course and assignment state, including changes made after the panel opened.
 - Without a real API, answer deadline/course questions from local data and label the mode **Local assistant / rule-based**. Unsupported questions should explain the limitation, not invent facts.
-- With an API, call the authenticated server endpoint; never put provider credentials in browser code.
+- With an API, call the authenticated server endpoint; never put provider credentials in browser code. The decided design is Gemini with browser-run tool calling (decisions 3–4 in DECISIONS.md).
 
 Required example questions:
 

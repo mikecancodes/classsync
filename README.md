@@ -4,7 +4,7 @@ A responsive academic hub built with Next.js App Router, TypeScript, Tailwind CS
 
 ## Agent development guides
 
-Start with [AGENTS.md](AGENTS.md). It links to the [frontend requirements](docs/agents/FRONTEND.md), [architecture and data rules](docs/agents/ARCHITECTURE.md), [development checklist](docs/agents/DEVELOPMENT.md), and [original frontend brief](docs/agents/FRONTEND-BRIEF.md). These guides distinguish the existing MVP from the new frontend targets. The app remains on Next.js and TypeScript; the brief's Vite suggestion is not an automatic migration instruction.
+Start with [AGENTS.md](AGENTS.md) and the [team decisions](docs/agents/DECISIONS.md). It links to the [frontend requirements](docs/agents/FRONTEND.md), [architecture and data rules](docs/agents/ARCHITECTURE.md), [development checklist](docs/agents/DEVELOPMENT.md), and [original frontend brief](docs/agents/FRONTEND-BRIEF.md). These guides distinguish the existing MVP from the new frontend targets. The app remains on Next.js and TypeScript; the brief's Vite suggestion is not an automatic migration instruction.
 
 ## Run locally
 
@@ -24,7 +24,7 @@ pnpm build
 pnpm start
 ```
 
-In this Codex Windows environment, pnpm is bundled at `C:/Users/mjstr/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/fallback/pnpm.cmd`. If pnpm cannot create global store links, install with `pnpm install --store-dir .pnpm-store --config.node-linker=hoisted --config.enable-global-virtual-store=false`. You can also start the installed app directly with `node node_modules/next/dist/bin/next dev --webpack --hostname 127.0.0.1`.
+**Mike's Windows/Codex setup only:** pnpm is bundled at `C:/Users/mjstr/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/fallback/pnpm.cmd`. If pnpm cannot create global store links, install with `pnpm install --store-dir .pnpm-store --config.node-linker=hoisted --config.enable-global-virtual-store=false`. You can also start the installed app directly with `node node_modules/next/dist/bin/next dev --webpack --hostname 127.0.0.1`.
 
 ## Included MVP
 

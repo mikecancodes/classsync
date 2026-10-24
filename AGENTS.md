@@ -6,6 +6,7 @@ ClassSync helps college students organize coursework and recover from missed cla
 
 Before changing code, read:
 
+0. [Team decisions](docs/agents/DECISIONS.md). These override older wording in the other guides and the brief.
 1. [Frontend requirements](docs/agents/FRONTEND.md) for branding, pages, interactions, and priorities.
 2. [Architecture and data rules](docs/agents/ARCHITECTURE.md) for state, migrations, AI, and LMS boundaries.
 3. [Development and acceptance checks](docs/agents/DEVELOPMENT.md) for workflow and verification.
@@ -15,9 +16,9 @@ These guides describe the target product; they do not claim all features are imp
 
 ## Stack and scope
 
-- This repository already uses Next.js App Router, React, TypeScript, Tailwind CSS, and Lucide React. Preserve that stack and the existing server routes.
+- This repository already uses Next.js App Router, React, TypeScript, Tailwind CSS, and Lucide React. Preserve that stack and the existing server routes. Build new UI with shadcn/ui components themed by the existing CSS tokens (decision 5).
 - The supplied frontend brief proposes React/Vite and allows TypeScript if configured. Apply its product and frontend requirements to this Next.js application. A Vite migration is a separate task requiring an explicit request; do not reinitialize the project.
-- Keep existing course pages, grade calculations, optional Supabase integration, and secure OpenAI endpoints working when adding the new frontend features.
+- Keep existing course pages, grade calculations, optional Supabase integration, and the secure server-side AI endpoint working (moving from OpenAI to Gemini, decision 3) when adding the new frontend features.
 - The branding target is a **brain logo** beside **ClassSync**, with the tagline **All your classes. One place.** The brain mark and tagline are implemented.
 - Follow the user's current task scope. A request for documentation does not authorize implementing every roadmap item.
 - Keep demo mode functional without credentials. Never imply demo LMS data or rule-based responses come from live services.
