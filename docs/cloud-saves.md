@@ -21,7 +21,9 @@ The revision baseline is in memory and belongs to the signed-in user. Sign-out/a
 5. Sign in, load an existing cloud workspace and save an edit. In another browser session load the same revision. Save in the first, then save in the second: the second must show a conflict and retain its local work. Try canceling and confirming the replacement review.
 6. Verify a second account sees only its own workspace. Check anonymous reads/writes fail and direct old-style upsert is rejected. Confirm email/password login and backup export/restore still work.
 
-This implementation has not been applied to a live Supabase project. It contains no project credentials or remote migration-history changes.
+Applied to the live ClassSync Supabase project on 2026-10-24 using the complete SQL-editor setup script. Preflight confirmed there was no workspace table, save function, or CLI migration history. The script committed successfully. A rollback-only verification passed first save, revision update, stale-save conflict, account isolation, direct-write denial, anonymous denial, and private-backup denial; no test workspace rows remained. This SQL-editor rollout did not alter CLI migration history.
+
+The ClassSync browser session was signed out during verification. A signed-in browser save/load and the two-browser concurrency check below still need to be exercised; the database checks alone do not establish that complete UI flow.
 
 ## Recovery and retention
 
