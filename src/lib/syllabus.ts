@@ -41,9 +41,33 @@ export const syllabusResponseJsonSchema = {
         required: ['title', 'date', 'type'],
       },
     },
+    weights: {
+      type: 'array',
+      description: 'Grading breakdown, e.g. Exams 40%, Labs 25%',
+      items: { type: 'object', properties: { name: { type: 'string' }, weight: { type: 'number', description: 'Percent of the final grade' } }, required: ['name', 'weight'] },
+    },
   },
   required: ['items'],
 };
+
+export type SyllabusWeight = { name: string; weight: number };
+
+// Grading categories with percentages: trimmed, de-duplicated, within 0-100, at most 20
+export function parseSyllabusWeights(value: unknown): SyllabusWeight[] {
+  const rows = (value && typeof value === 'object' && Array.isArray((value as { weights?: unknown }).weights)) ? (value as { weights: unknown[] }).weights : [];
+  const seen = new Set<string>();
+  const out: SyllabusWeight[] = [];
+  for (const row of rows) {
+    if (!row || typeof row !== 'object') continue;
+    const name = String((row as { name?: unknown }).name ?? '').replace(/\s+/g, ' ').replace(/[\s:–-]+$/, '').trim().slice(0, 80);
+    const weight = Number((row as { weight?: unknown }).weight);
+    if (!name || !Number.isFinite(weight) || weight <= 0 || weight > 100 || seen.has(name.toLowerCase())) continue;
+    seen.add(name.toLowerCase());
+    out.push({ name, weight: Math.round(weight * 100) / 100 });
+    if (out.length >= 20) break;
+  }
+  return out;
+}
 
 // Keeps only well-formed items; a single bad row never sinks the whole scan
 export function parseSyllabusItems(value: unknown): SyllabusItem[] {

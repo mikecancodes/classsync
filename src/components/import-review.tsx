@@ -9,10 +9,12 @@ import { scanSyllabus } from '@/lib/syllabus-scan';
 import { PDF_MIME } from '@/lib/syllabus';
 import { base64ToBytes } from '@/lib/document-text';
 import { materialFile } from '@/lib/material-files';
-import { SyllabusProposalList, defaultSelection } from './syllabus-scan';
+import { ScannedText, SyllabusProposalList, defaultSelection } from './syllabus-scan';
+import { applyWeightPlan, needsWeights, planWeights } from '@/lib/syllabus-weights';
+import type { SyllabusWeight } from '@/lib/syllabus';
 
 const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? '' : 's'}`;
-type SyllabusScanState = { file: SyllabusFile; courseName: string; status: 'scanning' | 'done' | 'error'; message?: string; proposals: SyllabusProposal[] };
+type SyllabusScanState = { file: SyllabusFile; courseName: string; status: 'scanning' | 'done' | 'error'; message?: string; proposals: SyllabusProposal[]; weights: SyllabusWeight[]; offerWeights: boolean; scannedText?: string };
 
 function Details({ label, items }: { label: string; items: string[] }) {
   if (!items.length) return null;
@@ -39,6 +41,7 @@ export function ImportReview({ data, payload, school, onApply, onCancel }: { dat
   const [scans, setScans] = useState<SyllabusScanState[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [applying, setApplying] = useState(false);
+  const [useWeights, setUseWeights] = useState<Set<string>>(new Set());
   useEffect(() => { dialog.current?.showModal(); return () => dialog.current?.close(); }, []);
   const result = useMemo(() => {
     try { return { ok: true as const, ...mergeImport(data, payload), syllabi: importPayloadSchema.parse(payload).syllabi }; }
@@ -51,7 +54,7 @@ export function ImportReview({ data, payload, school, onApply, onCancel }: { dat
     if (!result.ok || !result.syllabi.length) return;
     let active = true;
     const merged = result.state;
-    setScans(result.syllabi.map(file => ({ file, courseName: merged.courses.find(c => c.id === file.courseId)?.name ?? 'Class', status: 'scanning', proposals: [] })));
+    setScans(result.syllabi.map(file => ({ file, courseName: merged.courses.find(c => c.id === file.courseId)?.name ?? 'Class', status: 'scanning', proposals: [], weights: [], offerWeights: false })));
     result.syllabi.forEach((file, index) => {
       const course = merged.courses.find(c => c.id === file.courseId);
       if (!course) return;
@@ -59,8 +62,11 @@ export function ImportReview({ data, payload, school, onApply, onCancel }: { dat
         .then(scan => {
           if (!active) return;
           const proposals = proposeAssignments(scan.items, course, merged);
-          setScans(current => current.map((s, i) => i === index ? { ...s, status: 'done', message: scan.method === 'ai' ? undefined : scan.note, proposals } : s));
+          // Offer the syllabus's weights only when D2L didn't provide any for this class
+          const offerWeights = scan.weights.length > 0 && needsWeights(course);
+          setScans(current => current.map((s, i) => i === index ? { ...s, status: 'done', message: scan.method === 'ai' ? undefined : scan.note, proposals, weights: scan.weights, offerWeights, scannedText: scan.scannedText } : s));
           setSelected(current => new Set([...current, ...defaultSelection(proposals)]));
+          if (offerWeights) setUseWeights(current => new Set([...current, file.courseId]));
         })
         .catch(err => { if (active) setScans(current => current.map((s, i) => i === index ? { ...s, status: 'error', message: err instanceof Error ? err.message : 'Couldn’t scan this syllabus.' } : s)); });
     });
@@ -81,7 +87,12 @@ export function ImportReview({ data, payload, school, onApply, onCancel }: { dat
   async function apply() {
     if (!result.ok) return;
     setApplying(true);
-    const withSyllabus = await saveSyllabusMaterials(addProposals(result.state, syllabusChosen), result.syllabi);
+    let next = addProposals(result.state, syllabusChosen);
+    for (const scan of scans) {
+      if (!scan.offerWeights || !useWeights.has(scan.file.courseId)) continue;
+      try { next = applyWeightPlan(next, scan.file.courseId, planWeights(next, scan.file.courseId, scan.weights)); } catch { /* keep D2L's categories */ }
+    }
+    const withSyllabus = await saveSyllabusMaterials(next, result.syllabi);
     onApply(withSyllabus, changes ? `Added from ${from}: ${headline}` : 'Classes are up to date');
   }
 
@@ -107,7 +118,9 @@ export function ImportReview({ data, payload, school, onApply, onCancel }: { dat
           <p><strong>{scan.courseName}</strong> · {scan.file.fileName}</p>
           {scan.status === 'scanning' && <p className="notice"><LoaderCircle size={14} className="spin" /> Reading the syllabus…</p>}
           {scan.status === 'error' && <p className="muted">{scan.message}</p>}
-          {scan.status === 'done' && <>{scan.message && <p className="muted">{scan.message}</p>}<SyllabusProposalList proposals={scan.proposals} selected={selected} onToggle={toggle} /></>}
+          {scan.status === 'done' && <>{scan.message && <p className="muted">{scan.message}</p>}
+            {scan.offerWeights && <label className="weights-offer"><input type="checkbox" checked={useWeights.has(scan.file.courseId)} onChange={() => setUseWeights(current => { const next = new Set(current); if (next.has(scan.file.courseId)) next.delete(scan.file.courseId); else next.add(scan.file.courseId); return next; })} /> Use the syllabus grading weights: {scan.weights.map(w => `${w.name} ${w.weight}%`).join(', ')}</label>}
+            <SyllabusProposalList proposals={scan.proposals} selected={selected} onToggle={toggle} /><ScannedText text={scan.scannedText} /></>}
         </div>)}
       </div>}
       <div className="modal-actions">
