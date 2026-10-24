@@ -5,6 +5,7 @@ export const LEGACY_KEY = 'classsync-workspace-v1';
 
 const seededCourseIds = new Set([
   'demo-networks', 'cs201', 'demo-justice', 'demo-architecture', 'demo-algorithms',
+  'math210', 'psych101', 'eng102',
 ]);
 
 export function emptyWorkspace(): AcademicState {

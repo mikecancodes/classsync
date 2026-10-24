@@ -111,3 +111,7 @@ Analyze incomplete assignments using due date, priority, estimated completion ti
 Use Computer Networks, Data Structures, Criminal Justice, Computer Architecture, and Algorithm Analysis. Include Socket Programming Lab, Priority Queue Assignment, Chapter 5 Quiz, Cache Memory Discussion, and Algorithm Analysis Homework, plus multiple notes and announcements across D2L and Canvas.
 
 Generate demo dates relative to the current date. Changing the sample fixture must not overwrite user-created coursework or silently replace a saved workspace. Provide explicit demo refresh behavior as described in ARCHITECTURE.md.
+
+## Empty sync state
+
+Remove all historical generated class IDs, including math210, psych101, eng102 and the later demo set, along with their linked sample coursework. Preserve real courses by identity, never by name. When Sync classes is clicked with no courses, show: “Sync unsuccessful. Please log in to your student portal to sync classes.” Do not fabricate classes, show a successful sync, or show an all-caught-up result. Actual portal synchronization remains a future integration.

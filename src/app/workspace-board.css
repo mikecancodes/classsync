@@ -144,6 +144,7 @@
 .sync-sidebar>p { font-size: 11px; color: var(--muted); margin: 8px 0 19px; }
 .sync-sidebar>.primary-button { width: 100%; justify-content: center; font-size: 12px; padding: 11px; }
 .sync-sidebar-placeholder { color: var(--muted); font-size: 12px; line-height: 1.8; padding: 24px 0; }
+.sync-sidebar .sync-failure { font-size: 12px; line-height: 1.7; color: var(--text); padding: 13px; background: var(--hover); border: 1px solid var(--border); border-radius: 8px; margin-top: 15px; }
 .sync-sidebar label { display: grid; gap: 7px; font-size: 11px; color: var(--muted); margin-top: 24px; }
 .sync-sidebar select { width: 100%; padding: 8px; min-width: 0; font-size: 11px; background: var(--surface); }
 .sync-sidebar-count { font-size: 11px; color: var(--muted); padding: 20px 0 0; }

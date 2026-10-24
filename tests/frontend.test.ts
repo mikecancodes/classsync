@@ -36,6 +36,22 @@ test('read status and course references are validated', () => {
   assert.equal(stateSchema.safeParse(state).success, false);
 });
 
+test('migration removes every original generated class without matching real courses by name', () => {
+  const state = testState();
+  const original = state.courses[0];
+  for (const id of ['math210', 'psych101', 'eng102']) {
+    state.courses.push({ ...original, id });
+    state.assignments.push({ ...state.assignments[0], id: `old-${id}`, courseId: id });
+    state.materials.push({ ...state.materials[0], id: `old-note-${id}`, courseId: id });
+  }
+  state.courses.push({ ...original, id: 'student-course', name: 'Linear Algebra' });
+  const migrated = migrateWorkspace(state);
+  assert.deepEqual(migrated.courses.map(course => course.id), ['student-course']);
+  assert.deepEqual(migrated.assignments, []);
+  assert.deepEqual(migrated.materials, []);
+  assert.deepEqual(migrateWorkspace(migrated), migrated);
+});
+
 test('due-soon window includes today and day 7, excludes completed and outside dates', () => {
   const base = testState().assignments[0];
   const rows = [-1, 0, 1, 7, 8].map(day => ({ ...base, id: String(day), due: shiftDate('2026-12-31', day) }));
