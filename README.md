@@ -28,18 +28,23 @@ In this Codex Windows environment, pnpm is bundled at `C:/Users/mjstr/.cache/cod
 
 ## Included MVP
 
-- Dashboard with enrolled courses, calculated averages, overdue and upcoming assignments, calendar, and sample announcements.
+- Brain branding, assignment totals, Due Soon and completed counts, course cards, overdue/upcoming work, and announcements with persistent read state.
 - Course pages with assignment CRUD, completion tracking, earned scores, editable syllabus, and text/Markdown materials.
 - Searchable assignment list with status and course filters. All dates are local calendar dates; deadlines are considered overdue on the following day.
 - Monthly calendar, responsive navigation, keyboard focus states, and persistent light/dark modes.
 - Deterministic weighted grade calculator and hypothetical ungraded-category scenarios. Syllabus extraction supports category/percentage lines and requires review before applying.
+- Global collapsible chatbot with current-workspace local answers and optional server-side AI. Conversation survives page navigation and resets on reload.
 - Study assistant: summaries, study guides, catch-up plans, content questions, and rubric-based draft evaluation.
 - Local browser persistence, JSON export/restore, optional Supabase email/password auth, explicit cloud save/load, and database RLS.
 - Authenticated, validated future LMS import preview contract. No Chrome extension, live LMS sync, or assignment submission.
 
 ## Local demo behavior
 
-The first visit generates realistic sample coursework with deadlines relative to that visit. Thereafter the workspace is stored under `classsync-workspace-v1` in localStorage. Theme is saved separately. Completed status does not imply a score; record earned points explicitly.
+The first visit generates realistic sample coursework with deadlines relative to that visit. Thereafter the version-2 workspace is stored under `classsync-workspace-v2` in localStorage. Legacy v1 data migrates through validation and its original key remains as a recovery copy. Invalid stored data is preserved and automatic writes are paused. Theme is saved separately. Completed status does not imply a score; record earned points explicitly.
+
+**Demo Sync** adds missing samples for the five required courses and refreshes sample announcements while preserving read state, existing assignments, notes, grades, and manual work. Repeating it creates no duplicates; deleted demo records can be restored by syncing. Existing assignment dates are preserved. Due Soon means incomplete work due today through seven local calendar days ahead, inclusive.
+
+The global chatbot answers questions about today, tomorrow, the next seven days, overdue work, and courses using current workspace data. Schedule suggestions are deadline order only; capacity-aware Plan My Week remains future work.
 
 Without an OpenAI key, study tools return labeled excerpts, practice prompts, keyword matches, and a catch-up checklist. They are **not AI-generated answers**. The demo evaluator does not invent a score. Uploads support `.txt`, `.md`, and `.csv` up to 150 KB and 40,000 characters; paste extracted text for PDFs/Word. Raw files are not retained. Material text is stored with the workspace. Rubrics are limited to 20,000 characters.
 
@@ -47,7 +52,7 @@ Without an OpenAI key, study tools return labeled excerpts, practice prompts, ke
 
 Copy `.env.example` to `.env.local`, set `OPENAI_API_KEY`, and optionally set `OPENAI_MODEL` to a model available in your account. Restart the server.
 
-The server uses the [OpenAI Responses API](https://developers.openai.com/api/reference/typescript/resources/responses/methods/create), disables response storage, validates payload size, and limits output. The key is never imported by client code. Course content is sent only when you press a generation button. AI output is advisory and all evaluator scores are estimates.
+The server uses the [OpenAI Responses API](https://developers.openai.com/api/reference/typescript/resources/responses/methods/create), disables response storage, validates payload size, and limits output. The key is never imported by client code. Course content is sent only when you press a generation button, or explicitly enable connected AI and send a chat question. Chat sends current courses and assignments, with each question handled independently. `GET /api/ai` exposes only configuration availability; it does not bypass authentication. AI output is advisory and all evaluator scores are estimates.
 
 Authenticated Supabase users can call paid AI. For local development without Supabase, set `ALLOW_LOCAL_AI=true`; this bypass only works in development on a loopback hostname. Production always requires an authenticated account. A per-process limit allows 20 AI requests per user per hour. **Before a public multi-instance deployment, replace this with a shared rate limiter and configure provider budgets.** The local bypass is for a trusted local machine, not a public proxy.
 
@@ -65,25 +70,30 @@ Cloud storage uses one JSONB document per user in PostgreSQL for hackathon simpl
 
 For each category: `average = sum(earned) / sum(possible)` over rows with an entered score. A blank score is excluded, a zero is included. Current grade is `sum(average × weight) / sum(graded weights) × 100`. Categories with no scores are excluded from the current-grade denominator. Weight zero contributes nothing.
 
-The projection holds existing category averages constant and substitutes the hypothetical percentage for categories with no grades. It is disabled unless weights total 100%. It does not forecast individual future assignments within partially graded categories. Edit and clear an assignment’s earned points to explore those changes. The dashboard average is an unweighted average across courses with grades, **not a GPA**. Letter bands are the demo defaults (A ≥90, B ≥80, C ≥70, D ≥60).
+The projection holds existing category averages constant and substitutes the hypothetical percentage for categories with no grades. It is disabled unless weights total 100%. It does not forecast individual future assignments within partially graded categories. Edit and clear an assignment’s earned points to explore those changes. Letter bands are the demo defaults (A ≥90, B ≥80, C ≥70, D ≥60).
 
 ## API and structure
 
 ```text
-src/app/[[...slug]]/page.tsx   Application routes
+src/app/layout.tsx           Persistent application shell
+src/app/[[...slug]]/page.tsx   Catch-all route entry
 src/components/class-sync.tsx Dashboard, navigation, coursework, calendar
 src/components/panels.tsx     Assistant, grades, materials, settings
 src/lib/model.ts             Domain types, validation, deterministic math
 src/lib/demo.ts              Realistic demo seed
+src/lib/workspace.ts         v1 migration and idempotent Demo Sync
+src/lib/academic-assistant.ts Deterministic local chatbot and date windows
+src/components/chatbot.tsx   Global collapsible chat panel
 src/lib/server.ts            Authentication, body limits, rate limiter
 src/app/api/ai/route.ts       Server-only generation and demo tools
 src/app/api/workspace/route.ts Authenticated GET / PUT workspace
 src/app/api/imports/preview/route.ts Future LMS validation contract
 supabase/schema.sql          PostgreSQL table and row-level policies
 tests/grades.test.ts          Grade and validation regression tests
+tests/frontend.test.ts        Migration, sync, dates, and chatbot tests
 ```
 
-`POST /api/imports/preview` requires a Supabase bearer token and accepts `{ "version": 1, "source": "canvas" | "d2l" | "manual", "data": { "courses": [], "assignments": [], "materials": [] } }`, using the full domain schemas in `src/lib/model.ts`. It validates uniqueness and references and returns a normalized preview plus counts and `requiresApproval: true`. It never writes data. A future extension must add an origin/permission policy, student preview/approval UI, deduplication, and a transactional import commit endpoint. The current workspace PUT is for explicit full-workspace saves, not automatic LMS ingestion.
+`POST /api/imports/preview` requires a Supabase bearer token and accepts `{ "version": 1, "source": "canvas" | "d2l" | "manual", "data": { "courses": [], "assignments": [], "materials": [] } }`, using the full domain schemas in `src/lib/model.ts`. The outer import contract remains version 1; its nested workspace accepts legacy data or version 2 with announcements and normalizes to version 2. It validates uniqueness and references and returns a normalized preview plus counts and `requiresApproval: true`. It never writes data. A future extension must add an origin/permission policy, student preview/approval UI, deduplication, and a transactional import commit endpoint. The current workspace PUT is for explicit full-workspace saves, not automatic LMS ingestion.
 
 ## MVP boundaries
 

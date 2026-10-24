@@ -11,21 +11,21 @@ Prefer reusable components, pure data services, and conventional readable format
 
 ## Baseline and target gaps
 
-Recorded when these guides were added. “Existing” means source is present, not that external credentials or every edge case have been verified.
+Updated after the branding/dashboard/chatbot refresh. “Existing” means source is present, not that external credentials or every edge case have been verified.
 
 | Feature | Baseline | Next target |
 | --- | --- | --- |
-| Dashboard | Course cards, grade average, deadlines, sample announcements | Required assignment counts, structured/readable announcements, Demo Sync |
-| Brand | Graduation-cap mark and existing welcome copy | Brain logo and “All your classes. One place.” tagline |
+| Dashboard | Shared assignment counts, deadlines, structured announcements with read state, idempotent Demo Sync | Broader search and filters |
+| Brand | Brain logo and “All your classes. One place.” tagline | Preserve branding |
 | Assignments | CRUD, completion, search, status/course filters, due-date sorting | Platform, priority, duration, due/platform/priority filters |
-| AI | Dedicated study-tools page, server endpoint, labeled local fallback | Global collapsible chatbot grounded in shared structured data |
+| AI | Global collapsible chatbot, session history across routes, structured local answers, optional server AI; study tools preserved | Credential-backed integration testing |
 | Tasks | No separate task entity/page | Persistent To-Do List and completion progress |
 | Notes | Course-linked text materials with create/edit/delete | Global Lecture Notes page and keyword search |
 | Planner | Generic local catch-up checklist | Deterministic daily Plan My Week using deadline, priority, duration, workload |
 | Calendar | Monthly assignment dates and editing | Course colors, personal tasks, detailed event display; week view optional |
-| Classes | Four seeded course cards and detail tabs | Required five-course sample set and LMS metadata |
-| Imports | Authenticated preview-only API; backup restore | Idempotent local demo assignment/announcement JSON refresh |
-| Persistence | LocalStorage; explicit optional cloud save/load | Safe schema migration for new fields and entities |
+| Classes | Required five-course sample set and detail tabs; existing saved courses preserved | LMS metadata |
+| Imports | Authenticated preview-only API, backup restore, idempotent Demo Sync | Approved live-source adapters |
+| Persistence | Version-2 localStorage with validated v1 migration and announcements; optional cloud save/load | Future task/priority migrations |
 | Grade tools | Weighted calculation, projection, syllabus parsing | Preserve behavior during frontend work |
 
 Do not check off a target feature merely because a visual placeholder exists. Update this table after implementing and verifying a target.
